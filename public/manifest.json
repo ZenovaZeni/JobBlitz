@@ -1,0 +1,26 @@
+{
+  "name": "JobBlitz — AI Career Copilot",
+  "short_name": "JobBlitz",
+  "description": "Tailor your resume for every job with AI. One profile, unlimited opportunities.",
+  "theme_color": "#031631",
+  "background_color": "#f7f9fb",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "start_url": "/auth/signup",
+  "categories": ["productivity", "business"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

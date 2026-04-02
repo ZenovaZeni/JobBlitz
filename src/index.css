@@ -1,0 +1,259 @@
+@import "tailwindcss";
+
+@theme {
+  /* === JOBBLITZ DESIGN SYSTEM: The Digital Atelier === */
+
+  /* Colors */
+  --color-primary: #031631;
+  --color-primary-container: #1a2b47;
+  --color-primary-fixed: #d6e3ff;
+  --color-primary-fixed-dim: #b6c7ea;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #8293b4;
+  --color-on-primary-fixed: #081b37;
+  --color-on-primary-fixed-variant: #374765;
+
+  --color-secondary: #545f72;
+  --color-secondary-container: #d5e0f7;
+  --color-secondary-fixed: #d8e3fa;
+  --color-secondary-fixed-dim: #bcc7dd;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #586377;
+  --color-on-secondary-fixed: #111c2c;
+  --color-on-secondary-fixed-variant: #3c475a;
+
+  --color-tertiary: #05005d;
+  --color-tertiary-container: #0e0099;
+  --color-tertiary-fixed: #e1e0ff;
+  --color-tertiary-fixed-dim: #c0c1ff;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #8285ff;
+  --color-on-tertiary-fixed: #07006c;
+  --color-on-tertiary-fixed-variant: #2f2ebe;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #93000a;
+
+  --color-background: #f7f9fb;
+  --color-on-background: #191c1e;
+
+  --color-surface: #f7f9fb;
+  --color-surface-dim: #d8dadc;
+  --color-surface-bright: #f7f9fb;
+  --color-surface-variant: #e0e3e5;
+  --color-surface-tint: #4e5f7d;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f2f4f6;
+  --color-surface-container: #eceef0;
+  --color-surface-container-high: #e6e8ea;
+  --color-surface-container-highest: #e0e3e5;
+  --color-on-surface: #191c1e;
+  --color-on-surface-variant: #44474d;
+  --color-inverse-surface: #2d3133;
+  --color-inverse-on-surface: #eff1f3;
+  --color-inverse-primary: #b6c7ea;
+
+  --color-outline: #75777e;
+  --color-outline-variant: #c5c6ce;
+
+  /* Typography */
+  --font-headline: "Manrope", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-label: "Inter", sans-serif;
+
+  /* Border Radius */
+  --radius-DEFAULT: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-full: 9999px;
+}
+
+/* === GLOBAL STYLES === */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  /* Prevent iOS text size adjustment */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent overscroll bounce on iOS app shell */
+  overscroll-behavior: none;
+}
+
+/* === MOBILE: Prevent input zoom on focus (iOS requires font-size >= 16px) === */
+input, textarea, select {
+  font-size: 16px !important;
+}
+
+/* === MOBILE: Remove tap highlight flash === */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* === MOBILE: Fast tap (remove 300ms delay) === */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* === SAFE AREA UTILITIES === */
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.pl-safe { padding-left: env(safe-area-inset-left); }
+.pr-safe { padding-right: env(safe-area-inset-right); }
+
+/* Bottom nav safe area — extra padding above home indicator */
+.bottom-nav-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+}
+
+/* Page bottom padding when bottom nav visible */
+.page-pb-mobile {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+}
+
+/* Material Symbols */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  vertical-align: middle;
+  font-size: inherit;
+  line-height: 1;
+}
+.icon-filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+/* === SIGNATURE COMPONENTS === */
+
+/* Glassmorphism panel */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* AI Glow Button */
+.ai-glow-btn {
+  background: linear-gradient(135deg, #031631 0%, #0e0099 100%);
+  box-shadow: 0 4px 24px -4px rgba(14, 0, 153, 0.35);
+}
+.ai-glow-btn:hover {
+  box-shadow: 0 8px 32px -4px rgba(14, 0, 153, 0.45);
+}
+.ai-glow-btn:active {
+  transform: scale(0.97);
+}
+
+/* Gradient CTA */
+.gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-tertiary-container) 100%);
+}
+
+/* Ambient card shadow */
+.card-shadow {
+  box-shadow: 0 40px 80px -20px rgba(3, 22, 49, 0.05);
+}
+.card-shadow-hover:hover {
+  box-shadow: 0 40px 80px -15px rgba(3, 22, 49, 0.1);
+}
+
+/* Dot grid background */
+.dot-grid {
+  background-image: radial-gradient(var(--color-surface-container) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Circular progress */
+.circular-progress-68 {
+  background: conic-gradient(#0e0099 244.8deg, #eceef0 0deg);
+}
+.circular-progress-84 {
+  background: conic-gradient(#0e0099 302deg, #eceef0 0deg);
+}
+.circular-progress-94 {
+  background: conic-gradient(#0e0099 338deg, #eceef0 0deg);
+}
+
+/* Custom scrollbar */
+.custom-scroll::-webkit-scrollbar { width: 4px; }
+.custom-scroll::-webkit-scrollbar-track { background: transparent; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #e0e3e5; border-radius: 10px; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Drag handle */
+.drag-handle { cursor: grab; }
+.drag-handle:active { cursor: grabbing; }
+
+/* Animations */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.animate-pulse-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
+
+@keyframes slide-in {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-in { animation: slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up { animation: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #f2f4f6 25%, #eceef0 50%, #f2f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Resume preview paper */
+.paper-shadow {
+  box-shadow: 0 30px 60px -15px rgba(3, 22, 49, 0.12), 0 0 0 1px rgba(3, 22, 49, 0.04);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-tertiary-fixed);
+  color: var(--color-on-tertiary-fixed);
+}
+
+/* === MOBILE TOUCH TARGET MINIMUM === */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === BOTTOM NAV === */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(197, 198, 206, 0.2);
+  padding-bottom: env(safe-area-inset-bottom);
+}

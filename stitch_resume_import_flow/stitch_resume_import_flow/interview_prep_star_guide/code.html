@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Interview Prep | JobBlitz</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-fixed-dim": "#c0c1ff",
+              "on-tertiary-container": "#8285ff",
+              "outline": "#75777e",
+              "on-primary-fixed-variant": "#374765",
+              "secondary-fixed": "#d8e3fa",
+              "primary-fixed-dim": "#b6c7ea",
+              "on-surface": "#191c1e",
+              "surface-container-highest": "#e0e3e5",
+              "primary-fixed": "#d6e3ff",
+              "surface-container": "#eceef0",
+              "background": "#f7f9fb",
+              "on-surface-variant": "#44474d",
+              "on-error": "#ffffff",
+              "surface-dim": "#d8dadc",
+              "on-tertiary-fixed": "#07006c",
+              "tertiary-container": "#0e0099",
+              "surface-container-low": "#f2f4f6",
+              "surface-variant": "#e0e3e5",
+              "surface-bright": "#f7f9fb",
+              "on-primary-container": "#8293b4",
+              "surface": "#f7f9fb",
+              "secondary-container": "#d5e0f7",
+              "secondary-fixed-dim": "#bcc7dd",
+              "on-secondary-fixed-variant": "#3c475a",
+              "on-tertiary": "#ffffff",
+              "tertiary": "#05005d",
+              "primary-container": "#1a2b47",
+              "tertiary-fixed": "#e1e0ff",
+              "on-primary": "#ffffff",
+              "inverse-surface": "#2d3133",
+              "surface-container-lowest": "#ffffff",
+              "on-secondary-fixed": "#111c2c",
+              "on-tertiary-fixed-variant": "#2f2ebe",
+              "inverse-on-surface": "#eff1f3",
+              "on-secondary": "#ffffff",
+              "inverse-primary": "#b6c7ea",
+              "surface-container-high": "#e6e8ea",
+              "error": "#ba1a1a",
+              "outline-variant": "#c5c6ce",
+              "on-background": "#191c1e",
+              "primary": "#031631",
+              "error-container": "#ffdad6",
+              "surface-tint": "#4e5f7d",
+              "on-secondary-container": "#586377",
+              "secondary": "#545f72",
+              "on-error-container": "#93000a",
+              "on-primary-fixed": "#081b37"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        background-color: #f7f9fb;
+        color: #191c1e;
+        -webkit-font-smoothing: antialiased;
+      }
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(24px);
+      }
+    </style>
+</head>
+<body class="font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
+<div class="flex min-h-screen">
+<!-- SideNavBar Component -->
+<aside class="h-screen w-64 bg-[#f2f4f6] dark:bg-[#031631] flex flex-col py-8 pr-4 sticky top-0 border-r-0 shrink-0">
+<div class="px-8">
+<div class="text-lg font-black text-[#031631] dark:text-[#ffffff] mb-8 font-headline">JobBlitz</div>
+<div class="mb-10">
+<div class="text-[#031631] dark:text-[#ffffff] font-headline font-bold text-base leading-tight">The Digital Atelier</div>
+<div class="text-[#5c6d8c] dark:text-[#a1b0cb] text-xs font-medium tracking-wide">Career Curation</div>
+</div>
+</div>
+<nav class="flex-grow space-y-1">
+<a class="flex items-center gap-3 px-8 py-3 text-[#5c6d8c] dark:text-[#a1b0cb] hover:bg-[#eceef0] dark:hover:bg-[#1A2B47] rounded-r-full transition-all group" href="#">
+<span class="material-symbols-outlined text-xl">dashboard</span>
+<span class="font-medium text-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3 text-[#5c6d8c] dark:text-[#a1b0cb] hover:bg-[#eceef0] dark:hover:bg-[#1A2B47] rounded-r-full transition-all group" href="#">
+<span class="material-symbols-outlined text-xl">account_circle</span>
+<span class="font-medium text-sm">Profile</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3 text-[#5c6d8c] dark:text-[#a1b0cb] hover:bg-[#eceef0] dark:hover:bg-[#1A2B47] rounded-r-full transition-all group" href="#">
+<span class="material-symbols-outlined text-xl">description</span>
+<span class="font-medium text-sm">Resumes</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3 text-[#5c6d8c] dark:text-[#a1b0cb] hover:bg-[#eceef0] dark:hover:bg-[#1A2B47] rounded-r-full transition-all group" href="#">
+<span class="material-symbols-outlined text-xl">mail</span>
+<span class="font-medium text-sm">Cover Letters</span>
+</a>
+<!-- Active Tab: Interview Prep -->
+<a class="flex items-center gap-3 px-8 py-3 bg-[#ffffff] dark:bg-[#0e0099] text-[#031631] dark:text-white rounded-r-full shadow-sm group" href="#">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<span class="font-medium text-sm">Interview Prep</span>
+</a>
+</nav>
+<div class="px-8 mt-auto pt-8 border-t border-[#eceef0] dark:border-[#1A2B47]/20">
+<button class="w-full py-3 px-4 bg-gradient-to-r from-primary to-tertiary-container text-white rounded-lg font-semibold text-sm shadow-lg shadow-primary/10 active:scale-95 transition-transform duration-200">
+                    New Session
+                </button>
+<div class="mt-6 space-y-2">
+<a class="flex items-center gap-3 py-2 text-[#5c6d8c] dark:text-[#a1b0cb] hover:text-[#031631] transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">settings</span>
+<span class="text-xs font-medium">Settings</span>
+</a>
+<a class="flex items-center gap-3 py-2 text-[#5c6d8c] dark:text-[#a1b0cb] hover:text-[#031631] transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">help</span>
+<span class="text-xs font-medium">Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-grow min-w-0 bg-surface">
+<!-- Top App Bar -->
+<header class="h-16 flex items-center justify-between px-10 sticky top-0 glass-panel z-10">
+<div class="flex items-center gap-4">
+<h1 class="font-headline font-extrabold text-xl tracking-tighter text-primary">Interview Prep Canvas</h1>
+<span class="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-[10px] font-bold tracking-widest uppercase">Senior UI Designer</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="text-right">
+<p class="text-[10px] uppercase tracking-wider font-bold text-on-surface-variant">Upcoming Interview</p>
+<p class="text-sm font-semibold text-primary">Quantum Leap Dynamics • Oct 24</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden">
+<img alt="User Profile" data-alt="professional headshot of a creative professional against a neutral studio background with soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNii2GI_T3GkJV0UbLavKqloMfORBgTASLlauWxvgjH2HIEij0gxaFLQt0XJM3DNp_oHY1Slwf44Z0a7eAX3dtVDr7IY8Q91lnfnzeNAlHuJdVhjRuv_y4CvRgt3ROiEsIOih7vGpZvZ2vot4l187BQiDGYfP5nAqLLGG7qRRZ8qoa2pK0UCJ2y4UTdQ9_Xl9cv2U7XugRt8JEs5wAIL9BiXva4nONc19e9SLzY5nvf97DBIDqjGKVu0AVOajEDaMguKTjtBhkf9A"/>
+</div>
+</div>
+</header>
+<!-- Focus Canvas Layout -->
+<div class="p-10 max-w-7xl mx-auto space-y-12">
+<!-- Quick Insight Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Role Notes -->
+<div class="col-span-1 md:col-span-2 bg-surface-container-lowest p-8 rounded-xl shadow-[0_40px_40px_-15px_rgba(3,22,49,0.04)] border border-outline-variant/15">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-tertiary-container">corporate_fare</span>
+<h2 class="font-headline font-bold text-lg">Role-Specific Prep Notes</h2>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+<div class="space-y-3">
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Company Intel</p>
+<p class="text-sm text-on-surface leading-relaxed">Recently pivoted to an AI-first infrastructure. Focus heavily on 'User-Centric Data Visualization' during the case study.</p>
+<ul class="text-xs space-y-2 text-on-surface-variant">
+<li class="flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-tertiary"></span>Series C funding: $45M</li>
+<li class="flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-tertiary"></span>CEO values "Radical Candor"</li>
+</ul>
+</div>
+<div class="space-y-3">
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Technical Review</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-semibold rounded-lg">Atomic Design</span>
+<span class="px-2 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-semibold rounded-lg">React Frameworks</span>
+<span class="px-2 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-semibold rounded-lg">Heuristic Analysis</span>
+</div>
+<p class="text-xs text-on-surface-variant italic leading-relaxed">"Be prepared to discuss your hand-off process with engineering in deep detail."</p>
+</div>
+</div>
+</div>
+<!-- Confidence Meter -->
+<div class="bg-gradient-to-br from-primary to-tertiary-container p-8 rounded-xl text-white flex flex-col justify-between">
+<div>
+<p class="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-2">Readiness Score</p>
+<p class="text-4xl font-headline font-extrabold">84%</p>
+</div>
+<div class="space-y-4">
+<div class="h-1.5 w-full bg-white/20 rounded-full overflow-hidden">
+<div class="h-full bg-white w-[84%] rounded-full"></div>
+</div>
+<p class="text-xs leading-relaxed opacity-80">You're strong on technicals. Review your 'Result' points in the STAR responses to reach 95%.</p>
+</div>
+</div>
+</section>
+<!-- Predicted Interview Questions & STAR Responses -->
+<section class="space-y-8">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="font-headline font-bold text-2xl text-primary">Predicted Interview Questions</h2>
+<p class="text-sm text-on-surface-variant">Tailored analysis based on your profile and the job description.</p>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined">refresh</span></button>
+<button class="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined">print</span></button>
+</div>
+</div>
+<div class="space-y-6">
+<!-- Question Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-outline-variant/15">
+<div class="p-6 md:p-8 flex flex-col md:flex-row gap-8">
+<div class="md:w-1/3">
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-tertiary-container mb-2 block">Behavioral Question</span>
+<h3 class="font-headline font-bold text-lg leading-tight text-primary">"Tell us about a time you had to defend a design decision against strong stakeholder opposition."</h3>
+<div class="mt-4 p-3 bg-surface-container-low rounded-lg">
+<p class="text-xs font-medium text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">lightbulb</span>
+                                            AI Tip: Emphasize data usage.
+                                        </p>
+</div>
+</div>
+<div class="md:w-2/3 space-y-4 border-l-0 md:border-l border-outline-variant/30 md:pl-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="p-4 bg-surface-container-low rounded-lg">
+<span class="text-[9px] font-black tracking-widest text-primary mb-1 block uppercase">Situation</span>
+<p class="text-xs text-on-surface leading-relaxed">At FinTech Pro, the Head of Sales wanted a cluttered dashboard for 'quick access'.</p>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg">
+<span class="text-[9px] font-black tracking-widest text-primary mb-1 block uppercase">Task</span>
+<p class="text-xs text-on-surface leading-relaxed">Simplify the interface without losing key data points or alienating the sales team.</p>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg">
+<span class="text-[9px] font-black tracking-widest text-primary mb-1 block uppercase">Action</span>
+<p class="text-xs text-on-surface leading-relaxed">Conducted rapid A/B testing with 5 reps. Presented heatmaps showing the cluttered version led to 40% higher error rates.</p>
+</div>
+<div class="p-4 bg-tertiary-fixed rounded-lg">
+<span class="text-[9px] font-black tracking-widest text-on-tertiary-fixed mb-1 block uppercase">Result</span>
+<p class="text-xs text-on-tertiary-fixed-variant leading-relaxed font-medium">Adopted the streamlined design. User satisfaction rose by 22% and training time dropped by 3 days.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Question Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-outline-variant/15">
+<div class="p-6 md:p-8 flex flex-col md:flex-row gap-8">
+<div class="md:w-1/3">
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-tertiary-container mb-2 block">Technical Question</span>
+<h3 class="font-headline font-bold text-lg leading-tight text-primary">"How do you approach designing for accessibility (WCAG) in complex data applications?"</h3>
+<div class="mt-4 p-3 bg-surface-container-low rounded-lg">
+<p class="text-xs font-medium text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">psychology</span>
+                                            The Digital Atelier Insight
+                                        </p>
+</div>
+</div>
+<div class="md:w-2/3 space-y-4 border-l-0 md:border-l border-outline-variant/30 md:pl-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="p-4 bg-surface-container-low rounded-lg">
+<span class="text-[9px] font-black tracking-widest text-primary mb-1 block uppercase">Situation</span>
+<p class="text-xs text-on-surface leading-relaxed">Designing a real-time trading platform for users with diverse visual abilities.</p>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg">
+<span class="text-[9px] font-black tracking-widest text-primary mb-1 block uppercase">Task</span>
+<p class="text-xs text-on-surface leading-relaxed">Ensure AA compliance across all high-frequency data charts and tables.</p>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg">
+<span class="text-[9px] font-black tracking-widest text-primary mb-1 block uppercase">Action</span>
+<p class="text-xs text-on-surface leading-relaxed">Implemented a custom high-contrast color system and enabled keyboard navigation for all interactive chart nodes.</p>
+</div>
+<div class="p-4 bg-tertiary-fixed rounded-lg">
+<span class="text-[9px] font-black tracking-widest text-on-tertiary-fixed mb-1 block uppercase">Result</span>
+<p class="text-xs text-on-tertiary-fixed-variant leading-relaxed font-medium">Passed a 3rd party accessibility audit with zero major findings; expanded market reach by 8%.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Question Card 3 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-outline-variant/15">
+<div class="p-6 md:p-8 flex flex-col md:flex-row gap-8">
+<div class="md:w-1/3">
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-tertiary-container mb-2 block">Strategic Question</span>
+<h3 class="font-headline font-bold text-lg leading-tight text-primary">"Where do you see the intersection of AI and Product Design in the next 2-3 years?"</h3>
+<div class="mt-4 p-3 bg-surface-container-low rounded-lg">
+<p class="text-xs font-medium text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">stars</span>
+                                            High Impact Topic
+                                        </p>
+</div>
+</div>
+<div class="md:w-2/3 space-y-4 border-l-0 md:border-l border-outline-variant/30 md:pl-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="p-4 bg-surface-container-low rounded-lg">
+<span class="text-[9px] font-black tracking-widest text-primary mb-1 block uppercase">Situation</span>
+<p class="text-xs text-on-surface leading-relaxed">Industry shift toward generative UI and autonomous agents.</p>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg">
+<span class="text-[9px] font-black tracking-widest text-primary mb-1 block uppercase">Task</span>
+<p class="text-xs text-on-surface leading-relaxed">Define the designer's role when the system generates the output.</p>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg">
+<span class="text-[9px] font-black tracking-widest text-primary mb-1 block uppercase">Action</span>
+<p class="text-xs text-on-surface leading-relaxed">Focusing my current upskilling on "Prompt Engineering" and "System Logic Design" rather than just pixel-pushing.</p>
+</div>
+<div class="p-4 bg-tertiary-fixed rounded-lg">
+<span class="text-[9px] font-black tracking-widest text-on-tertiary-fixed mb-1 block uppercase">Result</span>
+<p class="text-xs text-on-tertiary-fixed-variant leading-relaxed font-medium">Positioned as a bridge between engineering and product to maintain 'Brand Soul' in AI outputs.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Additional Prep Categories - Visual Layout -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-6 pb-12">
+<div class="p-6 bg-surface-container-low rounded-xl flex flex-col items-center text-center group cursor-pointer hover:bg-surface-container transition-colors">
+<div class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-primary mb-4 shadow-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">video_chat</span>
+</div>
+<h4 class="font-bold text-sm text-primary mb-1">Practice Video</h4>
+<p class="text-[10px] text-on-surface-variant">Record and analyze with AI</p>
+</div>
+<div class="p-6 bg-surface-container-low rounded-xl flex flex-col items-center text-center group cursor-pointer hover:bg-surface-container transition-colors">
+<div class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-primary mb-4 shadow-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">group</span>
+</div>
+<h4 class="font-bold text-sm text-primary mb-1">Culture Check</h4>
+<p class="text-[10px] text-on-surface-variant">Analyze company values</p>
+</div>
+<div class="p-6 bg-surface-container-low rounded-xl flex flex-col items-center text-center group cursor-pointer hover:bg-surface-container transition-colors">
+<div class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-primary mb-4 shadow-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">history</span>
+</div>
+<h4 class="font-bold text-sm text-primary mb-1">Past Successes</h4>
+<p class="text-[10px] text-on-surface-variant">Review master profile</p>
+</div>
+<div class="p-6 bg-surface-container-low rounded-xl flex flex-col items-center text-center group cursor-pointer hover:bg-surface-container transition-colors">
+<div class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-primary mb-4 shadow-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">contact_support</span>
+</div>
+<h4 class="font-bold text-sm text-primary mb-1">Reverse Questions</h4>
+<p class="text-[10px] text-on-surface-variant">Questions for the interviewer</p>
+</div>
+</section>
+</div>
+<!-- Footer Component -->
+<footer class="w-full border-t border-[#eceef0] dark:border-[#1A2B47] bg-[#f7f9fb] dark:bg-[#031631]">
+<div class="w-full px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-4 max-w-screen-2xl mx-auto">
+<p class="font-['Inter'] text-xs tracking-wide text-[#5c6d8c] dark:text-[#a1b0cb]">© 2024 JobBlitz AI. Built for the Digital Atelier.</p>
+<div class="flex gap-8">
+<a class="text-xs tracking-wide text-[#5c6d8c] dark:text-[#a1b0cb] hover:text-[#031631] dark:hover:text-white transition-all underline underline-offset-4" href="#">Privacy Policy</a>
+<a class="text-xs tracking-wide text-[#5c6d8c] dark:text-[#a1b0cb] hover:text-[#031631] dark:hover:text-white transition-all underline underline-offset-4" href="#">Terms of Service</a>
+<a class="text-xs tracking-wide text-[#5c6d8c] dark:text-[#a1b0cb] hover:text-[#031631] dark:hover:text-white transition-all underline underline-offset-4" href="#">Cookie Settings</a>
+</div>
+</div>
+</footer>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Resume Versions | JobBlitz</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-fixed-dim": "#c0c1ff",
+              "on-tertiary-container": "#8285ff",
+              "outline": "#75777e",
+              "on-primary-fixed-variant": "#374765",
+              "secondary-fixed": "#d8e3fa",
+              "primary-fixed-dim": "#b6c7ea",
+              "on-surface": "#191c1e",
+              "surface-container-highest": "#e0e3e5",
+              "primary-fixed": "#d6e3ff",
+              "surface-container": "#eceef0",
+              "background": "#f7f9fb",
+              "on-surface-variant": "#44474d",
+              "on-error": "#ffffff",
+              "surface-dim": "#d8dadc",
+              "on-tertiary-fixed": "#07006c",
+              "tertiary-container": "#0e0099",
+              "surface-container-low": "#f2f4f6",
+              "surface-variant": "#e0e3e5",
+              "surface-bright": "#f7f9fb",
+              "on-primary-container": "#8293b4",
+              "surface": "#f7f9fb",
+              "secondary-container": "#d5e0f7",
+              "secondary-fixed-dim": "#bcc7dd",
+              "on-secondary-fixed-variant": "#3c475a",
+              "on-tertiary": "#ffffff",
+              "tertiary": "#05005d",
+              "primary-container": "#1a2b47",
+              "tertiary-fixed": "#e1e0ff",
+              "on-primary": "#ffffff",
+              "inverse-surface": "#2d3133",
+              "surface-container-lowest": "#ffffff",
+              "on-secondary-fixed": "#111c2c",
+              "on-tertiary-fixed-variant": "#2f2ebe",
+              "inverse-on-surface": "#eff1f3",
+              "on-secondary": "#ffffff",
+              "inverse-primary": "#b6c7ea",
+              "surface-container-high": "#e6e8ea",
+              "error": "#ba1a1a",
+              "outline-variant": "#c5c6ce",
+              "on-background": "#191c1e",
+              "primary": "#031631",
+              "error-container": "#ffdad6",
+              "surface-tint": "#4e5f7d",
+              "on-secondary-container": "#586377",
+              "secondary": "#545f72",
+              "on-error-container": "#93000a",
+              "on-primary-fixed": "#081b37"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(24px);
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+</head>
+<body class="bg-background font-body text-on-background selection:bg-primary-fixed selection:text-on-primary-fixed">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="bg-[#f2f4f6] dark:bg-[#031631] h-screen w-64 fixed left-0 top-0 hidden md:flex flex-col py-8 pr-4 z-40">
+<div class="px-8 mb-8">
+<div class="text-lg font-black text-[#031631] dark:text-[#ffffff] tracking-tighter">JobBlitz</div>
+<div class="mt-4 flex items-center gap-3">
+<img alt="User" class="w-8 h-8 rounded-full bg-surface-container shadow-sm" data-alt="professional studio portrait of a modern digital professional with soft bokeh background and clean lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBqK076PZuRbIs0gXIZc_WsBRfQNfdqhbdsn3_Cfx11wT7Wn5FuEEc6Du-WK5D6hIltTaXIDq9Jho7m4W5xbTZNIe21icfRHMAqvyU7HMJSkeNcmP572rIAjtYw9EBcCAumsQyVz8ZH9meoyNLKvisqVyR9vk0XPEZ-LH9R_l7mQLFI0gjz9100xJ4EpKWpL7QWrIbefHO21gGkFnZllx1bp8JSc38mrZDHH3x5d2VxVdCvbxpWMCIEe5tBILKbs5Zab1ud0yz93E"/>
+<div>
+<div class="font-['Inter'] text-sm font-medium text-[#031631] dark:text-[#ffffff]">The Digital Atelier</div>
+<div class="text-xs text-[#5c6d8c]">Career Curation</div>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-8 py-3 text-[#5c6d8c] dark:text-[#a1b0cb] hover:bg-[#eceef0] dark:hover:bg-[#1A2B47] rounded-r-full transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-['Inter'] text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3 text-[#5c6d8c] dark:text-[#a1b0cb] hover:bg-[#eceef0] dark:hover:bg-[#1A2B47] rounded-r-full transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-['Inter'] text-sm font-medium">Profile</span>
+</a>
+<!-- Active Item: Resumes -->
+<a class="flex items-center gap-3 px-8 py-3 bg-[#ffffff] dark:bg-[#0e0099] text-[#031631] dark:text-white rounded-r-full shadow-sm transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="description" style="font-variation-settings: 'FILL' 1;">description</span>
+<span class="font-['Inter'] text-sm font-medium">Resumes</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3 text-[#5c6d8c] dark:text-[#a1b0cb] hover:bg-[#eceef0] dark:hover:bg-[#1A2B47] rounded-r-full transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+<span class="font-['Inter'] text-sm font-medium">Cover Letters</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3 text-[#5c6d8c] dark:text-[#a1b0cb] hover:bg-[#eceef0] dark:hover:bg-[#1A2B47] rounded-r-full transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span class="font-['Inter'] text-sm font-medium">Interview Prep</span>
+</a>
+</nav>
+<div class="px-4 mt-auto space-y-1">
+<button class="w-full bg-primary text-on-primary py-3 px-6 rounded-xl font-headline font-bold text-sm mb-6 active:scale-95 transition-transform">
+                    New Session
+                </button>
+<a class="flex items-center gap-3 px-8 py-2 text-[#5c6d8c] dark:text-[#a1b0cb] hover:bg-[#eceef0] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-['Inter'] text-sm font-medium">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-2 text-[#5c6d8c] dark:text-[#a1b0cb] hover:bg-[#eceef0] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-['Inter'] text-sm font-medium">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 md:ml-64 min-h-screen bg-surface">
+<!-- Top Bar -->
+<header class="sticky top-0 z-30 bg-surface/80 backdrop-blur-xl px-8 py-6 flex justify-between items-center">
+<div>
+<h1 class="font-headline text-3xl font-extrabold tracking-tighter text-primary">Resume Portfolio</h1>
+<p class="text-on-surface-variant text-sm mt-1">Manage and curate your tailored professional narratives.</p>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex bg-surface-container-low p-1 rounded-full">
+<button class="px-4 py-1.5 text-xs font-semibold bg-surface-container-lowest rounded-full shadow-sm text-primary">Grid</button>
+<button class="px-4 py-1.5 text-xs font-semibold text-on-surface-variant hover:text-primary transition-colors">List</button>
+</div>
+</div>
+</header>
+<!-- Filter Chips -->
+<div class="px-8 py-4 flex gap-3 overflow-x-auto no-scrollbar">
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-primary text-on-primary text-xs font-semibold">All Versions</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant text-xs font-semibold hover:bg-surface-container transition-colors">Product Management</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant text-xs font-semibold hover:bg-surface-container transition-colors">UX Design</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant text-xs font-semibold hover:bg-surface-container transition-colors">Strategy</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant text-xs font-semibold hover:bg-surface-container transition-colors">Growth</button>
+</div>
+<!-- Content Grid -->
+<div class="px-8 pb-20 mt-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+<!-- Resume Card 1: High Match -->
+<div class="group relative flex flex-col bg-surface-container-lowest rounded-2xl overflow-hidden shadow-[0_40px_40px_-15px_rgba(3,22,49,0.04)] border border-outline-variant/15 hover:shadow-[0_40px_80px_-15px_rgba(3,22,49,0.08)] transition-all duration-500">
+<!-- Preview Thumbnail -->
+<div class="aspect-[3/4] bg-surface-container-low p-4 overflow-hidden relative">
+<div class="w-full h-full bg-white rounded shadow-sm p-4 text-[4px] leading-tight text-slate-300">
+<div class="w-1/2 h-2 bg-slate-100 mb-2"></div>
+<div class="w-full h-1 bg-slate-50 mb-1"></div>
+<div class="w-full h-1 bg-slate-50 mb-1"></div>
+<div class="w-3/4 h-1 bg-slate-50 mb-4"></div>
+<div class="w-full h-20 bg-slate-50/30 rounded"></div>
+</div>
+<!-- AI Intelligence Layer -->
+<div class="absolute inset-0 bg-primary/5 group-hover:bg-transparent transition-colors duration-500"></div>
+<!-- Hover Actions -->
+<div class="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary/10 backdrop-blur-[2px]">
+<button class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary hover:scale-110 transition-transform shadow-lg">
+<span class="material-symbols-outlined text-xl" data-icon="edit">edit</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary hover:scale-110 transition-transform shadow-lg">
+<span class="material-symbols-outlined text-xl" data-icon="download">download</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary hover:scale-110 transition-transform shadow-lg">
+<span class="material-symbols-outlined text-xl" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Info Section -->
+<div class="p-5 flex flex-col h-full">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-bold px-2 py-1 rounded tracking-wider uppercase">Product Management</span>
+<div class="flex flex-col items-end">
+<span class="text-2xl font-black text-primary leading-none">89%</span>
+<span class="text-[10px] font-medium text-on-surface-variant uppercase tracking-widest">Match Score</span>
+</div>
+</div>
+<h3 class="font-headline font-bold text-primary text-lg leading-tight mb-1">Google - PM</h3>
+<p class="text-on-surface-variant text-sm mb-4">Mountain View, CA</p>
+<div class="mt-auto pt-4 border-t border-outline-variant/10 flex items-center justify-between">
+<span class="text-[10px] font-medium text-on-surface-variant uppercase">Edited 2h ago</span>
+<span class="flex gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container/30"></span>
+</span>
+</div>
+</div>
+</div>
+<!-- Resume Card 2 -->
+<div class="group relative flex flex-col bg-surface-container-lowest rounded-2xl overflow-hidden shadow-[0_40px_40px_-15px_rgba(3,22,49,0.04)] border border-outline-variant/15 hover:shadow-[0_40px_80px_-15px_rgba(3,22,49,0.08)] transition-all duration-500">
+<div class="aspect-[3/4] bg-surface-container-low p-4 overflow-hidden relative">
+<div class="w-full h-full bg-white rounded shadow-sm p-4 text-[4px] leading-tight text-slate-300 opacity-60">
+<div class="w-2/3 h-2 bg-slate-100 mb-2"></div>
+<div class="w-full h-1 bg-slate-50 mb-1"></div>
+<div class="w-full h-1 bg-slate-50 mb-1"></div>
+</div>
+<div class="absolute inset-0 bg-primary/5 group-hover:bg-transparent transition-colors duration-500"></div>
+<div class="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary/10 backdrop-blur-[2px]">
+<button class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary hover:scale-110 transition-transform shadow-lg">
+<span class="material-symbols-outlined text-xl" data-icon="edit">edit</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary hover:scale-110 transition-transform shadow-lg">
+<span class="material-symbols-outlined text-xl" data-icon="download">download</span>
+</button>
+</div>
+</div>
+<div class="p-5 flex flex-col h-full">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-surface-container-high text-on-surface-variant text-[10px] font-bold px-2 py-1 rounded tracking-wider uppercase">Senior PM</span>
+<div class="flex flex-col items-end">
+<span class="text-2xl font-black text-primary leading-none">82%</span>
+<span class="text-[10px] font-medium text-on-surface-variant uppercase tracking-widest">Match Score</span>
+</div>
+</div>
+<h3 class="font-headline font-bold text-primary text-lg leading-tight mb-1">Apple - Lead PM</h3>
+<p class="text-on-surface-variant text-sm mb-4">Cupertino, CA</p>
+<div class="mt-auto pt-4 border-t border-outline-variant/10 flex items-center justify-between">
+<span class="text-[10px] font-medium text-on-surface-variant uppercase">Edited Dec 12, 2023</span>
+</div>
+</div>
+</div>
+<!-- Resume Card 3 -->
+<div class="group relative flex flex-col bg-surface-container-lowest rounded-2xl overflow-hidden shadow-[0_40px_40px_-15px_rgba(3,22,49,0.04)] border border-outline-variant/15 hover:shadow-[0_40px_80px_-15px_rgba(3,22,49,0.08)] transition-all duration-500">
+<div class="aspect-[3/4] bg-surface-container-low p-4 overflow-hidden relative">
+<div class="w-full h-full bg-white rounded shadow-sm p-4 text-[4px] leading-tight text-slate-300 opacity-40"></div>
+<div class="absolute inset-0 bg-primary/5 group-hover:bg-transparent transition-colors duration-500"></div>
+<div class="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary/10 backdrop-blur-[2px]">
+<button class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary hover:scale-110 transition-transform shadow-lg">
+<span class="material-symbols-outlined text-xl" data-icon="edit">edit</span>
+</button>
+</div>
+</div>
+<div class="p-5 flex flex-col h-full">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-bold px-2 py-1 rounded tracking-wider uppercase">UX Design</span>
+<div class="flex flex-col items-end">
+<span class="text-2xl font-black text-on-surface-variant leading-none">74%</span>
+<span class="text-[10px] font-medium text-on-surface-variant uppercase tracking-widest">Match Score</span>
+</div>
+</div>
+<h3 class="font-headline font-bold text-primary text-lg leading-tight mb-1">Airbnb - Product Designer</h3>
+<p class="text-on-surface-variant text-sm mb-4">San Francisco, CA</p>
+<div class="mt-auto pt-4 border-t border-outline-variant/10 flex items-center justify-between">
+<span class="text-[10px] font-medium text-on-surface-variant uppercase">Edited Oct 28, 2023</span>
+</div>
+</div>
+</div>
+<!-- New Resume Placeholder -->
+<button class="flex flex-col items-center justify-center border-2 border-dashed border-outline-variant rounded-2xl aspect-[3/4.5] group hover:border-primary/40 hover:bg-surface-container-low transition-all">
+<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-primary group-hover:text-on-primary transition-all mb-4">
+<span class="material-symbols-outlined text-2xl" data-icon="add">add</span>
+</div>
+<span class="font-headline font-bold text-primary">New Version</span>
+<span class="text-[10px] text-on-surface-variant uppercase mt-1 tracking-widest">Tailor by AI</span>
+</button>
+<!-- Resume Card 4 -->
+<div class="group relative flex flex-col bg-surface-container-lowest rounded-2xl overflow-hidden shadow-[0_40px_40px_-15px_rgba(3,22,49,0.04)] border border-outline-variant/15 hover:shadow-[0_40px_80px_-15px_rgba(3,22,49,0.08)] transition-all duration-500">
+<div class="aspect-[3/4] bg-surface-container-low p-4 overflow-hidden relative">
+<div class="w-full h-full bg-white rounded shadow-sm p-4 text-[4px] leading-tight text-slate-300 opacity-60"></div>
+<div class="absolute inset-0 bg-primary/5 group-hover:bg-transparent transition-colors duration-500"></div>
+<div class="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary/10 backdrop-blur-[2px]">
+<button class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary hover:scale-110 transition-transform shadow-lg">
+<span class="material-symbols-outlined text-xl" data-icon="edit">edit</span>
+</button>
+</div>
+</div>
+<div class="p-5 flex flex-col h-full">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-surface-container-high text-on-surface-variant text-[10px] font-bold px-2 py-1 rounded tracking-wider uppercase">Strategy</span>
+<div class="flex flex-col items-end">
+<span class="text-2xl font-black text-primary leading-none">92%</span>
+<span class="text-[10px] font-medium text-on-surface-variant uppercase tracking-widest">Match Score</span>
+</div>
+</div>
+<h3 class="font-headline font-bold text-primary text-lg leading-tight mb-1">Stripe - Strategy Ops</h3>
+<p class="text-on-surface-variant text-sm mb-4">Remote</p>
+<div class="mt-auto pt-4 border-t border-outline-variant/10 flex items-center justify-between">
+<span class="text-[10px] font-medium text-on-surface-variant uppercase">Edited 5d ago</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Section -->
+<footer class="w-full px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-4 max-w-screen-2xl mx-auto border-t border-[#eceef0] bg-[#f7f9fb]">
+<div class="text-[#5c6d8c] font-['Inter'] text-xs tracking-wide">
+                    © 2024 JobBlitz AI. Built for the Digital Atelier.
+                </div>
+<div class="flex gap-8">
+<a class="text-[#5c6d8c] hover:text-[#031631] font-['Inter'] text-xs tracking-wide transition-all underline-offset-4 hover:underline" href="#">Privacy Policy</a>
+<a class="text-[#5c6d8c] hover:text-[#031631] font-['Inter'] text-xs tracking-wide transition-all underline-offset-4 hover:underline" href="#">Terms of Service</a>
+<a class="text-[#5c6d8c] hover:text-[#031631] font-['Inter'] text-xs tracking-wide transition-all underline-offset-4 hover:underline" href="#">Cookie Settings</a>
+</div>
+</footer>
+</main>
+</div>
+<!-- Intelligence Rail (Signature Component) -->
+<div class="fixed right-6 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4 p-2 rounded-full glass-card border border-white/40 shadow-2xl z-50">
+<button class="w-12 h-12 rounded-full flex items-center justify-center text-primary hover:bg-surface-container transition-all" title="AI Match Assistant">
+<span class="material-symbols-outlined" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</button>
+<button class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-all" title="Analysis Tools">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+</button>
+<div class="w-8 h-[1px] bg-outline-variant/20 mx-auto"></div>
+<button class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-all" title="Export Manager">
+<span class="material-symbols-outlined" data-icon="archive">archive</span>
+</button>
+</div>
+</body></html>
