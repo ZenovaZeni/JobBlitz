@@ -229,6 +229,57 @@ button, a, [role="button"] {
   box-shadow: 0 30px 60px -15px rgba(3, 22, 49, 0.12), 0 0 0 1px rgba(3, 22, 49, 0.04);
 }
 
+/* === PDF PRINT === */
+#resume-print-target,
+#resume-print-target-standalone { display: none; }
+
+@media print {
+  @page { 
+    margin: 0; 
+    size: A4 portrait; 
+  }
+
+  /* Force background colors and images */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Hide everything in the app shell */
+  body > * { display: none !important; }
+
+  /* Show whichever print target is on this route */
+  #resume-print-target,
+  #resume-print-target-standalone {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: white !important;
+  }
+
+  /* Page break control for resume sections */
+  .resume-section {
+    page-break-inside: auto;
+  }
+  .resume-item {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Strip all backgrounds/shadows from the body */
+  body { 
+    background: white !important; 
+    margin: 0 !important; 
+    padding: 0 !important;
+    -webkit-font-smoothing: subpixel-antialiased;
+  }
+}
+
 /* Selection */
 ::selection {
   background-color: var(--color-tertiary-fixed);
@@ -256,4 +307,44 @@ button, a, [role="button"] {
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid rgba(197, 198, 206, 0.2);
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Custom scrollbar for admin and code views */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.1);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+/* Transitions & Animations */
+.animate-in {
+  animation-duration: 0.5s;
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation-name: fade-in-keyframes;
+}
+
+@keyframes fade-in-keyframes {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.slide-in-from-bottom-4 {
+  animation-name: slide-in-bottom-4-keyframes;
+}
+
+@keyframes slide-in-bottom-4-keyframes {
+  from { transform: translateY(1rem); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }

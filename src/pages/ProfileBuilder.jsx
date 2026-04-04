@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import SideNav from '../components/SideNav'
 import { useAuth } from '../context/AuthContext'
 import { useMasterProfile } from '../hooks/useMasterProfile'
+import { templates, AtelierTemplate, MinimalTemplate, ImpactTemplate } from '../components/ResumeTemplates'
 
 function calcCompletion(f) {
   let score = 0
@@ -27,6 +28,7 @@ const EMPTY_FORM = {
   experience: [], skills: [], education: [], projects: [],
   certifications: [], languages: [], positioning: '',
   career_goals: { target_roles: '', short_term: '', long_term: '' },
+  preferred_template: 'atelier',
 }
 
 function SectionLabel({ children }) {
@@ -244,6 +246,7 @@ function formFromData(data, userFallback = {}) {
     languages: data.languages || [],
     positioning: data.positioning || '',
     career_goals: data.career_goals || { target_roles: '', short_term: '', long_term: '' },
+    preferred_template: data.preferred_template || 'atelier',
   }
 }
 
@@ -256,6 +259,30 @@ export default function ProfileBuilder() {
   const [saveMsg, setSaveMsg] = useState('')
   const [activeSection, setActiveSection] = useState('header')
   const [importBanner, setImportBanner] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
+  const [zoom, setZoom] = useState(60)
+
+  const activeTemplate = form.preferred_template || 'atelier'
+  const ResumeTemplate = activeTemplate === 'atelier'
+    ? AtelierTemplate
+    : activeTemplate === 'minimal'
+      ? MinimalTemplate
+      : ImpactTemplate
+
+  // Mapper layer to fix the preview state bug
+  // Translates Master Profile schema to the Resume UI schema in real-time
+  const mappedProfile = {
+    ...form,
+    contact: [form.email, form.phone, form.location].filter(Boolean).join(' · '),
+    experience: (form.experience || []).map(exp => ({
+      ...exp,
+      title: exp.role || 'Job Title', // Templates expect 'title' within experience objects
+    })),
+    education: (form.education || []).map(edu => ({
+      ...edu,
+      // Other fields remain consistent
+    }))
+  }
 
   useEffect(() => {
     if (profile && !initialized) {
@@ -353,7 +380,7 @@ export default function ProfileBuilder() {
         )}
         {/* Sticky header */}
         <header className="w-full sticky top-0 z-50 glass-panel border-b" style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
-          <div className="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
             <div className="flex items-center gap-4">
               <div className="w-2 h-8 rounded-full" style={{ background: 'linear-gradient(to bottom, #031631, #0e0099)' }} />
               <div>
@@ -369,11 +396,16 @@ export default function ProfileBuilder() {
             </div>
             <div className="flex items-center gap-3">
               {(saveMsg || hookError) && (
-                <span className="text-xs font-bold hidden sm:block"
+                <span className="text-xs font-bold hidden xl:block"
                   style={{ color: saveMsg?.includes('failed') || hookError ? '#93000a' : '#2e7d32' }}>
                   {saveMsg || hookError}
                 </span>
               )}
+              <button onClick={() => setShowPreview(!showPreview)}
+                className="xl:hidden p-2.5 rounded-xl border flex items-center justify-center transition-all bg-white"
+                style={{ borderColor: 'rgba(197,198,206,0.2)', color: '#031631' }}>
+                <span className="material-symbols-outlined text-[20px]">{showPreview ? 'edit_note' : 'visibility'}</span>
+              </button>
               <button onClick={handleSave} disabled={saving}
                 className="px-6 py-2.5 text-sm font-bold text-white rounded-xl shadow-xl active:scale-95 transition-all ai-glow-btn flex items-center gap-2 disabled:opacity-60">
                 <span className={`material-symbols-outlined icon-filled text-[16px] ${saving ? 'animate-spin' : ''}`}>
@@ -385,9 +417,11 @@ export default function ProfileBuilder() {
           </div>
         </header>
 
-        <div className="w-full max-w-4xl flex gap-8 px-6 py-10 pb-32">
-          {/* Left nav */}
-          <aside className="hidden lg:flex flex-col w-48 flex-shrink-0 sticky top-24 self-start">
+        <div className="w-full max-w-[1800px] grid grid-cols-1 xl:grid-cols-12 gap-10 px-6 md:px-12 py-10 pb-32">
+          {/* Left Column (Navigation + Form) */}
+          <div className={`${showPreview ? 'hidden xl:flex' : 'flex'} xl:col-span-8 gap-10`}>
+            {/* Left nav */}
+            <aside className="hidden lg:flex flex-col w-48 flex-shrink-0 sticky top-24 self-start">
             <nav className="space-y-1">
               {NAV_SECTIONS.map(s => (
                 <button key={s.id} onClick={() => scrollTo(s.id)}
@@ -526,6 +560,54 @@ export default function ProfileBuilder() {
             </div>
           </div>
         </div>
+
+          {/* Right Column (Live Preview) */}
+          <div className={`${!showPreview ? 'hidden xl:flex' : 'flex'} xl:col-span-4 flex-col sticky top-24 self-start h-[calc(100vh-120px)]`}>
+          <div className="glass-panel rounded-2xl border h-full flex flex-col overflow-hidden bg-white/50 backdrop-blur-sm"
+            style={{ borderColor: 'rgba(197,198,206,0.15)' }}>
+            
+            {/* Preview Toolbar */}
+            <div className="px-5 py-4 border-b flex items-center justify-between bg-white" style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#031631]">visibility</span>
+                <span className="text-sm font-bold" style={{ color: '#031631' }}>Live Preview</span>
+              </div>
+              <div className="flex items-center gap-1.5 p-1 bg-[#f2f4f6] rounded-lg">
+                {templates.map(t => (
+                  <button key={t.id} onClick={() => update('preferred_template', t.id)}
+                    className="px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all"
+                    style={{ 
+                      backgroundColor: activeTemplate === t.id ? '#031631' : 'transparent',
+                      color: activeTemplate === t.id ? 'white' : '#8293b4'
+                    }}>
+                    {t.label.split(' ')[0]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Preview Stage */}
+            <div className="flex-1 overflow-auto custom-scroll dot-grid p-6 flex justify-center items-start origin-top bg-[#f2f4f6]">
+              <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center', transition: 'transform 0.2s ease' }}>
+                <div className="paper-shadow">
+                  <ResumeTemplate resume={mappedProfile} />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer zoom controls */}
+            <div className="px-5 py-3 border-t bg-white flex items-center justify-center gap-4" style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
+              <button onClick={() => setZoom(z => Math.max(z - 10, 30))} className="text-[#8293b4] hover:text-[#031631]">
+                <span className="material-symbols-outlined text-[20px]">remove</span>
+              </button>
+              <span className="text-xs font-bold w-12 text-center" style={{ color: '#031631' }}>{zoom}%</span>
+              <button onClick={() => setZoom(z => Math.min(z + 10, 100))} className="text-[#8293b4] hover:text-[#031631]">
+                <span className="material-symbols-outlined text-[20px]">add</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
       </main>
     </div>
   )

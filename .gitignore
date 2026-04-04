@@ -1,9 +1,12 @@
 # Dependencies
 node_modules/
+.pnp
+.pnp.js
 
 # Build output
 dist/
 dist-ssr/
+*.local
 
 # Environment variables (NEVER commit these)
 .env
@@ -12,20 +15,43 @@ dist-ssr/
 
 # Editor
 .vscode/
+!.vscode/extensions.json
 .idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+.classpath
+.project
+.settings/
 
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # Vite
 vite.config.js.timestamp*
+
+# Archives/Assets
+*.zip
+*.rar
+*.7z
+*.gz
+*.tar
+stitch_resume_import_flow/
+stitch_resume_import_flow.zip
+
+# Testing
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

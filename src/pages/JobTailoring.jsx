@@ -40,7 +40,7 @@ const STEPS = [
 
 export default function JobTailoring() {
   const navigate = useNavigate()
-  const { user, canUseAI, sessionsLeft, isPro, incrementSessionsUsed } = useAuth()
+  const { user, profile, isPro, updateUsage, checkAccess } = useAuth()
   const { setActiveSession } = useSession()
   const { profile: masterProfile, loading: profileLoading } = useMasterProfile()
   const { createSession, updateSession, saveResumeVersion, saveCoverLetter, saveInterviewPrep } = useSessions()
@@ -51,12 +51,108 @@ export default function JobTailoring() {
   const [phase, setPhase] = useState('input')
   const [currentStep, setCurrentStep] = useState(0)
   const [error, setError] = useState('')
+  const [stepErrors, setStepErrors] = useState({})
   const [results, setResults] = useState(null)
+  const [activeSessionId, setActiveSessionId] = useState(null)
+  const [stepData, setStepData] = useState({})
   const [showUpgradeGate, setShowUpgradeGate] = useState(false)
 
   const hasProfile = masterProfile && (masterProfile.experience?.length > 0 || masterProfile.summary)
 
-  const handleAnalyze = useCallback(async () => {
+  const runStep = useCallback(async (stepId, sessionId) => {
+    setCurrentStep(stepId)
+    setStepErrors(prev => ({ ...prev, [stepId]: null }))
+    setError('')
+
+    try {
+      let currentSessionId = sessionId || activeSessionId
+      let currentMatchData = stepData.matchData
+      let currentTailoredResume = stepData.tailoredResume
+      let currentCoverLetter = stepData.coverLetter
+      let currentInterviewData = stepData.interviewData
+
+      // Step 1: Create Session
+      if (stepId === 1) {
+        if (!currentSessionId) {
+          const s = await createSession({ company, role, jd_text: jdText })
+          currentSessionId = s.id
+          setActiveSessionId(s.id)
+        }
+        return runStep(2, currentSessionId)
+      }
+
+      // Step 2: Build match score
+      if (stepId === 2) {
+        const matchData = await analyzeJobMatch({ masterProfile, jdText })
+        await updateSession(currentSessionId, {
+          match_score: matchData.match_score,
+          matched_skills: matchData.matched_skills,
+          gaps: matchData.gaps,
+          ats_keywords: matchData.ats_keywords,
+        })
+        setStepData(prev => ({ ...prev, matchData }))
+        return runStep(3, currentSessionId)
+      }
+
+      // Step 3: Tailor resume
+      if (stepId === 3) {
+        const tailoredResume = await generateTailoredResume({ 
+          masterProfile, 
+          jdText, 
+          matchData: stepData.matchData, 
+          company, 
+          role 
+        })
+        await saveResumeVersion({ sessionId: currentSessionId, title: `${role} — ${company}`, content: tailoredResume })
+        setStepData(prev => ({ ...prev, tailoredResume }))
+        return runStep(4, currentSessionId)
+      }
+
+      // Step 4: Write cover letter
+      if (stepId === 4) {
+        const coverLetterText = await generateCoverLetter({ masterProfile, jdText, company, role, tone: 'Professional' })
+        await saveCoverLetter({ sessionId: currentSessionId, tone: 'Professional', content: coverLetterText })
+        setStepData(prev => ({ ...prev, coverLetter: coverLetterText }))
+        return runStep(5, currentSessionId)
+      }
+
+      // Step 5: Generate interview prep
+      if (stepId === 5) {
+        const interviewData = await generateInterviewQuestions({ masterProfile, jdText, company, role })
+        await saveInterviewPrep({ sessionId: currentSessionId, questions: interviewData.questions })
+        
+        // Finalize
+        const payload = { 
+          sessionId: currentSessionId, 
+          company, 
+          role, 
+          matchData: stepData.matchData, 
+          tailoredResume: stepData.tailoredResume, 
+          coverLetter: stepData.coverLetter, 
+          interviewData 
+        }
+        setActiveSession(payload)
+        await updateUsage('tailor').catch(err => console.error('Usage sync failed:', err))
+        setResults(payload)
+        setPhase('results')
+      }
+
+    } catch (err) {
+      console.error(`Step ${stepId} failed:`, err)
+      
+      // If it's a session limit error, show the gate immediately
+      if (err.message === 'SESSION_LIMIT_REACHED') {
+        setShowUpgradeGate(true)
+        setPhase('input')
+        return
+      }
+
+      setStepErrors(prev => ({ ...prev, [stepId]: err.message || 'AI step failed' }))
+      setError(err.message || 'Something went wrong. You can retry the failed step below.')
+    }
+  }, [company, role, jdText, masterProfile, activeSessionId, stepData, createSession, updateSession, saveResumeVersion, saveCoverLetter, saveInterviewPrep, setActiveSession, updateUsage])
+
+  const handleAnalyze = useCallback(() => {
     if (!company.trim() || !role.trim() || !jdText.trim()) {
       setError('Please fill in the company, role, and job description.')
       return
@@ -65,57 +161,19 @@ export default function JobTailoring() {
       setError('Please build your Master Profile first — I need your experience to tailor your resume.')
       return
     }
-    if (!canUseAI) {
+    const access = checkAccess('tailor')
+    if (!access.allowed) {
       setShowUpgradeGate(true)
       return
     }
 
     setError('')
+    setStepErrors({})
+    setStepData({})
+    setActiveSessionId(null)
     setPhase('analyzing')
-    setCurrentStep(1)
-
-    try {
-      const session = await createSession({ company, role, jd_text: jdText })
-
-      setCurrentStep(2)
-      const matchData = await analyzeJobMatch({ masterProfile, jdText })
-      await updateSession(session.id, {
-        match_score: matchData.match_score,
-        matched_skills: matchData.matched_skills,
-        gaps: matchData.gaps,
-        ats_keywords: matchData.ats_keywords,
-      })
-
-      setCurrentStep(3)
-      const tailoredResume = await generateTailoredResume({ masterProfile, jdText, matchData, company, role })
-      await saveResumeVersion({ sessionId: session.id, title: `${role} — ${company}`, content: tailoredResume })
-
-      setCurrentStep(4)
-      const coverLetterText = await generateCoverLetter({ masterProfile, jdText, company, role, tone: 'Professional' })
-      await saveCoverLetter({ sessionId: session.id, tone: 'Professional', content: coverLetterText })
-
-      setCurrentStep(5)
-      const interviewData = await generateInterviewQuestions({ masterProfile, jdText, company, role })
-      await saveInterviewPrep({ sessionId: session.id, questions: interviewData.questions })
-
-      // Store results in context so Editor / CoverLetter / InterviewPrep can read them
-      const sessionPayload = { sessionId: session.id, company, role, matchData, tailoredResume, coverLetter: coverLetterText, interviewData }
-      setActiveSession(sessionPayload)
-
-      // Increment free-tier counter
-      if (!isPro) await incrementSessionsUsed().catch(() => {})
-
-      setResults(sessionPayload)
-      setPhase('results')
-    } catch (err) {
-      console.error('Tailoring failed:', err)
-      setError(err.message || 'Something went wrong. Please try again.')
-      setPhase('input')
-      setCurrentStep(0)
-    }
-  }, [company, role, jdText, masterProfile, canUseAI, hasProfile, isPro,
-    createSession, updateSession, saveResumeVersion, saveCoverLetter, saveInterviewPrep,
-    setActiveSession, incrementSessionsUsed])
+    runStep(1)
+  }, [company, role, jdText, hasProfile, checkAccess, runStep])
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f7f9fb' }}>
@@ -133,19 +191,19 @@ export default function JobTailoring() {
                 FREE SESSIONS USED
               </div>
               <h2 className="text-3xl font-extrabold tracking-tight mb-3" style={{ fontFamily: 'Manrope', color: '#031631' }}>
-                Unlock Unlimited AI
+                Upgrade to Pro
               </h2>
               <p className="mb-8 leading-relaxed" style={{ color: '#44474d' }}>
-                You've used all <strong>3 free sessions</strong>. Upgrade to Pro for unlimited resume tailoring,
-                cover letters, interview prep, and PDF exports.
+                You've reached your monthly limit for free sessions. Upgrade to Pro for 50 monthly tailorings,
+                unlimited cover letters, and priority AI processing.
               </p>
               <div className="p-6 rounded-2xl mb-8 text-left" style={{ backgroundColor: '#f2f4f6' }}>
                 <div className="flex items-end gap-2 mb-3">
-                  <span className="text-4xl font-black" style={{ fontFamily: 'Manrope', color: '#031631' }}>$19</span>
+                  <span className="text-4xl font-black" style={{ fontFamily: 'Manrope', color: '#031631' }}>$9.99</span>
                   <span className="text-sm font-semibold mb-2" style={{ color: '#44474d' }}>/month</span>
                 </div>
                 <ul className="space-y-2">
-                  {['Unlimited tailoring sessions', 'AI cover letter generator', 'Interview STAR prep', 'PDF export + all templates', 'Priority AI processing'].map(f => (
+                  {['50 tailoring sessions / mo', 'AI cover letter generator', 'Interview STAR prep', 'PDF export + all templates', 'Priority AI processing'].map(f => (
                     <li key={f} className="flex items-center gap-2 text-sm" style={{ color: '#031631' }}>
                       <span className="material-symbols-outlined icon-filled text-[16px]" style={{ color: '#0e0099' }}>check_circle</span>
                       {f}
@@ -155,7 +213,7 @@ export default function JobTailoring() {
               </div>
               <button onClick={() => navigate('/pricing')}
                 className="w-full py-4 text-white font-bold rounded-2xl shadow-xl transition-all active:scale-95 ai-glow-btn text-base mb-3">
-                Upgrade to Pro — $19/mo
+                Upgrade to Pro — $9.99/mo
               </button>
               <button onClick={() => setShowUpgradeGate(false)}
                 className="w-full py-3 font-semibold text-sm transition-colors hover:opacity-70"
@@ -181,12 +239,12 @@ export default function JobTailoring() {
                 <p style={{ color: '#44474d' }}>Paste a job description and get a fully tailored resume, cover letter, and interview prep.</p>
                 {!isPro && (
                   <div className="flex items-center gap-2 mt-4 px-3 py-2 rounded-xl inline-flex"
-                    style={{ backgroundColor: sessionsLeft <= 1 ? '#ffdad6' : '#e1e0ff' }}>
+                    style={{ backgroundColor: (profile?.tailors_used || 0) >= 2 ? '#ffdad6' : '#e1e0ff' }}>
                     <span className="material-symbols-outlined icon-filled text-[14px]"
-                      style={{ color: sessionsLeft <= 1 ? '#93000a' : '#2f2ebe' }}>info</span>
+                      style={{ color: (profile?.tailors_used || 0) >= 2 ? '#93000a' : '#2f2ebe' }}>info</span>
                     <span className="text-xs font-bold"
-                      style={{ color: sessionsLeft <= 1 ? '#93000a' : '#2f2ebe' }}>
-                      {sessionsLeft} free {sessionsLeft === 1 ? 'session' : 'sessions'} remaining
+                      style={{ color: (profile?.tailors_used || 0) >= 2 ? '#93000a' : '#2f2ebe' }}>
+                      {Math.max(0, 2 - (profile?.tailors_used || 0))} free sessions remaining
                     </span>
                   </div>
                 )}
@@ -327,33 +385,61 @@ export default function JobTailoring() {
             </div>
             <div className="space-y-3 w-full max-w-sm">
               {STEPS.map(step => {
-                const done = currentStep > step.id
-                const active = currentStep === step.id
+                const done = currentStep > step.id || (currentStep === 5 && results)
+                const active = currentStep === step.id && !stepErrors[step.id]
+                const failed = !!stepErrors[step.id]
+
                 return (
                   <div key={step.id} className="flex items-center gap-4 p-4 rounded-xl transition-all"
                     style={{
-                      backgroundColor: active ? 'white' : 'transparent',
-                      boxShadow: active ? '0 4px 20px rgba(3,22,49,0.08)' : 'none',
+                      backgroundColor: active || failed ? 'white' : 'transparent',
+                      boxShadow: active || failed ? '0 4px 20px rgba(3,22,49,0.08)' : 'none',
+                      border: failed ? '1px solid #ffdad6' : 'none'
                     }}>
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: done ? '#031631' : active ? '#e1e0ff' : '#eceef0' }}>
+                      style={{ backgroundColor: done ? '#031631' : failed ? '#ffdad6' : active ? '#e1e0ff' : '#eceef0' }}>
                       {done
                         ? <span className="material-symbols-outlined icon-filled text-[16px] text-white">check</span>
+                        : failed 
+                        ? <span className="material-symbols-outlined icon-filled text-[16px] text-[#93000a]">report</span>
                         : <span className={`material-symbols-outlined icon-filled text-[16px] ${active ? 'animate-spin' : ''}`}
                           style={{ color: active ? '#0e0099' : '#c5c6ce' }}>
                           {active ? 'progress_activity' : step.icon}
                         </span>
                       }
                     </div>
-                    <span className="font-semibold text-sm" style={{ color: done || active ? '#031631' : '#c5c6ce' }}>
-                      {step.label}
-                    </span>
-                    {done && <span className="ml-auto text-xs font-bold" style={{ color: '#0e0099' }}>Done</span>}
-                    {active && <span className="ml-auto text-xs font-bold animate-pulse" style={{ color: '#0e0099' }}>Working...</span>}
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm" style={{ color: done || active ? '#031631' : failed ? '#93000a' : '#c5c6ce' }}>
+                        {step.label}
+                      </p>
+                      {failed && <p className="text-[10px] font-bold text-[#93000a] mt-0.5">Connection lost or AI timed out</p>}
+                    </div>
+                    
+                    {done && <span className="text-xs font-bold" style={{ color: '#0e0099' }}>Done</span>}
+                    {active && <span className="text-xs font-bold animate-pulse" style={{ color: '#0e0099' }}>Working...</span>}
+                    {failed && (
+                      <button 
+                        onClick={() => runStep(step.id)}
+                        className="px-3 py-1.5 rounded-lg bg-[#93000a] text-white text-[10px] font-bold uppercase tracking-widest active:scale-95 transition-all"
+                      >
+                        Retry
+                      </button>
+                    )}
                   </div>
                 )
               })}
             </div>
+
+            {error && (
+              <div className="max-w-sm w-full p-4 rounded-2xl flex items-center gap-3 bg-white border border-[#ffdad6] shadow-sm animate-slide-in">
+                <span className="material-symbols-outlined icon-filled text-[20px] text-[#93000a]">error</span>
+                <div className="flex-1">
+                  <p className="text-[11px] font-bold text-[#93000a] uppercase tracking-widest">Error</p>
+                  <p className="text-xs font-medium text-[#031631]">{error}</p>
+                </div>
+                <button onClick={() => setPhase('input')} className="text-[10px] font-black uppercase text-[#8293b4]">Cancel</button>
+              </div>
+            )}
           </div>
         )}
 
@@ -374,10 +460,10 @@ export default function JobTailoring() {
                     style={{ color: '#031631' }}>
                     New Analysis
                   </button>
-                  <button onClick={() => navigate('/app/editor')}
+                  <button onClick={() => navigate(`/app/session/${results.sessionId}`)}
                     className="px-5 py-2 text-white text-sm font-bold rounded-xl ai-glow-btn flex items-center gap-1.5">
-                    <span className="material-symbols-outlined icon-filled text-[16px]">edit_document</span>
-                    Open Resume Editor
+                    <span className="material-symbols-outlined icon-filled text-[16px]">rocket_launch</span>
+                    Open Command Center
                   </button>
                 </div>
               </div>
@@ -452,9 +538,9 @@ export default function JobTailoring() {
                 <h3 className="font-bold mb-4" style={{ color: '#031631' }}>Next Steps</h3>
                 <div className="space-y-3">
                   {[
-                    { icon: 'description', label: 'Edit Resume', route: '/app/editor', color: '#031631' },
-                    { icon: 'mail', label: 'Refine Cover Letter', route: '/app/cover-letter', color: '#0e0099' },
-                    { icon: 'psychology', label: 'Practice Interview', route: '/app/interview', color: '#2f2ebe' },
+                    { icon: 'description', label: 'Edit Resume', route: `/app/session/${results.sessionId}?tab=resume`, color: '#031631' },
+                    { icon: 'mail', label: 'Refine Cover Letter', route: `/app/session/${results.sessionId}?tab=cover`, color: '#0e0099' },
+                    { icon: 'psychology', label: 'Practice Interview', route: `/app/session/${results.sessionId}?tab=interview`, color: '#2f2ebe' },
                   ].map(a => (
                     <button key={a.label} onClick={() => navigate(a.route)}
                       className="w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all hover:bg-[#f2f4f6]">
@@ -472,7 +558,7 @@ export default function JobTailoring() {
               <div className="lg:col-span-3 bg-white rounded-2xl p-6" style={{ boxShadow: '0 4px 24px rgba(3,22,49,0.06)' }}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold" style={{ color: '#031631' }}>Cover Letter Preview</h3>
-                  <button onClick={() => navigate('/app/cover-letter')}
+                  <button onClick={() => navigate(`/app/session/${results.sessionId}?tab=cover`)}
                     className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all hover:bg-[#eceef0]"
                     style={{ color: '#0e0099' }}>
                     Open Full Editor →

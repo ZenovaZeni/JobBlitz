@@ -4,38 +4,92 @@
  */
 
 import { supabase } from './supabase'
+import { logger } from './logger'
 
-async function callAI(messages, options = {}) {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) throw new Error('Not authenticated')
+/**
+ * Calls our Supabase Edge Function to proxy OpenAI requests.
+ * Includes a retry mechanism (up to 2 retries) for better stability.
+ */
+export async function callAI(messages, options = {}, retryCount = 0) {
+  const MAX_RETRIES = 2
+  const delay = Math.pow(2, retryCount) * 1000 // Exponential backoff (1s, 2s)
 
-  const edgeFunctionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai-proxy`
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) throw new Error('Not authenticated')
 
-  const res = await fetch(edgeFunctionUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session.access_token}`,
-    },
-    body: JSON.stringify({ messages, options }),
-  })
+    const edgeFunctionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai-proxy`
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    if (err.error === 'SESSION_LIMIT_REACHED') {
-      throw Object.assign(new Error('SESSION_LIMIT_REACHED'), { code: 'SESSION_LIMIT_REACHED' })
+    const res = await fetch(edgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ messages, options }),
+    })
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      
+      // If limit reached (403), stop retrying
+      if (res.status === 403) {
+        throw Object.assign(new Error('SESSION_LIMIT_REACHED'), { code: 'SESSION_LIMIT_REACHED' })
+      }
+      
+      // If server error or rate limit and we have retries left, wait and retry
+      if ((res.status >= 500 || res.status === 429) && retryCount < MAX_RETRIES) {
+        console.warn(`AI request failed (${res.status}). Retrying in ${delay}ms... (Attempt ${retryCount + 1}/${MAX_RETRIES})`)
+        await new Promise(r => setTimeout(r, delay))
+        return callAI(messages, options, retryCount + 1)
+      }
+
+      await logger.error('generation', 'callAI', `AI request failed: ${res.status}`, {
+        status: res.status,
+        error: err,
+        retry_count: retryCount
+      }, user?.id)
+
+      throw new Error(err?.error || `AI request failed (${res.status})`)
     }
-    throw new Error(err?.error || `AI request failed (${res.status})`)
-  }
 
-  const data = await res.json()
-  const content = data.content ?? ''
+    const data = await res.json()
+    const content = data.choices?.[0]?.message?.content ?? data.content ?? ''
 
-  if (options.json) {
-    try { return JSON.parse(content) }
-    catch { throw new Error('AI returned invalid JSON') }
+    // Log successful generation
+    await logger.info('generation', 'callAI', 'AI content generated successfully', {
+      tokens: data.usage?.total_tokens,
+      model: data.model,
+      retry_count: retryCount
+    }, user?.id)
+
+    if (options.json) {
+      try {
+        return typeof content === 'string' ? JSON.parse(content) : content
+      } catch { 
+        await logger.error('generation', 'parse_error', 'AI returned invalid JSON', { content }, user?.id)
+        throw new Error('AI returned invalid JSON') 
+      }
+    }
+    return content
+  } catch (error) {
+    // If it's a non-retryable error (limit, auth), throw it
+    if (error.code === 'SESSION_LIMIT_REACHED' || error.message === 'Not authenticated') {
+      throw error
+    }
+
+    // Generic retry for other errors (network, timeout)
+    if (retryCount < MAX_RETRIES) {
+      console.warn(`AI request error: ${error.message}. Retrying... (Attempt ${retryCount + 1}/${MAX_RETRIES})`)
+      await new Promise(r => setTimeout(r, delay))
+      return callAI(messages, options, retryCount + 1)
+    }
+
+    throw error
   }
-  return content
 }
 
 // =============================================

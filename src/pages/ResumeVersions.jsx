@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom'
 import SideNav from '../components/SideNav'
-import { useSession } from '../context/SessionContext'
 import { useSessions } from '../hooks/useSessions'
 import { useMasterProfile } from '../hooks/useMasterProfile'
 
@@ -44,27 +43,11 @@ function ScoreBadge({ score }) {
 
 export default function ResumeVersions() {
   const navigate = useNavigate()
-  const { setActiveSession } = useSession()
   const { sessions, loading } = useSessions()
   const { profile: masterProfile } = useMasterProfile()
 
   function openSession(session) {
-    setActiveSession({
-      sessionId: session.id,
-      company: session.company,
-      role: session.role,
-      jdText: session.jd_text,
-      matchData: {
-        match_score: session.match_score,
-        matched_skills: session.matched_skills,
-        gaps: session.gaps,
-        ats_keywords: session.ats_keywords,
-      },
-      tailoredResume: session.tailored_resume,
-      coverLetter: session.cover_letter,
-      interviewData: session.interview_prep,
-    })
-    navigate('/app/editor')
+    navigate(`/app/session/${session.id}`)
   }
 
   const avgScore = sessions.length && sessions.some(s => s.match_score)
@@ -75,7 +58,8 @@ export default function ResumeVersions() {
     <div className="flex min-h-screen" style={{ backgroundColor: '#f7f9fb' }}>
       <SideNav />
 
-      <main className="flex-1 px-4 md:px-8 lg:px-12 py-6 md:py-12 overflow-y-auto pb-24 md:pb-12">
+      <main className="flex-1 px-4 md:px-8 lg:px-12 py-6 md:py-12 overflow-y-auto pb-24 md:pb-12 flex flex-col items-center">
+        <div className="w-full max-w-7xl mx-auto">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
@@ -122,11 +106,13 @@ export default function ResumeVersions() {
                 style={{ color: '#031631' }}>
                 Edit Profile
               </button>
-              <button onClick={() => navigate('/app/editor')}
-                className="px-5 py-2.5 rounded-xl font-bold text-sm border transition-all hover:bg-white/10"
-                style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'white' }}>
-                View Resume
-              </button>
+              {sessions.length > 0 && (
+                <button onClick={() => navigate(`/app/session/${sessions[0].id}`)}
+                  className="px-5 py-2.5 rounded-xl font-bold text-sm border transition-all hover:bg-white/10"
+                  style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'white' }}>
+                  View Latest
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -228,20 +214,20 @@ export default function ResumeVersions() {
 
                     {/* Actions */}
                     <div className="flex gap-2" onClick={e => e.stopPropagation()}>
-                      <button onClick={() => openSession(session)}
+                      <button onClick={() => navigate(`/app/session/${session.id}?tab=resume`)}
                         className="flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all hover:opacity-90 text-white"
                         style={{ backgroundColor: color }}>
                         Edit
                       </button>
                       <button
-                        onClick={() => navigate('/app/cover-letter')}
+                        onClick={() => navigate(`/app/session/${session.id}?tab=cover`)}
                         className="p-2 rounded-lg transition-all hover:bg-[#eceef0]"
                         style={{ color: '#44474d' }}
                         title="Cover Letter">
                         <span className="material-symbols-outlined text-[16px]">mail</span>
                       </button>
                       <button
-                        onClick={() => navigate('/app/interview')}
+                        onClick={() => navigate(`/app/session/${session.id}?tab=interview`)}
                         className="p-2 rounded-lg transition-all hover:bg-[#eceef0]"
                         style={{ color: '#44474d' }}
                         title="Interview Prep">
@@ -265,6 +251,7 @@ export default function ResumeVersions() {
             </div>
           </div>
         )}
+        </div>
       </main>
     </div>
   )

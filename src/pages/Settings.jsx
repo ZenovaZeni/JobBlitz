@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SideNav from '../components/SideNav'
 import { useAuth } from '../context/AuthContext'
@@ -60,13 +60,23 @@ function SaveBtn({ onClick, saving, saved, disabled }) {
 
 export default function Settings() {
   const navigate = useNavigate()
-  const { user, profile, updateProfile, signOut, isPro, sessionsLeft } = useAuth()
+  const { user, profile, isPro, updateProfile, signOut } = useAuth()
 
   // Account state
-  const [fullName, setFullName] = useState(profile?.full_name || '')
+  const [firstName, setFirstName] = useState(profile?.first_name || '')
+  const [lastName, setLastName] = useState(profile?.last_name || '')
   const [accountSaving, setAccountSaving] = useState(false)
   const [accountSaved, setAccountSaved] = useState(false)
   const [accountError, setAccountError] = useState('')
+  const [portalLoading, setPortalLoading] = useState(false)
+
+  // Sync state if profile loads later
+  useEffect(() => {
+    if (profile) {
+      setFirstName(profile.first_name || '')
+      setLastName(profile.last_name || '')
+    }
+  }, [profile])
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState('')
@@ -92,14 +102,30 @@ export default function Settings() {
     setAccountError('')
     setAccountSaved(false)
     try {
-      await updateProfile({ full_name: fullName })
-      await supabase.auth.updateUser({ data: { full_name: fullName } })
+      await updateProfile({ first_name: firstName, last_name: lastName })
+      await supabase.auth.updateUser({ data: { first_name: firstName, last_name: lastName } })
       setAccountSaved(true)
       setTimeout(() => setAccountSaved(false), 3000)
     } catch (err) {
       setAccountError(err.message || 'Failed to update account.')
     } finally {
       setAccountSaving(false)
+    }
+  }
+
+  async function handleManageBilling() {
+    setPortalLoading(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-portal')
+      if (error) throw error
+      
+      if (data?.redirect) navigate(data.redirect)
+      else if (data?.url) window.location.href = data.url
+    } catch (err) {
+      console.error('Portal error:', err)
+      alert(`Portal failed: ${err.message || 'Unknown error'}`)
+    } finally {
+      setPortalLoading(false)
     }
   }
 
@@ -156,7 +182,7 @@ export default function Settings() {
       .from('sessions').select('*').eq('user_id', user.id)
 
     const exportData = {
-      account: { email: user.email, name: profile?.full_name, created_at: user.created_at },
+      account: { email: user.email, name: `${profile?.first_name} ${profile?.last_name}`, created_at: user.created_at },
       profile: masterProfile,
       sessions,
       exported_at: new Date().toISOString(),
@@ -172,29 +198,34 @@ export default function Settings() {
   }
 
   const planLabel = isPro ? 'Pro' : 'Free'
-  const sessionDisplay = isPro ? 'Unlimited' : `${sessionsLeft} of ${profile?.sessions_limit ?? 3} remaining`
+  
+  const sessionsUsed = profile?.sessions_used || 0
+  const sessionsLimit = profile?.sessions_limit || 5
 
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: '#f7f9fb' }}>
       <SideNav />
 
       <main className="flex-1 px-4 md:px-8 lg:px-12 py-8 md:py-12 overflow-y-auto pb-24 md:pb-12">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
 
           {/* Page header */}
           <div className="mb-8">
             <h1 className="text-3xl font-extrabold tracking-tight" style={{ fontFamily: 'Manrope', color: '#031631', letterSpacing: '-0.02em' }}>
               Settings
             </h1>
-            <p className="mt-1 text-sm" style={{ color: '#44474d' }}>Manage your account, subscription, and preferences.</p>
+            <p className="mt-1 text-sm" style={{ color: '#44474d' }}>Manage your account, billing, and preferences.</p>
           </div>
 
           <div className="space-y-6">
 
             {/* Account */}
             <Section title="Account" subtitle="Your personal information and login details.">
-              <Field label="Full Name">
-                <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Your full name" />
+              <Field label="First Name">
+                <Input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" />
+              </Field>
+              <Field label="Last Name">
+                <Input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" />
               </Field>
               <Field label="Email Address" hint="Contact support to change your email.">
                 <Input value={user?.email || ''} disabled />
@@ -227,33 +258,39 @@ export default function Settings() {
                   </span>
                   {isPro && (
                     <span className="text-xs" style={{ color: '#75777e' }}>
-                      Renews {profile?.subscription_status === 'active' ? 'monthly' : 'N/A'}
+                      {profile?.cancel_at_period_end 
+                        ? `Pro ends ${new Date(profile?.current_period_end).toLocaleDateString()}`
+                        : `Renews ${new Date(profile?.current_period_end).toLocaleDateString()}`
+                      }
                     </span>
                   )}
                 </div>
               </Field>
-              <Field label="AI Sessions" hint="Each tailored application uses one session.">
-                <p className="text-sm font-semibold" style={{ color: '#031631' }}>{sessionDisplay}</p>
-                {!isPro && (
-                  <div className="mt-2 h-2 rounded-full overflow-hidden" style={{ backgroundColor: '#eceef0', maxWidth: '200px' }}>
-                    <div className="h-full rounded-full"
-                      style={{
-                        width: `${Math.max(0, 100 - (sessionsLeft / (profile?.sessions_limit ?? 3)) * 100)}%`,
-                        background: 'linear-gradient(90deg, #0e0099, #2f2ebe)',
-                        transition: 'width 0.5s',
+              <Field label="Monthly Usage" hint="Resets at start of each billing cycle.">
+                {/* Sessions */}
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="font-semibold" style={{ color: '#031631' }}>Tailoring Sessions</span>
+                    <span style={{ color: '#75777e' }}>{sessionsUsed} / {sessionsLimit}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: '#eceef0' }}>
+                    <div className="h-full rounded-full transition-all duration-700"
+                      style={{ 
+                        width: `${Math.min(100, (sessionsUsed / sessionsLimit) * 100)}%`, 
+                        background: 'linear-gradient(90deg, #0e0099, #2f2ebe)' 
                       }} />
                   </div>
-                )}
+                </div>
               </Field>
               {!isPro && (
                 <Field label="Upgrade">
                   <div className="p-5 rounded-2xl border" style={{ borderColor: 'rgba(14,0,153,0.15)', backgroundColor: 'rgba(225,224,255,0.15)' }}>
                     <p className="font-bold mb-1" style={{ color: '#031631' }}>Unlock Unlimited Access</p>
                     <p className="text-sm mb-4" style={{ color: '#44474d' }}>
-                      $19/month — unlimited sessions, all templates, PDF export, priority AI.
+                      $9.99/month — 50 sessions, all templates, PDF export, priority AI.
                     </p>
                     <button
-                      onClick={() => alert('Stripe integration coming soon — contact us to upgrade manually.')}
+                      onClick={() => navigate('/pricing')}
                       className="px-5 py-2.5 text-white text-sm font-bold rounded-xl ai-glow-btn">
                       Upgrade to Pro →
                     </button>
@@ -263,9 +300,10 @@ export default function Settings() {
               {isPro && (
                 <Field label="Billing">
                   <button
-                    onClick={() => alert('Stripe customer portal coming soon.')}
-                    className="px-4 py-2 text-sm font-bold rounded-xl border transition-all hover:bg-[#f2f4f6]"
+                    onClick={handleManageBilling} disabled={portalLoading}
+                    className="px-4 py-2 text-sm font-bold rounded-xl border transition-all hover:bg-[#f2f4f6] flex items-center justify-center gap-2"
                     style={{ borderColor: 'rgba(197,198,206,0.4)', color: '#031631' }}>
+                    {portalLoading ? <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span> : null}
                     Manage Billing →
                   </button>
                 </Field>

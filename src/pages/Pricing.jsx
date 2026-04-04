@@ -1,8 +1,10 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
 
 const FREE_FEATURES = [
-  '3 AI tailoring sessions',
+  '5 AI tailoring sessions',
   'Match score & skill gap analysis',
   'ATS-optimized resume',
   'Cover letter generation',
@@ -37,24 +39,42 @@ const FAQS = [
   },
   {
     q: 'What AI model powers JobBlitz?',
-    a: 'We use GPT-4o mini — a state-of-the-art model optimized for professional writing. Your API key is kept secure server-side.',
+    a: 'We use GPT-4o mini — a state-of-the-art model optimized for professional writing. Security and privacy are our top priorities.',
   },
   {
     q: 'What if I run out of free sessions?',
-    a: 'You can still view your existing tailored resumes, cover letters, and interview prep. You just need Pro to run new sessions.',
+    a: 'You can still view your existing sessions. You just need Pro to run new ones once you hit your monthly limit (5/mo).',
   },
 ]
 
 export default function Pricing() {
   const navigate = useNavigate()
-  const { user, isPro } = useAuth()
+  const { user, isPro, loading: authLoading } = useAuth()
+  const [loading, setLoading] = useState(false)
 
-  function handleCTA() {
+  useEffect(() => {
+    document.title = 'Pricing | JobBlitz'
+  }, [])
+
+  async function handleCTA() {
     if (!user) {
       navigate('/auth/signup')
-    } else {
-      // Stripe integration placeholder
-      alert('Stripe integration coming soon — contact us to upgrade manually.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: { priceId: import.meta.env.VITE_STRIPE_PRO_PRICE_ID },
+      })
+
+      if (error) throw error
+      if (data?.url) window.location.href = data.url
+    } catch (err) {
+      console.error('Checkout error:', err)
+      alert(`Checkout failed: ${err.message || 'Unknown error'}`)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -103,7 +123,7 @@ export default function Pricing() {
             Start free. Upgrade when ready.
           </h1>
           <p className="text-lg max-w-xl mx-auto leading-relaxed" style={{ color: '#44474d' }}>
-            3 full tailoring sessions on us — no credit card required. Upgrade to Pro when you're ready for unlimited.
+            2 full tailoring sessions every month on us. Upgrade to Pro when you're ready for more.
           </p>
         </div>
 
@@ -146,7 +166,7 @@ export default function Pricing() {
             <div className="mb-6">
               <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Pro</p>
               <div className="flex items-end gap-2">
-                <span className="text-5xl font-black" style={{ fontFamily: 'Manrope' }}>$19</span>
+                <span className="text-5xl font-black" style={{ fontFamily: 'Manrope' }}>$9.99</span>
                 <span className="text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>/month</span>
               </div>
             </div>
@@ -164,9 +184,10 @@ export default function Pricing() {
                 You're on Pro ✓
               </div>
             ) : (
-              <button onClick={handleCTA}
-                className="w-full py-3.5 text-sm font-bold rounded-xl transition-all active:scale-95 hover:shadow-xl"
+              <button onClick={handleCTA} disabled={loading}
+                className="w-full py-3.5 text-sm font-bold rounded-xl transition-all active:scale-95 hover:shadow-xl flex items-center justify-center gap-2"
                 style={{ backgroundColor: 'white', color: '#031631' }}>
+                {loading ? <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> : null}
                 Upgrade to Pro
               </button>
             )}
@@ -186,7 +207,7 @@ export default function Pricing() {
               <div className="text-center font-bold text-sm" style={{ color: '#0e0099' }}>Pro</div>
             </div>
             {[
-              ['Tailoring sessions', '3 total', 'Unlimited'],
+              ['Tailoring sessions', '2 / month', '50 / month'],
               ['Match score + gap analysis', true, true],
               ['ATS-optimized resume', true, true],
               ['Cover letter generation', true, true],
@@ -247,7 +268,7 @@ export default function Pricing() {
             <button onClick={() => user ? navigate('/app/dashboard') : navigate('/auth/signup')}
               className="px-8 py-4 font-bold rounded-xl text-[#031631] transition-all active:scale-95 hover:shadow-xl text-sm"
               style={{ backgroundColor: 'white' }}>
-              {user ? 'Go to Dashboard →' : 'Create Free Account →'}
+              {user ? 'Go to Dashboard →' : 'Start for Free →'}
             </button>
           </div>
         </div>

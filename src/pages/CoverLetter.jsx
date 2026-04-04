@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SideNav from '../components/SideNav'
+import { useAuth } from '../context/AuthContext'
 import { useSession } from '../context/SessionContext'
 import { generateCoverLetter } from '../lib/openai'
 import { useSessions } from '../hooks/useSessions'
@@ -13,6 +14,7 @@ export default function CoverLetter() {
   const { activeSession } = useSession()
   const { saveCoverLetter } = useSessions()
   const { profile: masterProfile } = useMasterProfile()
+  const { checkAccess, updateUsage } = useAuth()
 
   const [tone, setTone] = useState('Professional')
   const [letterText, setLetterText] = useState(activeSession?.coverLetter || '')
@@ -28,7 +30,11 @@ export default function CoverLetter() {
 
   async function handleRegenerate() {
     if (!activeSession || !masterProfile) return
-    setGenerating(true)
+    const access = checkAccess('cover_letter')
+    if (!access.allowed) {
+      alert(access.reason)
+      return
+    }
     setError('')
     try {
       const newLetter = await generateCoverLetter({
@@ -40,6 +46,7 @@ export default function CoverLetter() {
       })
       setLetterText(newLetter)
       await saveCoverLetter({ sessionId: activeSession.sessionId, tone, content: newLetter })
+      await updateUsage('cover_letter').catch(err => console.error('Usage sync failed:', err))
     } catch (err) {
       setError(err.message || 'Failed to regenerate. Please try again.')
     } finally {
@@ -172,10 +179,10 @@ export default function CoverLetter() {
                     {letterText.split(/\s+/).filter(Boolean).length} words
                   </p>
                   <div className="flex gap-3">
-                    <button onClick={() => navigate('/app/editor')}
+                    <button onClick={() => navigate(`/app/session/${activeSession.sessionId}?tab=resume`)}
                       className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all hover:bg-[#eceef0]"
                       style={{ color: '#031631' }}>View Resume →</button>
-                    <button onClick={() => navigate('/app/interview')}
+                    <button onClick={() => navigate(`/app/session/${activeSession.sessionId}?tab=interview`)}
                       className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all hover:bg-[#eceef0]"
                       style={{ color: '#0e0099' }}>Interview Prep →</button>
                   </div>

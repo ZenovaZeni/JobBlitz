@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import logoWordmark from '../../assets/brand/jobblitz-wordmark-transparent.png'
 
 export default function Login() {
   const navigate = useNavigate()
-  const { signIn, signInWithGoogle, user, loading } = useAuth()
+  const { signIn, signInWithGoogle, user, loading: authLoading } = useAuth()
 
   useEffect(() => {
-    if (!loading && user) navigate('/app/dashboard', { replace: true })
-  }, [user, loading, navigate])
+    document.title = 'Login | JobBlitz'
+    if (!authLoading && user) navigate('/app/dashboard', { replace: true })
+  }, [user, authLoading, navigate])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -41,7 +43,8 @@ export default function Login() {
       {/* Left panel — hidden on mobile */}
       <div className="hidden lg:flex flex-col justify-between w-1/2 p-16 text-white"
         style={{ background: 'linear-gradient(135deg, #031631 0%, #0e0099 100%)' }}>
-        <div className="text-2xl font-black tracking-tighter" style={{ fontFamily: 'Manrope' }}>JobBlitz</div>
+        <img src={logoWordmark} alt="JobBlitz" className="h-10 w-fit object-contain brightness-0 invert" 
+          style={{ filter: 'brightness(0) invert(1)' }} />
         <div>
           <h2 className="text-4xl font-extrabold leading-tight mb-6" style={{ fontFamily: 'Manrope' }}>
             Your career data,<br />curated and ready<br />for every opportunity.
@@ -66,9 +69,9 @@ export default function Login() {
       {/* Right panel */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 md:p-8">
         <div className="w-full max-w-md animate-slide-in">
-          {/* Mobile brand */}
-          <div className="lg:hidden text-2xl font-black tracking-tighter mb-12 text-center"
-            style={{ fontFamily: 'Manrope', color: '#031631' }}>JobBlitz</div>
+          <div className="lg:hidden flex justify-center mb-12">
+            <img src={logoWordmark} alt="JobBlitz" className="h-8 w-fit object-contain" />
+          </div>
 
           <h1 className="text-3xl font-extrabold tracking-tight mb-2"
             style={{ fontFamily: 'Manrope', color: '#031631' }}>

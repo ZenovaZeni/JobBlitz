@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import logoWordmark from '../assets/brand/jobblitz-wordmark-transparent.png'
 
 function FeatureCard({ icon, title, desc, accent = false, wide = false }) {
   return (
@@ -34,9 +35,8 @@ export default function Landing() {
       {/* ===== TOP NAV ===== */}
       <header className="glass-panel sticky top-0 z-50 shadow-sm">
         <nav className="flex justify-between items-center w-full px-4 md:px-8 py-4 max-w-screen-2xl mx-auto">
-          <div className="text-xl font-black tracking-tighter cursor-pointer"
-            style={{ fontFamily: 'Manrope', color: '#1A2B47' }}>
-            JobBlitz
+          <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
+            <img src={logoWordmark} alt="JobBlitz" className="h-7 w-fit object-contain" />
           </div>
           <div className="hidden md:flex items-center gap-8 font-semibold tracking-tight" style={{ fontFamily: 'Manrope' }}>
             <a href="#features" className="transition-colors hover:opacity-70" style={{ color: '#1A2B47', borderBottom: '2px solid #1A2B47', paddingBottom: '2px' }}>Product</a>
@@ -364,16 +364,13 @@ export default function Landing() {
       {/* ===== FOOTER ===== */}
       <footer style={{ backgroundColor: '#f7f9fb', borderTop: '1px solid #eceef0' }}>
         <div className="w-full px-4 md:px-8 py-10 md:py-12 flex flex-col md:flex-row justify-between items-center gap-6 max-w-screen-2xl mx-auto">
-          <div className="flex flex-col items-center md:items-start gap-3">
-            <div className="text-xl font-black tracking-tighter" style={{ fontFamily: 'Manrope', color: '#1A2B47' }}>JobBlitz</div>
-            <p className="text-xs tracking-wide" style={{ color: '#5c6d8c' }}>© 2025 JobBlitz AI. Built for the Digital Atelier.</p>
+          <div className="flex flex-col items-center md:items-start gap-4">
+            <img src={logoWordmark} alt="JobBlitz" className="h-6 w-fit object-contain" />
+            <p className="text-xs tracking-wide" style={{ color: '#5c6d8c' }}>© 2026 JobBlitz AI. Built for the Digital Atelier.</p>
           </div>
           <div className="flex gap-8">
-            {['Privacy Policy', 'Terms of Service', 'Cookie Settings'].map(link => (
-              <a key={link} href="#"
-                className="text-xs tracking-wide transition-all hover:opacity-100"
-                style={{ color: '#5c6d8c' }}>{link}</a>
-            ))}
+            <a href="/privacy" className="text-xs tracking-wide transition-all hover:opacity-100" style={{ color: '#5c6d8c' }}>Privacy Policy</a>
+            <a href="/terms" className="text-xs tracking-wide transition-all hover:opacity-100" style={{ color: '#5c6d8c' }}>Terms of Service</a>
           </div>
           <div className="flex gap-3">
             {['language', 'share'].map(icon => (

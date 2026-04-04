@@ -1,6 +1,9 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
+import logoIcon from '../assets/brand/jobblitz-icon-sidebar.png'
+import logoWordmark from '../assets/brand/jobblitz-wordmark-transparent.png'
+
 const navItems = [
   { path: '/app/dashboard', icon: 'grid_view', label: 'Dashboard' },
   { path: '/app/profile', icon: 'account_circle', label: 'Profile' },
@@ -22,20 +25,22 @@ export default function SideNav() {
   }
 
   return (
-    <nav className="hidden md:flex w-56 flex-shrink-0 flex-col h-full border-r"
+    <nav className="hidden md:flex w-64 flex-shrink-0 flex-col h-screen sticky top-0 border-r"
       style={{ backgroundColor: '#f2f4f6', borderColor: 'rgba(197,198,206,0.12)' }}>
 
       {/* Brand */}
-      <div className="px-5 py-6 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'linear-gradient(135deg, #031631, #0e0099)' }}>
-          <span className="text-white font-black text-xs" style={{ fontFamily: 'Manrope' }}>JB</span>
+      <div className="px-6 py-10 flex flex-col gap-5">
+        <div className="flex items-center gap-4">
+          <img src={logoIcon} alt="JobBlitz" className="w-11 h-11 object-contain" />
+          <div className="flex flex-col">
+            <img src={logoWordmark} alt="JobBlitz" className="h-8 object-contain" />
+            {isPro && (
+              <span className="mt-1 text-[8px] font-black uppercase tracking-[0.2em] text-[#031631]/60">
+                Professional Edition
+              </span>
+            )}
+          </div>
         </div>
-        <span className="font-extrabold tracking-tight" style={{ fontFamily: 'Manrope', color: '#031631' }}>JobBlitz</span>
-        {isPro && (
-          <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full text-white"
-            style={{ background: 'linear-gradient(135deg, #031631, #0e0099)' }}>Pro</span>
-        )}
       </div>
 
       {/* Nav items */}

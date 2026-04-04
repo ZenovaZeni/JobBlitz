@@ -145,9 +145,9 @@ export default function ResumeImport() {
     <div className="flex min-h-screen" style={{ backgroundColor: '#f7f9fb' }}>
       <SideNav />
 
-      <main className="flex-1 flex flex-col">
-        <header className="px-4 md:px-16 py-6 md:py-8 border-b" style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
-          <div className="max-w-2xl">
+      <main className="flex-1 flex flex-col items-center">
+        <header className="px-4 md:px-16 py-6 md:py-8 border-b w-full" style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
+          <div className="max-w-2xl mx-auto">
             <h1 className="text-4xl font-extrabold tracking-tight mb-2"
               style={{ fontFamily: 'Manrope', color: '#031631', letterSpacing: '-0.02em' }}>
               Import Your Resume
@@ -162,7 +162,7 @@ export default function ResumeImport() {
 
           {/* Step indicator */}
           {stage !== 'review' && (
-            <div className="flex items-center gap-4 mb-10 max-w-md">
+            <div className="flex items-center gap-4 mb-10 max-w-md mx-auto">
               {[
                 { num: '01', label: 'Select / Paste', active: stage === 'select' || stage === 'error' },
                 { num: '02', label: 'Parsing', active: stage === 'parsing' },
@@ -189,7 +189,7 @@ export default function ResumeImport() {
 
           {/* SELECT STAGE */}
           {(stage === 'select' || stage === 'error') && (
-            <div className="max-w-2xl">
+            <div className="max-w-2xl mx-auto w-full">
 
               {errorMsg && (
                 <div className="mb-6 p-4 rounded-xl flex items-start gap-3"
@@ -311,7 +311,7 @@ export default function ResumeImport() {
 
           {/* PARSING STAGE */}
           {stage === 'parsing' && (
-            <div className="max-w-2xl">
+            <div className="max-w-2xl mx-auto w-full">
               <div className="bg-white p-10 rounded-2xl shadow-sm border" style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
                 <h3 className="text-xl font-bold mb-8 text-center" style={{ fontFamily: 'Manrope', color: '#031631' }}>
                   Extracting your career data...
@@ -323,7 +323,7 @@ export default function ResumeImport() {
 
           {/* REVIEW STAGE */}
           {stage === 'review' && parsedData && (
-            <div className="w-full max-w-5xl">
+            <div className="w-full max-w-5xl mx-auto">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold mb-3"
