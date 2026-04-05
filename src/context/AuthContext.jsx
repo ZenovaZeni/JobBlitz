@@ -6,20 +6,49 @@ import { logger } from '../lib/logger'
 
 const AuthContext = createContext(null)
 
-const MOCK_USER = {
-  id: '00000000-0000-0000-0000-000000000000',
-  email: 'tester@jobblitz.ai',
-  user_metadata: { full_name: 'Test Admin' }
-}
-
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(MOCK_USER)
-  const [profile, setProfile] = useState({ id: MOCK_USER.id, plan_tier: 'pro', full_name: 'Test Admin' })
-  const [loading, setLoading] = useState(false)
+  const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Session check bypassed for verification
-    setLoading(false)
+    let mounted = true
+    
+    // Safety timeout to ensure app doesn't hang on "Loading..." indefinitely
+    const authTimeout = setTimeout(() => {
+      if (mounted) {
+        setLoading(false)
+        console.warn('Auth initialization timed out after 5s')
+      }
+    }, 5000)
+
+    // Listen for auth state changes — Supabase v2 fires INITIAL_SESSION immediately
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return
+      
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
+      
+      try {
+        if (currentUser) {
+          await fetchProfile(currentUser.id)
+        } else {
+          setProfile(null)
+          setLoading(false)
+        }
+      } catch (err) {
+        console.error('Error handling auth state change:', err)
+        setLoading(false)
+      } finally {
+        clearTimeout(authTimeout)
+      }
+    })
+
+    return () => {
+      mounted = false
+      subscription?.unsubscribe()
+      clearTimeout(authTimeout)
+    }
   }, [])
 
   async function createDefaultProfile(userId) {

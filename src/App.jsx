@@ -3,6 +3,8 @@ import { AuthProvider } from './context/AuthContext'
 import { SessionProvider } from './context/SessionContext'
 import AuthGuard from './components/AuthGuard'
 import BottomNav from './components/BottomNav'
+import ConfigError from './components/ConfigError'
+import { isConfigMissing } from './lib/supabase'
 
 // Public pages
 import Landing from './pages/Landing'
@@ -33,9 +35,12 @@ import LogViewer from './pages/admin/LogViewer'
 import UserManager from './pages/admin/UserManager'
 import UserDetail from './pages/admin/UserDetail'
 import AdminGuard from './components/AdminGuard'
-import DevLogin from './pages/DevLogin'
 
 export default function App() {
+  if (isConfigMissing) {
+    return <ConfigError />
+  }
+
   return (
     <AuthProvider>
       <SessionProvider>
@@ -72,8 +77,6 @@ export default function App() {
               <Route path="users/:id" element={<UserDetail />} />
             </Route>
 
-            {/* Dev Only Verification Bypass */}
-            <Route path="/dev-login" element={<DevLogin />} />
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />

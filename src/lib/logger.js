@@ -27,7 +27,11 @@ export const logger = {
   async log(severity, event_type, action, message, metadata = {}, user_id = null) {
     try {
       const sanitizedMetadata = redact(metadata)
-      
+      if (!supabase) {
+        console.warn('Logging skipped: Supabase client is not initialized.')
+        return
+      }
+
       const { error } = await supabase
         .from('system_logs')
         .insert({
