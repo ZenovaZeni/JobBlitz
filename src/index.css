@@ -169,8 +169,13 @@ button, a, [role="button"] {
 
 /* Dot grid background */
 .dot-grid {
-  background-image: radial-gradient(var(--color-surface-container) 1px, transparent 1px);
   background-size: 20px 20px;
+}
+
+.dot-grid-preview {
+  background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+  background-size: 30px 30px;
+  background-color: #f3f4f6;
 }
 
 /* Circular progress */
@@ -236,47 +241,40 @@ button, a, [role="button"] {
 @media print {
   @page { 
     margin: 0; 
-    size: A4 portrait; 
+    size: letter portrait; 
   }
 
-  /* Force background colors and images */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    color-adjust: exact !important;
+  /* Hide everything by default */
+  body > *:not(#resume-print-target) {
+    display: none !important;
   }
 
-  /* Hide everything in the app shell */
-  body > * { display: none !important; }
-
-  /* Show whichever print target is on this route */
-  #resume-print-target,
-  #resume-print-target-standalone {
-    display: flex !important;
-    flex-direction: column;
-    align-items: center;
+  #resume-print-target {
+    display: block !important;
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    background-color: white !important;
+    margin: 0;
+    padding: 0;
+    background: white !important;
+    visibility: visible !important;
   }
 
-  /* Page break control for resume sections */
-  .resume-section {
-    page-break-inside: auto;
-  }
-  .resume-item {
-    page-break-inside: avoid;
-    break-inside: avoid;
+  /* Ensure deep elements are visible */
+  #resume-print-target * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  /* Strip all backgrounds/shadows from the body */
+  /* Force background colors */
+  .bg-white { background-color: white !important; }
+  
+  /* Strip shadows and browser UI leftovers */
   body { 
-    background: white !important; 
-    margin: 0 !important; 
-    padding: 0 !important;
-    -webkit-font-smoothing: subpixel-antialiased;
+    background: white !important;
+    overflow: visible !important;
   }
 }
 
@@ -347,4 +345,40 @@ button, a, [role="button"] {
 @keyframes slide-in-bottom-4-keyframes {
   from { transform: translateY(1rem); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+/* === MODAL & COACH UTILITIES === */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 22, 49, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.coach-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 320px;
+  background: white;
+  border-left: 1px solid rgba(197, 198, 206, 0.3);
+  box-shadow: -10px 0 30px rgba(3, 22, 49, 0.05);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 1024px) {
+  .coach-panel {
+    width: 100%;
+    position: fixed;
+    z-index: 60;
+  }
 }

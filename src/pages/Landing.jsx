@@ -1,33 +1,30 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logoWordmark from '../assets/brand/jobblitz-wordmark-transparent.png'
-
-function FeatureCard({ icon, title, desc, accent = false, wide = false }) {
-  return (
-    <div className={`rounded-3xl p-8 flex flex-col gap-6 transition-all duration-300 hover:shadow-md
-      ${wide ? 'md:col-span-8' : 'md:col-span-4'}
-      ${accent ? 'text-white' : 'bg-white border card-shadow'}
-    `}
-      style={accent ? { background: 'linear-gradient(135deg, #031631, #0e0099)' } : {}}>
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0
-        ${accent ? 'bg-white/10' : ''}`}
-        style={!accent ? { backgroundColor: '#d6e3ff' } : {}}>
-        <span className="material-symbols-outlined text-[24px]"
-          style={{ color: accent ? 'white' : '#031631' }}>{icon}</span>
-      </div>
-      <div>
-        <h3 className="text-xl font-bold mb-2" style={{ fontFamily: 'Manrope', color: accent ? 'white' : '#031631' }}>
-          {title}
-        </h3>
-        <p className="text-sm leading-relaxed" style={{ color: accent ? 'rgba(255,255,255,0.7)' : '#44474d' }}>
-          {desc}
-        </p>
-      </div>
-    </div>
-  )
-}
+import DemoSection from '../components/landing/DemoSection'
 
 export default function Landing() {
   const navigate = useNavigate()
+  const [openFaq, setOpenFaq] = useState(null)
+
+  const faqs = [
+    {
+      q: "Won't it sound like it was written by a machine?",
+      a: "The outputs are reframings of your experience, not text generated from nothing. We restructure your words around what the job actually values. If you wrote 'managed a team,' we don't invent details — we surface why that experience matters for this specific role.",
+    },
+    {
+      q: "I apply to very different types of roles.",
+      a: "One profile, unlimited packets. The same background gets read differently for a product role versus an engineering one — different parts of your experience get surfaced each time. Nothing is fabricated.",
+    },
+    {
+      q: "My resume is already tailored. Is this worth it?",
+      a: "Worth running through for the cover letter alone. Most candidates spend 30–45 minutes writing a matching one from scratch. JobBlitz generates it in under 2 minutes, tied to the same experience your resume references. The match score is a useful second opinion too.",
+    },
+    {
+      q: "What does 'free' actually mean?",
+      a: "5 complete packets per month — tailored resume, cover letter, and interview prep — at no cost. No credit card to sign up. The only thing behind a paywall is volume: 50 packets/month on the Pro plan.",
+    },
+  ]
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f7f9fb', fontFamily: 'Inter, sans-serif' }}>
@@ -39,7 +36,7 @@ export default function Landing() {
             <img src={logoWordmark} alt="JobBlitz" className="h-7 w-fit object-contain" />
           </div>
           <div className="hidden md:flex items-center gap-8 font-semibold tracking-tight" style={{ fontFamily: 'Manrope' }}>
-            <a href="#features" className="transition-colors hover:opacity-70" style={{ color: '#1A2B47', borderBottom: '2px solid #1A2B47', paddingBottom: '2px' }}>Product</a>
+            <a href="#packet" className="transition-colors hover:opacity-70" style={{ color: '#1A2B47', borderBottom: '2px solid #1A2B47', paddingBottom: '2px' }}>What's in a Packet</a>
             <a href="#how-it-works" className="transition-colors hover:opacity-70" style={{ color: '#5c6d8c' }}>How It Works</a>
             <a href="/pricing" className="transition-colors hover:opacity-70" style={{ color: '#5c6d8c' }}>Pricing</a>
           </div>
@@ -51,7 +48,7 @@ export default function Landing() {
             </button>
             <button onClick={() => navigate('/auth/signup')}
               className="px-6 py-2.5 text-white text-sm font-bold rounded-lg shadow-md transition-all active:scale-95 ai-glow-btn">
-              Get Started
+              Get Started Free
             </button>
           </div>
         </nav>
@@ -59,7 +56,6 @@ export default function Landing() {
 
       {/* ===== HERO ===== */}
       <section className="relative pt-20 pb-32 overflow-hidden">
-        {/* Background glow */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-10 blur-3xl pointer-events-none"
           style={{ background: 'radial-gradient(circle, #0e0099 0%, transparent 70%)' }} />
 
@@ -69,46 +65,45 @@ export default function Landing() {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-6"
               style={{ backgroundColor: '#e1e0ff', color: '#2f2ebe' }}>
               <span className="material-symbols-outlined icon-filled text-[14px]">colors_spark</span>
-              AI-POWERED CAREER CURATION
+              ONE PASTE. ONE COMPLETE PACKET.
             </div>
             <h1 className="font-black text-4xl md:text-5xl lg:text-6xl leading-tight tracking-tight mb-6"
               style={{ fontFamily: 'Manrope', color: '#031631', letterSpacing: '-0.02em' }}>
-              Tailor your resume for every job{' '}
-              <span style={{ color: '#0e0099' }}>without starting over.</span>
+              Paste a job description.{' '}
+              <span style={{ color: '#0e0099' }}>Get a complete application packet in under 2 minutes.</span>
             </h1>
             <p className="text-lg md:text-xl max-w-xl mb-10 leading-relaxed" style={{ color: '#44474d' }}>
-              Import your experience once, match it to any job description, and generate a better resume,
-              cover letter, and interview prep in minutes.
+              Most applications are a generic resume and a cover letter written from scratch — disconnected,
+              inconsistent, and forgettable. JobBlitz generates a tailored resume, a matching cover letter,
+              and interview prep from the same job analysis. All three read as one coherent application.
             </p>
             <div className="flex flex-wrap gap-4">
               <button onClick={() => navigate('/app/import')}
                 className="px-8 py-4 text-white font-bold rounded-xl shadow-xl transition-all active:scale-95 ai-glow-btn">
-                Get Started for Free
+                Build my first packet free
               </button>
-              <button onClick={() => navigate('/app/dashboard')}
-                className="px-8 py-4 font-bold rounded-xl flex items-center gap-2 transition-all hover:shadow-md active:scale-95"
+              <a href="#live-demo"
+                className="px-8 py-4 font-bold rounded-xl flex items-center gap-2 transition-all hover:shadow-md active:scale-95 cursor-pointer"
                 style={{ backgroundColor: '#eceef0', color: '#031631' }}>
-                <span className="material-symbols-outlined">play_circle</span>
-                Try Demo
-              </button>
+                <span className="material-symbols-outlined">south</span>
+                See it work on a real job
+              </a>
             </div>
-            <div className="flex items-center gap-6 mt-10">
-              <div className="flex -space-x-2">
-                {['photo-1568602471122', 'photo-1500648767791', 'photo-1494790108377'].map((img, i) => (
-                  <div key={i} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden" style={{ backgroundColor: '#eceef0' }}>
-                    <img src={`https://images.unsplash.com/${img}-be9c29b29330?w=40&h=40&fit=crop&crop=face`}
-                      alt="" className="w-full h-full object-cover"
-                      onError={(e) => e.target.style.display = 'none'} />
-                  </div>
-                ))}
-              </div>
-              <p className="text-sm font-medium" style={{ color: '#44474d' }}>
-                <span className="font-bold" style={{ color: '#031631' }}>10,000+</span> professionals accelerating their job search
-              </p>
+            <div className="flex flex-wrap items-center gap-5 mt-10">
+              {[
+                { icon: 'check_circle', label: 'Free to start — no credit card' },
+                { icon: 'lock', label: 'Your resume data stays private' },
+                { icon: 'link', label: 'All three outputs from one analysis' },
+              ].map(({ icon, label }) => (
+                <div key={label} className="flex items-center gap-2">
+                  <span className="material-symbols-outlined icon-filled text-[16px]" style={{ color: '#0e0099' }}>{icon}</span>
+                  <span className="text-sm font-medium" style={{ color: '#44474d' }}>{label}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Right: Product Mockup — hidden on mobile to save space */}
+          {/* Right: Product Mockup */}
           <div className="relative hidden lg:block">
             <div className="absolute inset-0 rounded-full opacity-20 blur-3xl"
               style={{ background: 'linear-gradient(135deg, #e1e0ff, #d6e3ff)' }} />
@@ -144,8 +139,8 @@ export default function Landing() {
                       <div className="h-3 rounded w-4/5" style={{ backgroundColor: '#eceef0' }} />
                       <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(225,224,255,0.4)', border: '1px solid rgba(14,0,153,0.08)' }}>
                         <div className="flex items-center gap-1 mb-2">
-                          <span className="material-symbols-outlined icon-filled text-[12px]" style={{ color: '#0e0099' }}>auto_awesome</span>
-                          <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: '#0e0099' }}>AI SUGGESTION</span>
+                          <span className="material-symbols-outlined icon-filled text-[12px]" style={{ color: '#0e0099' }}>link</span>
+                          <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: '#0e0099' }}>MATCHED TO THIS ROLE</span>
                         </div>
                         <div className="h-2 rounded mb-1" style={{ backgroundColor: 'rgba(14,0,153,0.12)' }} />
                         <div className="h-2 rounded w-4/5" style={{ backgroundColor: 'rgba(14,0,153,0.08)' }} />
@@ -167,119 +162,169 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ===== TRUST BAR ===== */}
-      <div className="py-6 border-y" style={{ backgroundColor: '#f2f4f6', borderColor: '#eceef0' }}>
-        <div className="max-w-screen-xl mx-auto px-8 flex flex-wrap gap-8 justify-center items-center">
-          {['Google', 'Stripe', 'Airbnb', 'Apple', 'Meta', 'Netflix'].map(co => (
-            <span key={co} className="text-sm font-bold tracking-widest uppercase"
-              style={{ color: 'rgba(68,71,77,0.35)' }}>{co}</span>
+      {/* ===== TRANSPARENCY BAR ===== */}
+      <div className="py-5 border-y" style={{ backgroundColor: '#f2f4f6', borderColor: '#eceef0' }}>
+        <div className="max-w-screen-xl mx-auto px-8 flex flex-wrap gap-x-10 gap-y-3 justify-center items-center">
+          {[
+            { icon: 'bolt', text: 'Structured output — not keyword stuffing' },
+            { icon: 'visibility_off', text: 'Your data is never sold or shared' },
+            { icon: 'price_check', text: 'Transparent pricing — no surprise charges' },
+            { icon: 'all_inclusive', text: '5 complete packets free, every month' },
+          ].map(({ icon, text }) => (
+            <div key={text} className="flex items-center gap-2">
+              <span className="material-symbols-outlined icon-filled text-[15px]" style={{ color: '#0e0099' }}>{icon}</span>
+              <span className="text-xs font-semibold" style={{ color: '#44474d' }}>{text}</span>
+            </div>
           ))}
         </div>
       </div>
 
-      {/* ===== FEATURES BENTO ===== */}
-      <section id="features" className="py-16 md:py-24" style={{ backgroundColor: '#f2f4f6' }}>
+      {/* ===== LIVE DEMO ===== */}
+      <DemoSection />
+
+      {/* ===== WHAT'S IN A PACKET ===== */}
+      <section id="packet" className="py-16 md:py-24" style={{ backgroundColor: '#f2f4f6' }}>
         <div className="max-w-screen-2xl mx-auto px-4 md:px-8">
           <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-4"
+              style={{ backgroundColor: '#e1e0ff', color: '#2f2ebe' }}>
+              <span className="material-symbols-outlined icon-filled text-[12px]">inventory_2</span>
+              WHAT'S IN EVERY PACKET
+            </div>
             <h2 className="font-bold text-4xl mb-4" style={{ fontFamily: 'Manrope', color: '#031631' }}>
-              Precision tools for the modern candidate
+              Four outputs. One job paste. One coherent story.
             </h2>
-            <p className="max-w-2xl mx-auto" style={{ color: '#44474d' }}>
-              Skip the generic templates. Use specialized AI agents designed to handle the nuances of technical and creative hiring.
+            <p className="max-w-2xl mx-auto text-base leading-relaxed" style={{ color: '#44474d' }}>
+              Every packet is generated from the same analysis of your background and the job description.
+              That's why your resume, cover letter, and interview answers all reference the same experience —
+              they were built together, not in separate sessions.
             </p>
           </div>
           <div className="grid md:grid-cols-12 gap-6">
-            {/* Wide card */}
+
+            {/* Wide card — Resume */}
             <div className="md:col-span-8 bg-white rounded-3xl p-8 card-shadow border hover:shadow-md transition-all"
               style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
               <div className="flex flex-col md:flex-row gap-8 items-center">
                 <div className="flex-1">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: '#d6e3ff' }}>
-                    <span className="material-symbols-outlined" style={{ color: '#031631' }}>bolt</span>
+                  <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-bold mb-5"
+                    style={{ backgroundColor: '#eceef0', color: '#44474d' }}>
+                    <span className="w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center text-white" style={{ backgroundColor: '#031631' }}>1</span>
+                    PACKET OUTPUT
                   </div>
-                  <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: 'Manrope', color: '#031631' }}>Tailor in Seconds</h3>
+                  <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: 'Manrope', color: '#031631' }}>
+                    Your resume, rewritten for this role
+                  </h3>
                   <p className="leading-relaxed" style={{ color: '#44474d' }}>
-                    Our AI analyzes job descriptions instantly, highlighting the skills and experiences you need to emphasize to beat the ATS and reach a human recruiter.
+                    JobBlitz surfaces the parts of your experience most relevant to the role and restructures
+                    your bullets around the job's language and requirements. Your words — not templates.
+                    The result reads like you wrote it for this job, because in effect, you did.
                   </p>
-                  <button onClick={() => navigate('/app/tailor')}
+                  <button onClick={() => navigate('/app/import')}
                     className="mt-6 flex items-center gap-2 text-sm font-bold transition-all hover:gap-3"
                     style={{ color: '#0e0099' }}>
-                    Try it now <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                    Build your first packet free <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                   </button>
                 </div>
-                <div className="flex-1 w-full h-48 rounded-2xl overflow-hidden" style={{ backgroundColor: '#eceef0' }}>
-                  {/* Abstract visual */}
-                  <div className="w-full h-full flex items-center justify-center relative">
-                    <div className="absolute inset-0 flex items-end p-4 gap-1">
-                      {[60, 80, 45, 90, 70, 85, 50, 95].map((h, i) => (
-                        <div key={i} className="flex-1 rounded-t transition-all"
-                          style={{ height: `${h}%`, backgroundColor: i === 7 ? '#0e0099' : `rgba(3,22,49,${0.05 + i * 0.04})` }} />
-                      ))}
+                <div className="flex-1 w-full h-48 rounded-2xl overflow-hidden" style={{ backgroundColor: '#f7f9fb', border: '1px solid #eceef0' }}>
+                  <div className="w-full h-full p-5 flex flex-col gap-3">
+                    <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: '#c5c6ce' }}>Resume bullet — before</div>
+                    <div className="p-3 rounded-xl text-xs leading-relaxed" style={{ backgroundColor: '#eceef0', color: '#75777e' }}>
+                      "Led backend development on multiple projects and collaborated with cross-functional teams."
+                    </div>
+                    <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: '#0e0099' }}>After — matched to this role</div>
+                    <div className="p-3 rounded-xl text-xs leading-relaxed font-medium" style={{ backgroundColor: 'rgba(225,224,255,0.4)', border: '1px solid rgba(14,0,153,0.12)', color: '#031631' }}>
+                      "Redesigned the payments reconciliation pipeline for a platform processing $3M/month — cut failure rate by 41% and reduced manual review time by 70%."
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Accent card */}
+            {/* Match score card */}
             <div className="md:col-span-4 rounded-3xl p-8 flex flex-col justify-between text-white"
               style={{ background: 'linear-gradient(135deg, #031631 0%, #0e0099 100%)' }}>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-12" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
-                <span className="material-symbols-outlined icon-filled text-white">query_stats</span>
+              <div>
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-bold mb-8"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>
+                  <span className="w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}>2</span>
+                  PACKET OUTPUT
+                </div>
+                <span className="material-symbols-outlined icon-filled text-white mb-4 block" style={{ fontSize: 28 }}>query_stats</span>
               </div>
               <div>
-                <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: 'Manrope' }}>Smart Match Scores</h3>
+                <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: 'Manrope' }}>Know where you stand before you apply</h3>
                 <p className="text-sm leading-relaxed mb-6" style={{ color: 'rgba(178,195,218,1)' }}>
-                  Get a real-time percentage score on how well your resume matches the job requirements.
+                  See how well your tailored resume matches the job — which keywords land,
+                  what's missing, and whether a targeted rewrite is worth it. No surprises after you submit.
                 </p>
-                <div className="h-2 w-full rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
-                  <div className="h-full rounded-full" style={{ width: '85%', backgroundColor: '#c0c1ff' }} />
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                    <span>Match score</span><span>85%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
+                    <div className="h-full rounded-full" style={{ width: '85%', backgroundColor: '#c0c1ff' }} />
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Purple card */}
+            {/* Cover letter card */}
             <div className="md:col-span-4 rounded-3xl p-8 flex flex-col text-white"
               style={{ backgroundColor: '#0e0099' }}>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-auto" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
-                <span className="material-symbols-outlined text-white">visibility</span>
+              <div>
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-bold mb-8"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>
+                  <span className="w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}>3</span>
+                  PACKET OUTPUT
+                </div>
+                <span className="material-symbols-outlined text-white mb-4 block" style={{ fontSize: 28 }}>mail</span>
               </div>
-              <div className="mt-12">
-                <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: 'Manrope' }}>Live Preview</h3>
+              <div className="mt-auto">
+                <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: 'Manrope' }}>A cover letter that matches your resume</h3>
                 <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                  See your changes in real-time on a professional, print-ready document as you edit.
+                  Not written from scratch. Generated from the same job analysis — so both documents
+                  reference the same experience and metrics. They read as one application,
+                  not two documents you wrote separately.
                 </p>
               </div>
             </div>
 
-            {/* Wide card 2 */}
+            {/* Wide card — Interview prep */}
             <div className="md:col-span-8 bg-white rounded-3xl p-8 card-shadow border hover:shadow-md transition-all"
               style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
               <div className="flex flex-col md:flex-row gap-8 items-center">
-                <div className="flex-1 h-48 w-full rounded-2xl overflow-hidden" style={{ backgroundColor: '#eceef0' }}>
+                <div className="flex-1 h-48 w-full rounded-2xl overflow-hidden" style={{ backgroundColor: '#f7f9fb', border: '1px solid #eceef0' }}>
                   <div className="w-full h-full flex flex-col p-5 gap-2">
                     {[
-                      { q: '"Tell me about a time you led a team..."', tag: 'BEHAVIORAL' },
-                      { q: '"How do you approach system design?"', tag: 'TECHNICAL' },
+                      { q: '"Tell me about a time you led a team under pressure."', tag: 'BEHAVIORAL' },
+                      { q: '"Walk me through how you\'d approach a payments reliability incident."', tag: 'TECHNICAL' },
                     ].map((item, i) => (
-                      <div key={i} className="bg-white rounded-xl p-4 flex items-start gap-3 flex-1">
-                        <span className="px-2 py-0.5 text-[9px] font-bold rounded tracking-wider mt-0.5" style={{ backgroundColor: '#e1e0ff', color: '#2f2ebe' }}>{item.tag}</span>
+                      <div key={i} className="bg-white rounded-xl p-4 flex items-start gap-3 flex-1 border" style={{ borderColor: '#eceef0' }}>
+                        <span className="px-2 py-0.5 text-[9px] font-bold rounded tracking-wider mt-0.5 flex-shrink-0"
+                          style={{ backgroundColor: '#e1e0ff', color: '#2f2ebe' }}>{item.tag}</span>
                         <p className="text-xs font-medium" style={{ color: '#031631' }}>{item.q}</p>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div className="flex-1">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: '#e1e0ff' }}>
-                    <span className="material-symbols-outlined" style={{ color: '#2f2ebe' }}>psychology</span>
+                  <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-bold mb-5"
+                    style={{ backgroundColor: '#eceef0', color: '#44474d' }}>
+                    <span className="w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center text-white" style={{ backgroundColor: '#031631' }}>4</span>
+                    PACKET OUTPUT
                   </div>
-                  <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: 'Manrope', color: '#031631' }}>Interview STAR Prep</h3>
+                  <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: 'Manrope', color: '#031631' }}>
+                    Interview prep tied to the same job
+                  </h3>
                   <p className="leading-relaxed" style={{ color: '#44474d' }}>
-                    Generate tailored behavioral interview questions and STAR-method responses based on your unique experience and the target role.
+                    Four role-specific questions with STAR-method answers drawn from the same experience
+                    in your resume. Walk in knowing what to say — not just that you applied.
                   </p>
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       </section>
@@ -291,28 +336,34 @@ export default function Landing() {
             style={{ borderBottom: '1px solid rgba(197,198,206,0.15)' }}>
             <div>
               <h2 className="font-bold text-4xl mb-2" style={{ fontFamily: 'Manrope', color: '#031631' }}>
-                Three steps to your next role
+                How a packet comes together
               </h2>
-              <p style={{ color: '#44474d' }}>The Digital Atelier workflow: clean, fast, and focused.</p>
+              <p style={{ color: '#44474d' }}>Three inputs. One coherent output. Usually under 2 minutes.</p>
             </div>
             <div className="hidden md:block text-8xl font-black" style={{ color: '#eceef0' }}>PROCESS</div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
             {[
               {
-                num: '01', title: 'Build Master Profile',
-                desc: 'Upload your current resume or LinkedIn profile. Our AI extracts every achievement, metric, and skill into your Digital Atelier vault.',
-                action: () => navigate('/app/import'), cta: 'Import Resume →'
+                num: '01',
+                title: 'Import your experience once',
+                desc: 'Upload a resume, paste your work history, or describe your background. JobBlitz structures your experience, pulls out your metrics, and builds the foundation every packet is generated from. You never rewrite your history again.',
+                action: () => navigate('/app/import'),
+                cta: 'Import your resume →',
               },
               {
-                num: '02', title: 'Paste Job Description',
-                desc: 'Drop in the URL or text of any job posting. The AI immediately identifies the "silent keywords" and critical requirements recruiters are looking for.',
-                action: () => navigate('/app/tailor'), cta: 'Start Tailoring →'
+                num: '02',
+                title: 'Paste any job description',
+                desc: 'Drop in a job posting. JobBlitz reads the role\'s requirements, identifies what from your background matters most, and builds a job-specific analysis — the same one that drives all four packet outputs.',
+                action: () => navigate('/app/tailor'),
+                cta: 'Try a tailoring session →',
               },
               {
-                num: '03', title: 'Get Tailored Content',
-                desc: 'Download your custom-fit resume, a matching cover letter, and a personalized interview cheat sheet — all perfectly synced to that specific job.',
-                action: () => navigate('/app/dashboard'), cta: 'See Dashboard →'
+                num: '03',
+                title: 'Receive your complete packet',
+                desc: 'A tailored resume, a cover letter that references the same experience, and interview prep tied to the same role — all from one analysis. Everything tells the same story. Ready to submit.',
+                action: () => navigate('/app/dashboard'),
+                cta: 'See the dashboard →',
               },
             ].map(step => (
               <div key={step.num} className="space-y-5">
@@ -330,6 +381,40 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ===== OBJECTIONS / FAQ ===== */}
+      <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#f2f4f6' }}>
+        <div className="max-w-screen-md mx-auto">
+          <div className="mb-12">
+            <h2 className="font-bold text-3xl md:text-4xl mb-3" style={{ fontFamily: 'Manrope', color: '#031631' }}>
+              Common questions
+            </h2>
+            <p style={{ color: '#44474d' }}>Honest answers — no marketing copy.</p>
+          </div>
+          <div className="space-y-3">
+            {faqs.map((faq, i) => (
+              <div key={i} className="bg-white rounded-2xl border overflow-hidden transition-all"
+                style={{ borderColor: openFaq === i ? 'rgba(14,0,153,0.2)' : 'rgba(197,198,206,0.2)' }}>
+                <button
+                  className="w-full flex items-center justify-between px-6 py-5 text-left gap-4"
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}>
+                  <span className="font-bold text-base" style={{ color: '#031631' }}>{faq.q}</span>
+                  <span className="material-symbols-outlined flex-shrink-0 transition-transform duration-300"
+                    style={{ color: '#0e0099', transform: openFaq === i ? 'rotate(180deg)' : 'none' }}>
+                    expand_more
+                  </span>
+                </button>
+                {openFaq === i && (
+                  <div className="px-6 pb-6">
+                    <div className="h-px mb-5" style={{ backgroundColor: '#eceef0' }} />
+                    <p className="leading-relaxed" style={{ color: '#44474d' }}>{faq.a}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ===== FINAL CTA ===== */}
       <section className="py-16 md:py-24 px-4 md:px-8">
         <div className="max-w-screen-xl mx-auto rounded-[3rem] overflow-hidden relative"
@@ -340,21 +425,25 @@ export default function Landing() {
           <div className="relative z-10 px-8 py-20 md:py-32 text-center max-w-3xl mx-auto">
             <h2 className="font-bold text-4xl md:text-5xl text-white mb-6 leading-tight"
               style={{ fontFamily: 'Manrope' }}>
-              Ready to land your dream job?<br />Start tailoring now.
+              One complete packet. Every job. In under 2 minutes.
             </h2>
-            <p className="text-lg mb-12" style={{ color: '#8293b4' }}>
-              Join 10,000+ professionals who have accelerated their job search with the JobBlitz Digital Atelier.
+            <p className="text-lg mb-4 leading-relaxed" style={{ color: '#8293b4' }}>
+              Build your profile once. Every application after that is a tailored resume, matching cover letter,
+              and interview prep — in the time it takes to read the job description.
+            </p>
+            <p className="text-sm mb-12 font-semibold" style={{ color: 'rgba(193,200,214,0.7)' }}>
+              5 complete packets free every month. No credit card required.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button onClick={() => navigate('/app/import')}
                 className="px-10 py-5 font-bold rounded-2xl shadow-xl transition-all active:scale-95 hover:brightness-110"
                 style={{ backgroundColor: '#e1e0ff', color: '#07006c' }}>
-                Create Your Profile
+                Build my first packet free
               </button>
-              <button onClick={() => navigate('/app/dashboard')}
+              <button onClick={() => navigate('/pricing')}
                 className="px-10 py-5 font-bold rounded-2xl transition-all active:scale-95 hover:bg-white/10"
                 style={{ backgroundColor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}>
-                View Dashboard
+                See Pricing
               </button>
             </div>
           </div>
@@ -366,7 +455,7 @@ export default function Landing() {
         <div className="w-full px-4 md:px-8 py-10 md:py-12 flex flex-col md:flex-row justify-between items-center gap-6 max-w-screen-2xl mx-auto">
           <div className="flex flex-col items-center md:items-start gap-4">
             <img src={logoWordmark} alt="JobBlitz" className="h-6 w-fit object-contain" />
-            <p className="text-xs tracking-wide" style={{ color: '#5c6d8c' }}>© 2026 JobBlitz AI. Built for the Digital Atelier.</p>
+            <p className="text-xs tracking-wide" style={{ color: '#5c6d8c' }}>© 2026 JobBlitz AI. Built for the modern job search.</p>
           </div>
           <div className="flex gap-8">
             <a href="/privacy" className="text-xs tracking-wide transition-all hover:opacity-100" style={{ color: '#5c6d8c' }}>Privacy Policy</a>

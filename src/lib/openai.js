@@ -132,6 +132,12 @@ Return a JSON object with these exact keys:
 // PROMPT 2: Generate tailored resume content
 // =============================================
 export async function generateTailoredResume({ masterProfile, jdText, matchData, company, role }) {
+  const positioningContext = [
+    masterProfile.positioning ? `Candidate positioning statement: ${masterProfile.positioning}` : '',
+    masterProfile.career_goals?.target_roles ? `Target roles: ${masterProfile.career_goals.target_roles}` : '',
+    masterProfile.career_goals?.short_term ? `Short-term career goal: ${masterProfile.career_goals.short_term}` : '',
+  ].filter(Boolean).join('\n')
+
   return callAI([
     {
       role: 'system',
@@ -148,6 +154,7 @@ Job Description:
 ${jdText}
 
 ATS Keywords to weave in naturally: ${matchData?.ats_keywords?.join(', ')}
+${positioningContext ? `\nCandidate context (use to shape the summary and framing):\n${positioningContext}` : ''}
 
 Rewrite the resume to maximize match for this specific role.
 Return JSON with these exact keys:
@@ -309,3 +316,43 @@ Rewrite this bullet to be stronger. Lead with an action verb, include metrics if
     },
   ], { maxTokens: 200, temperature: 0.6 })
 }
+// =============================================
+// PROMPT 7: ATS Coach / Profile Readiness Analysis
+// =============================================
+export async function analyzeMasterProfile(masterProfile) {
+  return callAI([
+    {
+      role: 'system',
+      content: `You are a senior hiring manager and ATS optimization coach. Analyze a candidate's Master Profile for hiring outcomes. Focus on metric density, summary strength, and section completeness. Be brutally honest, outcome-oriented, and constructive. Return a JSON object.`
+    },
+    {
+      role: 'user',
+      content: `
+Analyze this Master Profile for readiness:
+${JSON.stringify({
+  name: masterProfile.name,
+  title: masterProfile.title,
+  summary: masterProfile.summary,
+  experience: masterProfile.experience,
+  skills: masterProfile.skills,
+  education: masterProfile.education,
+  projects: masterProfile.projects
+})}
+
+Return JSON with these exact keys:
+{
+  "readiness_score": number (0-100),
+  "critical_missing": string[] (sections or key info missing),
+  "quality_feedback": {
+    "summary": { "rating": "strong"|"weak", "advice": string },
+    "experience": { "metric_density": number (0-100), "advice": string },
+    "skills": { "advice": string }
+  },
+  "next_steps": string[] (3 actionable bullet points to improve the profile)
+}`
+    }
+  ], { json: true, maxTokens: 1500, temperature: 0.5 })
+}
+
+// Explicit export for Vite/HMR stability
+export { analyzeMasterProfile as analyzeMasterProfile_explicit };

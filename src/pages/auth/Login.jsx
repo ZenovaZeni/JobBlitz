@@ -63,7 +63,7 @@ export default function Login() {
             ))}
           </div>
         </div>
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>© 2025 JobBlitz AI · The Digital Atelier</p>
+        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>© 2026 JobBlitz AI</p>
       </div>
 
       {/* Right panel */}
@@ -155,8 +155,8 @@ export default function Login() {
 
           <p className="text-xs text-center mt-8" style={{ color: '#75777e' }}>
             By continuing, you agree to our{' '}
-            <a href="#" className="underline">Terms</a> and{' '}
-            <a href="#" className="underline">Privacy Policy</a>.
+            <a href="/terms" className="underline">Terms</a> and{' '}
+            <a href="/privacy" className="underline">Privacy Policy</a>.
           </p>
         </div>
       </div>

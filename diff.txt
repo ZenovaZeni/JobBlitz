@@ -1,0 +1,246 @@
+﻿diff --git a/src/context/AuthContext.jsx b/src/context/AuthContext.jsx
+index 76c3480..035b604 100644
+--- a/src/context/AuthContext.jsx
++++ b/src/context/AuthContext.jsx
+@@ -1,19 +1,12 @@
+ import { createContext, useContext, useEffect, useState } from 'react'
+ import { supabase } from '../lib/supabase'
+ import { checkAccess } from '../lib/permissions'
++import { PLAN_LIMITS, DEFAULT_PLAN } from '../lib/planLimits'
+ import { logger } from '../lib/logger'
+ 
+ const AuthContext = createContext(null)
+ 
+-const SMOKE_TEST_USER_ID = 'fa6d0edd-bdf1-48e9-ba3f-014ea83a819d' // test_smoke_final@example.com
+-const MOCK_USER = {
+-  id: SMOKE_TEST_USER_ID,
+-  email: 'test_smoke_final@example.com',
+-  app_metadata: { provider: 'email' },
+-  user_metadata: { first_name: 'Smoke', last_name: 'Tester' },
+-  aud: 'authenticated',
+-  role: 'authenticated'
+-}
++// Removed MOCK_USER for smoke test
+ 
+ export function AuthProvider({ children }) {
+   const [user, setUser] = useState(null)
+@@ -22,23 +15,14 @@ export function AuthProvider({ children }) {
+ 
+   useEffect(() => {
+     // Get initial session
+-    const isBypass = localStorage.getItem('jam_smoke_bypass') === 'true'
+-    
+-    if (isBypass) {
+-      console.warn('≡ƒ¢á∩╕Å SMOKE TEST BYPASS ACTIVE')
+-      setUser(MOCK_USER)
+-      fetchProfile(SMOKE_TEST_USER_ID)
+-    } else {
+-      supabase.auth.getSession().then(({ data: { session } }) => {
+-        setUser(session?.user ?? null)
+-        if (session?.user) fetchProfile(session.user.id)
+-        else setLoading(false)
+-      })
+-    }
++    supabase.auth.getSession().then(({ data: { session } }) => {
++      setUser(session?.user ?? null)
++      if (session?.user) fetchProfile(session.user.id)
++      else setLoading(false)
++    })
+ 
+     // Listen for auth changes
+     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+-      if (localStorage.getItem('jam_smoke_bypass') === 'true') return
+       
+       setUser(session?.user ?? null)
+       if (session?.user) fetchProfile(session.user.id)
+@@ -48,6 +32,18 @@ export function AuthProvider({ children }) {
+     return () => subscription.unsubscribe()
+   }, [])
+ 
++  async function createDefaultProfile(userId) {
++    // Called when a user has no profile row ΓÇö first-time OAuth sign-ins hit this path.
++    // upsert with onConflict ensures this is idempotent if two tabs race on first login.
++    const { data, error } = await supabase
++      .from('profiles')
++      .upsert({ id: userId, plan_tier: DEFAULT_PLAN }, { onConflict: 'id' })
++      .select()
++      .single()
++    if (error) throw error
++    return data
++  }
++
+   async function fetchProfile(userId) {
+     try {
+       const { data, error } = await supabase
+@@ -56,40 +52,15 @@ export function AuthProvider({ children }) {
+         .eq('id', userId)
+         .maybeSingle()
+ 
+-      if (error || !data) {
+-        if (localStorage.getItem('jam_smoke_bypass') === 'true') {
+-          console.warn('ΓÜá∩╕Å SMOKE TEST: Injecting synthetic profile');
+-          setProfile({
+-            id: userId,
+-            email: 'test_smoke_final@example.com',
+-            full_name: 'Smoke Tester',
+-            plan_tier: 'pro',
+-            subscription_status: 'active',
+-            app_role: 'admin',
+-            sessions_used: 0,
+-            sessions_limit: 100
+-          });
+-          setLoading(false);
+-          return;
+-        }
+-        if (error) throw error;
+-      } else {
+-        const checkedProfile = await checkMonthlyReset(data)
+-        setProfile(checkedProfile)
+-      }
++      if (error) throw error
++
++      const profile = data ?? await createDefaultProfile(userId)
++      const checkedProfile = await checkMonthlyReset(profile)
++      setProfile(checkedProfile)
+     } catch (err) {
+-      console.error('Profile fetch error:', err);
+-      if (localStorage.getItem('jam_smoke_bypass') === 'true') {
+-        setProfile({
+-          id: userId,
+-          email: 'test_smoke_final@example.com',
+-          full_name: 'Smoke Tester (Fallback)',
+-          plan_tier: 'pro',
+-          app_role: 'admin',
+-        });
+-      }
++      console.error('Profile fetch error:', err)
+     } finally {
+-      setLoading(false);
++      setLoading(false)
+     }
+   }
+ 
+@@ -100,17 +71,18 @@ export function AuthProvider({ children }) {
+     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+ 
+     if (lastReset < thirtyDaysAgo) {
+-      console.log('Resetting monthly usage counters')
+       const { data, error } = await supabase
+         .from('profiles')
+         .update({
+-          sessions_used: 0,
++          tailors_used: 0,
++          cover_letters_used: 0,
++          sessions_used: 0, // legacy field ΓÇö kept until column is dropped
+           last_reset_date: new Date().toISOString(),
+         })
+         .eq('id', p.id)
+         .select()
+         .single()
+-      
++
+       if (!error) return data
+     }
+     return p
+@@ -168,11 +140,12 @@ export function AuthProvider({ children }) {
+     return data
+   }
+ 
+-  async function updateUsage() {
++  async function updateUsage(action) {
+     if (!profile) return
++    const field = action === 'cover_letter' ? 'cover_letters_used' : 'tailors_used'
+     const { data, error } = await supabase
+       .from('profiles')
+-      .update({ sessions_used: (profile.sessions_used || 0) + 1 })
++      .update({ [field]: (profile[field] || 0) + 1 })
+       .eq('id', user.id)
+       .select()
+       .single()
+@@ -186,11 +159,18 @@ export function AuthProvider({ children }) {
+   const canUseTailor = checkAccess(profile, 'tailor').allowed
+   const canUseCoverLetter = checkAccess(profile, 'cover_letter').allowed
+ 
++  const limitObj = PLAN_LIMITS[profile?.plan_tier || DEFAULT_PLAN]
++  const tailorLimit = limitObj?.monthly_tailors ?? 5
++  const tailorsLeft = isPro ? Infinity : Math.max(0, tailorLimit - (profile?.tailors_used || 0))
++  // sessionsLeft kept as alias ΓÇö consumed by Dashboard and JobTailoring
++  const sessionsLeft = tailorsLeft
++
+   return (
+     <AuthContext.Provider value={{
+       user, profile, loading,
+       signUp, signIn, signInWithGoogle, signOut, updateProfile, updateUsage,
+       isPro, isAdmin, canUseTailor, canUseCoverLetter, checkAccess: (action) => checkAccess(profile, action),
++      sessionsLeft,
+     }}>
+       {children}
+     </AuthContext.Provider>
+diff --git a/src/lib/supabase.js b/src/lib/supabase.js
+index 7a61207..3973ce2 100644
+--- a/src/lib/supabase.js
++++ b/src/lib/supabase.js
+@@ -15,41 +15,4 @@ const baseSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+   },
+ })
+ 
+-// Mock Session for Launch Verification (Smoke Tests)
+-const MOCK_USER = {
+-  id: 'fa6d0edd-bdf1-48e9-ba3f-014ea83a819d', // Hand-created test user
+-  email: 'test_smoke_final@example.com',
+-  user_metadata: { first_name: 'Smoke', last_name: 'Test' },
+-  app_metadata: { provider: 'email', providers: ['email'] },
+-  role: 'authenticated'
+-};
+-
+-const MOCK_SESSION = {
+-  access_token: 'mock-access-token',
+-  refresh_token: 'mock-refresh-token',
+-  expires_in: 3600,
+-  expires_at: Math.floor(Date.now() / 1000) + 3600,
+-  user: MOCK_USER,
+-};
+-
+-export const supabase = new Proxy(baseSupabase, {
+-  get(target, prop) {
+-    if (prop === 'auth' && localStorage.getItem('auth_mock') === 'true') {
+-      return {
+-        ...target.auth,
+-        getSession: async () => ({ data: { session: MOCK_SESSION }, error: null }),
+-        getUser: async () => ({ data: { user: MOCK_USER }, error: null }),
+-        onAuthStateChange: (callback) => {
+-          callback('SIGNED_IN', MOCK_SESSION);
+-          return { data: { subscription: { unsubscribe: () => {} } } };
+-        },
+-        signOut: async () => {
+-          localStorage.removeItem('auth_mock');
+-          return target.auth.signOut();
+-        },
+-        signInWithPassword: async () => ({ data: { user: MOCK_USER, session: MOCK_SESSION }, error: null }),
+-      };
+-    }
+-    return target[prop];
+-  }
+-});
++export const supabase = baseSupabase
+diff --git a/src/pages/auth/Signup.jsx b/src/pages/auth/Signup.jsx
+index baac563..cbc5a64 100644
+--- a/src/pages/auth/Signup.jsx
++++ b/src/pages/auth/Signup.jsx
+@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
+ import { Link, useNavigate } from 'react-router-dom'
+ import { useAuth } from '../../context/AuthContext'
+ import logoWordmark from '../../assets/brand/jobblitz-wordmark-transparent.png'
++import { PLAN_LIMITS } from '../../lib/planLimits'
+ 
+ export default function Signup() {
+   const navigate = useNavigate()
+@@ -104,7 +105,7 @@ export default function Signup() {
+           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-6"
+             style={{ backgroundColor: '#e1e0ff', color: '#2f2ebe' }}>
+             <span className="material-symbols-outlined icon-filled text-[12px]">star</span>
+-            FREE ┬╖ 3 tailoring sessions included
++            FREE ┬╖ {PLAN_LIMITS.free.monthly_tailors} tailoring sessions / mo
+           </div>
+ 
+           <h1 className="text-3xl font-extrabold tracking-tight mb-2"

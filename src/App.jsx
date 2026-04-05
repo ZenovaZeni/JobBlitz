@@ -8,6 +8,8 @@ import BottomNav from './components/BottomNav'
 import Landing from './pages/Landing'
 import Login from './pages/auth/Login'
 import Signup from './pages/auth/Signup'
+import Reset from './pages/auth/Reset'
+import UpdatePassword from './pages/auth/UpdatePassword'
 import Pricing from './pages/Pricing'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
@@ -29,6 +31,7 @@ import AdminLayout from './pages/admin/AdminLayout'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import LogViewer from './pages/admin/LogViewer'
 import UserManager from './pages/admin/UserManager'
+import UserDetail from './pages/admin/UserDetail'
 import AdminGuard from './components/AdminGuard'
 import DevLogin from './pages/DevLogin'
 
@@ -42,6 +45,8 @@ export default function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/signup" element={<Signup />} />
+            <Route path="/auth/reset" element={<Reset />} />
+            <Route path="/auth/update-password" element={<UpdatePassword />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
@@ -64,6 +69,7 @@ export default function App() {
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="logs" element={<LogViewer />} />
               <Route path="users" element={<UserManager />} />
+              <Route path="users/:id" element={<UserDetail />} />
             </Route>
 
             {/* Dev Only Verification Bypass */}

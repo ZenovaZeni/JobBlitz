@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import SideNav from '../../components/SideNav'
 
 const SEVERITY_COLORS = {
-  info: { bg: '#e8f0fe', text: '#1967d2' },
-  warn: { bg: '#fff4e5', text: '#663c00' },
-  error: { bg: '#fce8e6', text: '#c5221f' }
+  info: { bg: 'rgba(59,130,246,0.1)', text: '#60a5fa', border: 'rgba(59,130,246,0.2)' },
+  warn: { bg: 'rgba(245,158,11,0.1)', text: '#fbbf24', border: 'rgba(245,158,11,0.2)' },
+  error: { bg: 'rgba(239,68,68,0.1)', text: '#f87171', border: 'rgba(239,68,68,0.2)' }
 }
 
 export default function AdminDashboard() {
@@ -19,7 +18,7 @@ export default function AdminDashboard() {
     
     // Subscribe to new logs
     const channel = supabase
-      .channel('admin_logs')
+      .channel('admin_logs_dashboard')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'system_logs' }, (payload) => {
         setLogs(prev => [payload.new, ...prev].slice(0, 50))
       })
@@ -38,7 +37,7 @@ export default function AdminDashboard() {
         .from('system_logs')
         .select('*, profiles(email)')
         .order('created_at', { ascending: false })
-        .limit(50)
+        .limit(20)
       
       setLogs(logData || [])
 
@@ -76,156 +75,145 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#f7f9fb]">
-      <SideNav />
-      
-      <main className="flex-1 p-8 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">
-          <header className="mb-8 border-b pb-4">
-            <h1 className="text-3xl font-black tracking-tight" style={{ fontFamily: 'Manrope', color: '#031631' }}>
-              Command Center
-            </h1>
-            <p className="text-sm text-[#5c6d8c] mt-1">Operational observability and system health.</p>
-          </header>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <StatCard title="Total Users" value={stats.users} icon="groups" color="#0e0099" />
-            <StatCard title="AI Generations" value={stats.generations} icon="auto_awesome" color="#1967d2" />
-            <StatCard title="System Errors" value={stats.errors} icon="error" color="#c5221f" />
-            <StatCard title="Success Rate" value={`${stats.successRate}%`} icon="analytics" color={stats.successRate > 90 ? '#0d652d' : '#c5221f'} />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Hot Spots */}
-            <div className="bg-white rounded-2xl shadow-sm border border-[#eceef0] p-6">
-              <h2 className="font-bold text-[#031631] mb-4 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-[#c5221f]">local_fire_department</span>
-                Error Hot Spots
-              </h2>
-              <div className="space-y-3">
-                {hotSpots.length === 0 ? (
-                  <p className="text-sm text-[#5c6d8c] italic py-4">No active error patterns detected.</p>
-                ) : (
-                  hotSpots.map((spot, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-[#fce8e610] border border-[#fce8e6]">
-                      <span className="text-xs font-bold text-[#c5221f] truncate max-w-[80%]" title={spot.msg}>
-                        {spot.msg}
-                      </span>
-                      <span className="text-[10px] font-black uppercase bg-[#c5221f] text-white px-2 py-0.5 rounded-full">
-                        {spot.count} Hits
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Health Chart (Visual Placeholder/Simulation) */}
-            <div className="bg-white rounded-2xl shadow-sm border border-[#eceef0] p-6">
-               <h2 className="font-bold text-[#031631] mb-6 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-[#0e0099]">insights</span>
-                System Health (Last 50 Events)
-              </h2>
-              <div className="flex items-end gap-2 h-32 px-4">
-                {/* Visualizing success vs error density in the last 50 logs */}
-                {Array.from({ length: 15 }).map((_, i) => {
-                  const slice = logs.slice(i * 3, (i + 1) * 3)
-                  const hasErr = slice.some(l => l.severity === 'error')
-                  const height = Math.max(20, Math.random() * 80 + 20) // Simulated trend for visual polish
-                  return (
-                    <div key={i} className="flex-1 rounded-t-md transition-all hover:scale-110" 
-                      style={{ 
-                        backgroundColor: hasErr ? '#c5221f' : '#e8f0fe',
-                        height: `${height}%`,
-                        opacity: 0.8
-                      }} 
-                    />
-                  )
-                })}
-              </div>
-              <div className="flex justify-between mt-3 px-2 text-[9px] font-black uppercase tracking-widest text-[#8293b4]">
-                 <span>Chronological History</span>
-                 <span>Latest</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Log Stream */}
-          <section className="bg-white rounded-2xl shadow-sm border border-[#eceef0] overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#eceef0] flex justify-between items-center bg-[#fcfdfe]">
-              <h2 className="font-bold text-[#031631]">Real-time Event Stream</h2>
-              <button 
-                onClick={fetchData}
-                className="text-xs font-bold text-[#0e0099] flex items-center gap-1 hover:underline"
-              >
-                <span className="material-symbols-outlined text-[14px]">refresh</span> Refresh
-              </button>
-            </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-[#f7f9fb] text-[11px] uppercase tracking-wider font-bold text-[#5c6d8c]">
-                  <tr>
-                    <th className="px-6 py-3">Timestamp</th>
-                    <th className="px-6 py-3">Event</th>
-                    <th className="px-6 py-3">Severity</th>
-                    <th className="px-6 py-3">User</th>
-                    <th className="px-6 py-3">Action</th>
-                    <th className="px-6 py-3">Message</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#eceef0]">
-                  {loading && logs.length === 0 ? (
-                    <tr><td colSpan="6" className="px-6 py-12 text-center text-[#5c6d8c]">Initializing secure connection...</td></tr>
-                  ) : logs.length === 0 ? (
-                    <tr><td colSpan="6" className="px-6 py-12 text-center text-[#5c6d8c]">No system logs found.</td></tr>
-                  ) : (
-                    logs.map(log => (
-                      <tr key={log.id} className="hover:bg-[#fcfdfe] transition-colors">
-                        <td className="px-6 py-4 text-[11px] text-[#75777e] font-mono">
-                          {new Date(log.created_at).toLocaleTimeString()}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-xs font-bold px-2 py-0.5 rounded bg-[#f1f3f4] text-[#3c4043] border border-[#dadce0]">
-                            {log.event_type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <SeverityBadge severity={log.severity} />
-                        </td>
-                        <td className="px-6 py-4 text-xs font-medium text-[#031631]">
-                          {log.profiles?.email || 'System'}
-                        </td>
-                        <td className="px-6 py-4 text-xs font-mono text-[#1967d2]">
-                          {log.action}
-                        </td>
-                        <td className="px-6 py-4 text-xs text-[#44474d] max-w-xs truncate" title={log.message}>
-                          {log.message}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <header className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-black text-white tracking-tight">Command Center</h2>
+          <p className="text-slate-500 font-medium">Real-time health and system telemetry.</p>
         </div>
-      </main>
+        <button 
+           onClick={fetchData}
+           disabled={loading}
+           className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white disabled:opacity-50 transition-all shadow-lg"
+        >
+          <span className={`material-symbols-outlined ${loading ? 'animate-spin' : ''}`}>refresh</span>
+        </button>
+      </header>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <StatCard title="Total Users" value={stats.users} icon="groups" color="#60a5fa" />
+        <StatCard title="AI Generations" value={stats.generations} icon="auto_awesome" color="#818cf8" />
+        <StatCard title="System Errors" value={stats.errors} icon="error" color="#f87171" />
+        <StatCard title="Success Rate" value={`${stats.successRate}%`} icon="analytics" color={stats.successRate > 90 ? '#34d399' : '#f87171'} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Error Hot Spots */}
+        <div className="lg:col-span-1 p-6 rounded-3xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-xl">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+            <span className="material-symbols-outlined text-[16px] text-red-400">local_fire_department</span>
+            Anomalous Hot Spots
+          </h3>
+          <div className="space-y-3">
+            {hotSpots.length === 0 ? (
+              <p className="text-sm text-slate-600 italic py-4">No critical error patterns.</p>
+            ) : (
+              hotSpots.map((spot, i) => (
+                <div key={i} className="group p-3 rounded-2xl bg-red-500/5 border border-red-500/10 transition-all hover:bg-red-500/10">
+                  <p className="text-[11px] font-bold text-red-400/80 mb-1 truncate" title={spot.msg}>{spot.msg}</p>
+                  <div className="flex items-center justify-between">
+                     <span className="text-[9px] font-black uppercase text-red-400 tracking-wider">Occurrence Density</span>
+                     <span className="text-xs font-black text-white">{spot.count}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* System Health View */}
+        <div className="lg:col-span-2 p-6 rounded-3xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-xl">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-2">
+            <span className="material-symbols-outlined text-[16px] text-blue-400">insights</span>
+            Event Throughput (Last 50 Logs)
+          </h3>
+          <div className="flex items-end gap-1.5 h-32 px-2">
+            {Array.from({ length: 25 }).map((_, i) => {
+              const slice = logs.slice(i * 2, (i + 1) * 2)
+              const hasErr = slice.some(l => l.severity === 'error' || l.severity === 'critical')
+              const height = slice.length > 0 ? Math.max(15, (slice.length / 2) * 100) : 8
+              return (
+                <div key={i} className="flex-1 rounded-t-lg transition-all hover:brightness-125 cursor-help"
+                  style={{
+                    backgroundColor: hasErr ? '#f87171' : '#3b82f6',
+                    height: `${height}%`,
+                    opacity: slice.length > 0 ? 0.6 : 0.2
+                  }}
+                  title={hasErr ? 'Contains Errors' : 'Healthy Segment'}
+                />
+              )
+            })}
+          </div>
+          <div className="flex justify-between mt-4 px-2 text-[9px] font-black uppercase tracking-widest text-slate-600">
+             <span>Older History</span>
+             <span>Current Pulse</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mini Event Stream */}
+      <section className="rounded-3xl border border-slate-800/60 bg-slate-900/40 backdrop-blur-xl overflow-hidden shadow-2xl">
+        <div className="px-6 py-4 border-b border-slate-800/60 flex justify-between items-center bg-slate-800/20">
+          <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Real-time Event Stream</h3>
+          <span className="flex items-center gap-2 text-[10px] font-bold text-emerald-500">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            LIVE
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[700px]">
+            <thead className="bg-slate-800/30 text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-800/60">
+              <tr>
+                <th className="px-6 py-4">Timestamp</th>
+                <th className="px-6 py-4">Context</th>
+                <th className="px-6 py-4">User</th>
+                <th className="px-6 py-4">Message</th>
+                <th className="px-6 py-4">Severity</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/40">
+              {logs.slice(0, 10).map(log => (
+                <tr key={log.id} className="hover:bg-blue-500/5 transition-colors group">
+                  <td className="px-6 py-4 text-[10px] font-mono text-slate-500">
+                    {new Date(log.created_at).toLocaleTimeString([], { hour12: false })}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black uppercase tracking-widest text-slate-600">{log.event_type}</span>
+                      <span className="text-[11px] font-bold text-slate-300">{log.action}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-[11px] font-medium text-slate-400">
+                    {log.profiles?.email || 'SYSTEM'}
+                  </td>
+                  <td className="px-6 py-4 text-[11px] text-slate-500 truncate max-w-xs transition-colors group-hover:text-slate-300">
+                    {log.message}
+                  </td>
+                  <td className="px-6 py-4">
+                    <SeverityBadge severity={log.severity} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   )
 }
 
 function StatCard({ title, value, icon, color }) {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-[#eceef0] shadow-sm flex items-center gap-4">
-      <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}15` }}>
-        <span className="material-symbols-outlined" style={{ color }}>{icon}</span>
+    <div className="group p-6 rounded-3xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-xl transition-all hover:border-slate-700">
+      <div className="flex items-center justify-between mb-4">
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110" style={{ backgroundColor: `${color}15` }}>
+          <span className="material-symbols-outlined" style={{ color }}>{icon}</span>
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500/80 bg-emerald-500/5 px-2 py-0.5 rounded-full border border-emerald-500/10">Active</span>
       </div>
-      <div>
-        <p className="text-xs font-bold text-[#5c6d8c] uppercase tracking-wider">{title}</p>
-        <p className="text-2xl font-black text-[#031631]">{value.toLocaleString()}</p>
-      </div>
+      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{title}</p>
+      <p className="text-3xl font-black text-white tracking-tight">{typeof value === 'number' ? value.toLocaleString() : value}</p>
     </div>
   )
 }
@@ -233,8 +221,8 @@ function StatCard({ title, value, icon, color }) {
 function SeverityBadge({ severity }) {
   const styles = SEVERITY_COLORS[severity] || SEVERITY_COLORS.info
   return (
-    <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full" 
-      style={{ backgroundColor: styles.bg, color: styles.text }}>
+    <span className="text-[9px] font-black uppercase tracking-[0.1em] px-2 py-0.5 rounded border" 
+      style={{ backgroundColor: styles.bg, color: styles.text, borderColor: styles.border }}>
       {severity}
     </span>
   )

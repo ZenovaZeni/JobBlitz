@@ -7,11 +7,12 @@ const SEVERITIES = ['info', 'warning', 'error', 'critical']
 /**
  * LogViewer
  * 
- * Provides a searchable, filterable table for audit logs.
+ * Provides a searchable, filterable table for audit logs with detailed JSON inspection.
  */
 export default function LogViewer() {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedLog, setSelectedLog] = useState(null)
   const [filters, setFilters] = useState({
     event_type: 'all',
     severity: 'all',
@@ -111,17 +112,18 @@ export default function LogViewer() {
                 <th className="px-6 py-4">User Identity</th>
                 <th className="px-6 py-4">Message Context</th>
                 <th className="px-6 py-4">Severity</th>
+                <th className="px-6 py-4 text-right pr-6">Detail</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
               {loading ? (
                 [...Array(6)].map((_, i) => (
                   <tr key={i}>
-                    <td colSpan="5" className="px-6 py-6 h-12 bg-slate-800/5 rounded animate-pulse"></td>
+                    <td colSpan="6" className="px-6 py-6 h-12 bg-slate-800/5 rounded animate-pulse"></td>
                   </tr>
                 ))
               ) : filteredLogs.map((log) => (
-                <tr key={log.id} className="hover:bg-blue-500/5 transition-colors group">
+                <tr key={log.id} className="hover:bg-blue-500/5 transition-colors group cursor-pointer" onClick={() => setSelectedLog(log)}>
                   <td className="px-6 py-4 text-[11px] tabular-nums text-slate-500 font-medium">
                     {new Date(log.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </td>
@@ -151,22 +153,75 @@ export default function LogViewer() {
                   <td className="px-6 py-4">
                     <SeverityBadge severity={log.severity} />
                   </td>
-                </tr>
-              ))}
-              {!loading && filteredLogs.length === 0 && (
-                <tr>
-                  <td colSpan="5" className="px-6 py-24 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <span className="material-symbols-outlined text-slate-700 text-4xl">inventory_2</span>
-                      <p className="text-slate-500 font-medium italic">No logs found matching your filters.</p>
-                    </div>
+                  <td className="px-6 py-4 text-right pr-6">
+                    <button className="p-2 rounded-lg text-slate-500 group-hover:text-white group-hover:bg-slate-800 transition-all opacity-0 group-hover:opacity-100">
+                      <span className="material-symbols-outlined text-[18px]">visibility</span>
+                    </button>
                   </td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Metadata Modal */}
+      {selectedLog && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+           <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="px-8 py-6 border-b border-slate-800 bg-slate-950/50 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-black text-white tracking-tight">Event Context</h3>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Telemetry Payload Breakdown</p>
+                </div>
+                <button onClick={() => setSelectedLog(null)} className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition-all">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <div className="p-8 max-h-[70vh] overflow-y-auto space-y-6">
+                {/* ID and Action */}
+                <div className="flex flex-wrap gap-3">
+                   <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-[10px] font-mono text-slate-400">
+                     ID: {selectedLog.id}
+                   </div>
+                   <div className="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase text-blue-400 tracking-wider">
+                     {selectedLog.action}
+                   </div>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-slate-950/50 border border-slate-800 text-sm text-slate-300 leading-relaxed italic">
+                  "{selectedLog.message}"
+                </div>
+
+                {/* JSON Blocks */}
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 px-1">Primary Payload</h4>
+                    <pre className="p-5 rounded-2xl bg-black/60 border border-slate-800 text-[11px] text-emerald-400 font-mono overflow-x-auto">
+                      {JSON.stringify(selectedLog.payload || {}, null, 2)}
+                    </pre>
+                  </div>
+
+                  {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 px-1">Diagnostic Metadata</h4>
+                      <pre className="p-5 rounded-2xl bg-black/60 border border-slate-800 text-[11px] text-blue-400 font-mono overflow-x-auto">
+                        {JSON.stringify(selectedLog.metadata, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="px-8 py-5 bg-slate-950/50 border-t border-slate-800 text-right">
+                <button onClick={() => setSelectedLog(null)} className="px-6 py-2 rounded-xl bg-slate-800 text-white text-sm font-bold hover:bg-slate-700 transition-all">
+                  Close Inspector
+                </button>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   )
 }

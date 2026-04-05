@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSessions } from '../../hooks/useSessions'
+import { useMasterProfile } from '../../hooks/useMasterProfile'
 
-export default function QuickStartWizard() {
+export default function QuickStartWizard({ onSkip }) {
   const navigate = useNavigate()
   const { createSession } = useSessions()
-  
+  const { profile: masterProfile } = useMasterProfile()
+  const hasProfile = masterProfile && (masterProfile.experience?.length > 0 || masterProfile.summary)
+
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -16,6 +19,13 @@ export default function QuickStartWizard() {
 
   async function handleSubmit() {
     if (!formData.role || !formData.company || !formData.jdText) return
+
+    // Guard: profile required before tailoring can run
+    if (!hasProfile) {
+      navigate('/app/profile?onboard=1')
+      return
+    }
+
     setLoading(true)
     try {
       const newSession = await createSession({
@@ -24,7 +34,6 @@ export default function QuickStartWizard() {
         jd_text: formData.jdText
       })
       if (newSession) {
-        // Optimization: Go straight to tailoring for the prompt "2-Minute Start"
         navigate(`/app/tailor?session=${newSession.id}`)
       }
     } catch (err) {
@@ -91,13 +100,31 @@ export default function QuickStartWizard() {
             </div>
 
             <div className="mt-10 flex justify-end">
-              <button 
-                onClick={() => setStep(2)}
-                disabled={!formData.role || !formData.company}
-                className="group px-8 py-4 bg-[#031631] text-white font-black rounded-2xl flex items-center gap-3 transition-all active:scale-95 disabled:opacity-30 shadow-xl shadow-blue-900/10 hover:shadow-2xl">
-                Next Step
-                <span className="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
-              </button>
+              <div className="flex flex-col gap-3 w-full">
+                <button
+                  onClick={step === 1 ? () => setStep(2) : handleSubmit}
+                  disabled={!isFormValid || loading}
+                  className={`w-full py-4 rounded-xl font-bold text-white transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 ${isFormValid && !loading ? 'bg-[#0e0099] hover:shadow-2xl' : 'bg-[#c5c6ce] cursor-not-allowed text-white/60'}`}>
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-[20px]">{step === 1 ? 'arrow_forward' : 'auto_awesome'}</span>
+                      {step === 1 ? 'Next Step' : 'Generate Optimized Session'}
+                    </>
+                  )}
+                </button>
+
+                <div className="flex items-center gap-2 mt-2">
+                  {onSkip && (
+                    <button
+                      onClick={onSkip}
+                      className="flex-1 py-3 text-xs font-bold text-[#8293b4] hover:text-[#031631] transition-colors underline decoration-[#eceef0] underline-offset-4">
+                      Skip for now, explore dashboard
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )}

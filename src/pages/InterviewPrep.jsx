@@ -109,7 +109,7 @@ export default function InterviewPrep() {
         </aside>
 
         {/* Right: STAR Response */}
-        <div className="flex-1 overflow-y-auto custom-scroll">
+        <div className="flex-1 overflow-y-auto custom-scroll page-pb-mobile">
           {currentQ ? (
             <>
               <header className="px-8 py-6 border-b sticky top-0 glass-panel z-10"

@@ -2,21 +2,26 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { PRO_PRICE, PRO_PRICE_LABEL } from '../config/constants'
+import { PLAN_LIMITS } from '../lib/planLimits'
+
+const FREE_LIMIT = PLAN_LIMITS.free.monthly_tailors
+const PRO_LIMIT  = PLAN_LIMITS.pro.monthly_tailors
 
 const FREE_FEATURES = [
-  '5 AI tailoring sessions',
-  'Match score & skill gap analysis',
-  'ATS-optimized resume',
-  'Cover letter generation',
+  `${FREE_LIMIT} complete application packets / mo`,
+  'Tailored resume per job',
+  'Matching cover letter per job',
+  'ATS match score + skill gap analysis',
   'Interview STAR prep',
   'Master Profile builder',
 ]
 
 const PRO_FEATURES = [
-  'Unlimited tailoring sessions',
-  'Match score & skill gap analysis',
-  'ATS-optimized resume',
-  'Cover letter (4 tones)',
+  `${PRO_LIMIT} complete application packets / mo`,
+  'Tailored resume per job',
+  'Cover letter — 4 tone options',
+  'ATS match score + skill gap analysis',
   'Interview STAR prep',
   'All 3 resume templates',
   'PDF export',
@@ -26,8 +31,12 @@ const PRO_FEATURES = [
 
 const FAQS = [
   {
-    q: 'What counts as a tailoring session?',
-    a: 'One session = one job description analyzed. Each session generates a tailored resume, cover letter, and interview prep questions simultaneously.',
+    q: 'What counts as one session?',
+    a: `One session = one job description analyzed. Each session produces a tailored resume, a matching cover letter, and interview prep questions — simultaneously. Free plan includes ${FREE_LIMIT} sessions per month.`,
+  },
+  {
+    q: 'Does the resume and cover letter actually match?',
+    a: 'Yes — that\'s the core difference. Both are generated from your same profile data, so they reference the same experience, metrics, and framing. They read as one coherent application, not two separate documents.',
   },
   {
     q: 'Can I cancel anytime?',
@@ -39,11 +48,11 @@ const FAQS = [
   },
   {
     q: 'What AI model powers JobBlitz?',
-    a: 'We use GPT-4o mini — a state-of-the-art model optimized for professional writing. Security and privacy are our top priorities.',
+    a: 'We use GPT-4o mini — optimized for professional writing. Your data is used only to generate your content and is never used to train any model.',
   },
   {
-    q: 'What if I run out of free sessions?',
-    a: 'You can still view your existing sessions. You just need Pro to run new ones once you hit your monthly limit (5/mo).',
+    q: `What happens when I use all ${FREE_LIMIT} free sessions?`,
+    a: 'You can still view and edit everything from your existing sessions. You need Pro to run new tailoring jobs once you hit the monthly limit.',
   },
 ]
 
@@ -120,10 +129,10 @@ export default function Pricing() {
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-5"
             style={{ fontFamily: 'Manrope', color: '#031631', letterSpacing: '-0.02em' }}>
-            Start free. Upgrade when ready.
+            Start free. Upgrade when you need more.
           </h1>
-          <p className="text-lg max-w-xl mx-auto leading-relaxed" style={{ color: '#44474d' }}>
-            2 full tailoring sessions every month on us. Upgrade to Pro when you're ready for more.
+          <p className="text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: '#44474d' }}>
+            Free plan includes <strong style={{ color: '#031631' }}>{FREE_LIMIT} complete application packets per month</strong> — each one is a tailored resume, matching cover letter, and interview prep for one job. Enough to feel the difference before committing to anything.
           </p>
         </div>
 
@@ -138,6 +147,9 @@ export default function Pricing() {
                 <span className="text-5xl font-black" style={{ fontFamily: 'Manrope', color: '#031631' }}>$0</span>
                 <span className="text-sm font-semibold mb-2" style={{ color: '#75777e' }}>forever</span>
               </div>
+              <p className="text-xs mt-2 leading-relaxed" style={{ color: '#75777e' }}>
+                {FREE_LIMIT} sessions / mo · No credit card required
+              </p>
             </div>
             <ul className="space-y-3 mb-8">
               {FREE_FEATURES.map(f => (
@@ -166,9 +178,12 @@ export default function Pricing() {
             <div className="mb-6">
               <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Pro</p>
               <div className="flex items-end gap-2">
-                <span className="text-5xl font-black" style={{ fontFamily: 'Manrope' }}>$9.99</span>
+                <span className="text-5xl font-black" style={{ fontFamily: 'Manrope' }}>{PRO_PRICE}</span>
                 <span className="text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>/month</span>
               </div>
+              <p className="text-xs mt-2 leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                {PRO_LIMIT} sessions / mo · Cancel anytime
+              </p>
             </div>
             <ul className="space-y-3 mb-8">
               {PRO_FEATURES.map(f => (
@@ -188,9 +203,40 @@ export default function Pricing() {
                 className="w-full py-3.5 text-sm font-bold rounded-xl transition-all active:scale-95 hover:shadow-xl flex items-center justify-center gap-2"
                 style={{ backgroundColor: 'white', color: '#031631' }}>
                 {loading ? <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> : null}
-                Upgrade to Pro
+                Upgrade to Pro — {PRO_PRICE_LABEL}
               </button>
             )}
+          </div>
+        </div>
+
+        {/* What's in a session */}
+        <div className="max-w-3xl mx-auto mb-16 rounded-2xl p-8"
+          style={{ backgroundColor: '#f2f4f6' }}>
+          <h3 className="font-extrabold text-lg mb-2" style={{ fontFamily: 'Manrope', color: '#031631' }}>
+            What's included in one session?
+          </h3>
+          <p className="text-sm mb-6" style={{ color: '#44474d' }}>
+            One session = one job description analyzed. Everything below is generated simultaneously, from the same profile, in about 2 minutes.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {[
+              { icon: 'description', label: 'Tailored Resume',       desc: 'Rewritten bullets, prioritized skills, ATS keywords — specific to that job.' },
+              { icon: 'mail',        label: 'Matching Cover Letter', desc: 'Same experience and metrics as your resume. Reads as one application.' },
+              { icon: 'query_stats', label: 'ATS Match Score',       desc: 'Know where you stand before you apply. See your skill gaps.' },
+              { icon: 'psychology',  label: 'Interview STAR Prep',   desc: '4 role-specific questions with fully written answers from your experience.' },
+            ].map(f => (
+              <div key={f.label} className="flex items-start gap-3 bg-white rounded-xl p-4"
+                style={{ boxShadow: '0 2px 8px rgba(3,22,49,0.04)' }}>
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: '#e1e0ff' }}>
+                  <span className="material-symbols-outlined icon-filled text-[18px]" style={{ color: '#0e0099' }}>{f.icon}</span>
+                </div>
+                <div>
+                  <p className="font-bold text-sm mb-0.5" style={{ color: '#031631' }}>{f.label}</p>
+                  <p className="text-xs leading-relaxed" style={{ color: '#75777e' }}>{f.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -207,12 +253,12 @@ export default function Pricing() {
               <div className="text-center font-bold text-sm" style={{ color: '#0e0099' }}>Pro</div>
             </div>
             {[
-              ['Tailoring sessions', '2 / month', '50 / month'],
-              ['Match score + gap analysis', true, true],
-              ['ATS-optimized resume', true, true],
-              ['Cover letter generation', true, true],
-              ['Cover letter tones', '1', '4'],
+              ['Sessions / month', `${FREE_LIMIT}`, `${PRO_LIMIT}`],
+              ['Tailored resume per session', true, true],
+              ['Matching cover letter per session', true, true],
+              ['ATS match score + gap analysis', true, true],
               ['Interview STAR prep', true, true],
+              ['Cover letter tone options', '1', '4'],
               ['Resume templates', '1', '3'],
               ['PDF export', false, true],
               ['Priority AI processing', false, true],
@@ -222,15 +268,15 @@ export default function Pricing() {
                 <span className="text-sm" style={{ color: '#031631' }}>{feature}</span>
                 <div className="flex justify-center">
                   {typeof free === 'boolean'
-                    ? <span className={`material-symbols-outlined icon-filled text-[20px]`}
-                      style={{ color: free ? '#0e0099' : '#c5c6ce' }}>{free ? 'check_circle' : 'cancel'}</span>
+                    ? <span className="material-symbols-outlined icon-filled text-[20px]"
+                        style={{ color: free ? '#0e0099' : '#c5c6ce' }}>{free ? 'check_circle' : 'cancel'}</span>
                     : <span className="text-sm font-bold" style={{ color: '#44474d' }}>{free}</span>
                   }
                 </div>
                 <div className="flex justify-center">
                   {typeof pro === 'boolean'
-                    ? <span className={`material-symbols-outlined icon-filled text-[20px]`}
-                      style={{ color: pro ? '#0e0099' : '#c5c6ce' }}>{pro ? 'check_circle' : 'cancel'}</span>
+                    ? <span className="material-symbols-outlined icon-filled text-[20px]"
+                        style={{ color: pro ? '#0e0099' : '#c5c6ce' }}>{pro ? 'check_circle' : 'cancel'}</span>
                     : <span className="text-sm font-bold" style={{ color: '#0e0099' }}>{pro}</span>
                   }
                 </div>
@@ -262,8 +308,8 @@ export default function Pricing() {
             <h2 className="text-3xl font-extrabold tracking-tight mb-3" style={{ fontFamily: 'Manrope' }}>
               Start tailoring for free
             </h2>
-            <p className="mb-6 text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              3 full sessions included. No credit card required.
+            <p className="mb-6 text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              {FREE_LIMIT} complete application packets every month — no credit card required.
             </p>
             <button onClick={() => user ? navigate('/app/dashboard') : navigate('/auth/signup')}
               className="px-8 py-4 font-bold rounded-xl text-[#031631] transition-all active:scale-95 hover:shadow-xl text-sm"

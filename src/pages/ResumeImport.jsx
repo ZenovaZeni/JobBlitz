@@ -141,61 +141,71 @@ export default function ResumeImport() {
     navigate('/app/profile')
   }
 
+  const STEPS = [
+    { num: '01', label: 'Select / Paste', key: 'select' },
+    { num: '02', label: 'Parsing', key: 'parsing' },
+    { num: '03', label: 'Review', key: 'review' },
+  ]
+  const activeStepIdx = stage === 'error' ? 0 : STEPS.findIndex(s => s.key === stage)
+
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: '#f7f9fb' }}>
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f7f9fb' }}>
       <SideNav />
 
-      <main className="flex-1 flex flex-col items-center">
-        <header className="px-4 md:px-16 py-6 md:py-8 border-b w-full" style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
-          <div className="max-w-2xl mx-auto">
-            <h1 className="text-4xl font-extrabold tracking-tight mb-2"
-              style={{ fontFamily: 'Manrope', color: '#031631', letterSpacing: '-0.02em' }}>
-              Import Your Resume
-            </h1>
-            <p style={{ color: '#44474d' }}>
-              Upload a .txt file or paste your resume text — we'll extract and pre-fill your Master Profile.
-            </p>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Glass-panel sticky header with step indicator */}
+        <header className="glass-panel border-b flex-shrink-0 z-10"
+          style={{ borderColor: 'rgba(197,198,206,0.15)', boxShadow: '0 4px 12px rgba(3,22,49,0.03)' }}>
+          <div className="px-4 md:px-8 py-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest mb-0.5" style={{ color: '#0e0099' }}>Import Resume</p>
+              <h1 className="text-lg font-black tracking-tight" style={{ fontFamily: 'Manrope', color: '#031631' }}>
+                Build Your Master Profile
+              </h1>
+            </div>
+            {/* Step indicator */}
+            <div className="hidden sm:flex items-center gap-3">
+              {STEPS.map((step, i) => {
+                const done = i < activeStepIdx
+                const active = i === activeStepIdx
+                return (
+                  <div key={step.num} className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all flex-shrink-0"
+                        style={{
+                          backgroundColor: done ? '#031631' : active ? '#0e0099' : '#eceef0',
+                          color: done || active ? 'white' : '#c5c6ce',
+                        }}>
+                        {done ? '✓' : step.num}
+                      </div>
+                      <span className="text-xs font-bold transition-colors"
+                        style={{ color: active ? '#031631' : done ? '#0e0099' : '#9da3ae' }}>
+                        {step.label}
+                      </span>
+                    </div>
+                    {i < STEPS.length - 1 && (
+                      <div className="w-6 h-px" style={{ backgroundColor: '#eceef0' }} />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </header>
 
-        <div className="flex-1 px-4 md:px-16 py-8 md:py-12 flex flex-col pb-24 md:pb-0">
-
-          {/* Step indicator */}
-          {stage !== 'review' && (
-            <div className="flex items-center gap-4 mb-10 max-w-md mx-auto">
-              {[
-                { num: '01', label: 'Select / Paste', active: stage === 'select' || stage === 'error' },
-                { num: '02', label: 'Parsing', active: stage === 'parsing' },
-                { num: '03', label: 'Review', active: false },
-              ].map((step, i, arr) => (
-                <div key={step.num} className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
-                      style={{
-                        backgroundColor: step.active ? '#031631' : '#eceef0',
-                        color: step.active ? 'white' : '#c5c6ce',
-                      }}>
-                      {step.num}
-                    </div>
-                    <span className="font-medium text-sm" style={{ color: step.active ? '#031631' : '#9da3ae' }}>
-                      {step.label}
-                    </span>
-                  </div>
-                  {i < arr.length - 1 && <div className="w-8 h-px" style={{ backgroundColor: '#eceef0' }} />}
-                </div>
-              ))}
-            </div>
-          )}
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 md:py-12 pb-24 md:pb-12">
 
           {/* SELECT STAGE */}
           {(stage === 'select' || stage === 'error') && (
-            <div className="max-w-2xl mx-auto w-full">
+            <div className="w-full">
 
               {errorMsg && (
-                <div className="mb-6 p-4 rounded-xl flex items-start gap-3"
-                  style={{ backgroundColor: '#ffdad6', color: '#93000a' }}>
-                  <span className="material-symbols-outlined icon-filled text-[18px] flex-shrink-0 mt-0.5">error</span>
-                  <p className="text-sm font-semibold">{errorMsg}</p>
+                <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 ${errorMsg.includes('PDF/DOCX') ? 'bg-[#e1e0ff] text-[#0e0099]' : 'bg-[#ffdad6] text-[#93000a]'}`}>
+                  <span className="material-symbols-outlined icon-filled text-[18px] flex-shrink-0 mt-0.5">
+                    {errorMsg.includes('PDF/DOCX') ? 'info' : 'error'}
+                  </span>
+                  <p className="text-sm font-semibold">{errorMsg.replace('requires a library not yet installed.', 'is not natively supported yet.')}</p>
                 </div>
               )}
 
@@ -311,7 +321,7 @@ export default function ResumeImport() {
 
           {/* PARSING STAGE */}
           {stage === 'parsing' && (
-            <div className="max-w-2xl mx-auto w-full">
+            <div className="w-full">
               <div className="bg-white p-10 rounded-2xl shadow-sm border" style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
                 <h3 className="text-xl font-bold mb-8 text-center" style={{ fontFamily: 'Manrope', color: '#031631' }}>
                   Extracting your career data...
@@ -323,7 +333,7 @@ export default function ResumeImport() {
 
           {/* REVIEW STAGE */}
           {stage === 'review' && parsedData && (
-            <div className="w-full max-w-5xl mx-auto">
+            <div className="w-full">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold mb-3"
@@ -475,8 +485,9 @@ export default function ResumeImport() {
             </div>
           )}
 
-        </div>
-      </main>
+          </div>
+        </main>
+      </div>
     </div>
   )
 }

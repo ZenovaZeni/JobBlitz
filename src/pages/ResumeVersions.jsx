@@ -55,7 +55,7 @@ export default function ResumeVersions() {
     : null
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: '#f7f9fb' }}>
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f7f9fb' }}>
       <SideNav />
 
       <main className="flex-1 px-4 md:px-8 lg:px-12 py-6 md:py-12 overflow-y-auto pb-24 md:pb-12 flex flex-col items-center">

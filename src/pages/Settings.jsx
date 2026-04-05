@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import SideNav from '../components/SideNav'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { PLAN_LIMITS } from '../lib/planLimits'
 
-function Section({ title, subtitle, children }) {
+function Section({ id, title, subtitle, children }) {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 4px 20px rgba(3,22,49,0.04)' }}>
+    <div id={id} className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 4px 20px rgba(3,22,49,0.04)' }}>
       <div className="px-8 py-6 border-b" style={{ borderColor: 'rgba(197,198,206,0.12)' }}>
         <h2 className="font-extrabold text-lg" style={{ fontFamily: 'Manrope', color: '#031631' }}>{title}</h2>
         {subtitle && <p className="text-sm mt-0.5" style={{ color: '#75777e' }}>{subtitle}</p>}
@@ -62,9 +63,8 @@ export default function Settings() {
   const navigate = useNavigate()
   const { user, profile, isPro, updateProfile, signOut } = useAuth()
 
-  // Account state
-  const [firstName, setFirstName] = useState(profile?.first_name || '')
-  const [lastName, setLastName] = useState(profile?.last_name || '')
+  // Account state — stored as full_name to match SideNav / Dashboard reads
+  const [fullName, setFullName] = useState(profile?.full_name || '')
   const [accountSaving, setAccountSaving] = useState(false)
   const [accountSaved, setAccountSaved] = useState(false)
   const [accountError, setAccountError] = useState('')
@@ -73,8 +73,7 @@ export default function Settings() {
   // Sync state if profile loads later
   useEffect(() => {
     if (profile) {
-      setFirstName(profile.first_name || '')
-      setLastName(profile.last_name || '')
+      setFullName(profile.full_name || '')
     }
   }, [profile])
 
@@ -102,8 +101,8 @@ export default function Settings() {
     setAccountError('')
     setAccountSaved(false)
     try {
-      await updateProfile({ first_name: firstName, last_name: lastName })
-      await supabase.auth.updateUser({ data: { first_name: firstName, last_name: lastName } })
+      await updateProfile({ full_name: fullName })
+      await supabase.auth.updateUser({ data: { full_name: fullName } })
       setAccountSaved(true)
       setTimeout(() => setAccountSaved(false), 3000)
     } catch (err) {
@@ -198,34 +197,61 @@ export default function Settings() {
   }
 
   const planLabel = isPro ? 'Pro' : 'Free'
-  
-  const sessionsUsed = profile?.sessions_used || 0
-  const sessionsLimit = profile?.sessions_limit || 5
+
+  const planTier = profile?.plan_tier || 'free'
+  const sessionsUsed = profile?.tailors_used || 0
+  const sessionsLimit = PLAN_LIMITS[planTier]?.monthly_tailors ?? 5
+
+  const NAV_ITEMS = [
+    { id: 'account',      label: 'Account',       icon: 'person'          },
+    { id: 'subscription', label: 'Subscription',  icon: 'workspace_premium' },
+    ...(!isGoogleUser ? [{ id: 'security', label: 'Security', icon: 'lock' }] : []),
+    { id: 'preferences',  label: 'Preferences',   icon: 'tune'            },
+    { id: 'data',         label: 'Data & Privacy', icon: 'shield'          },
+    { id: 'session',      label: 'Session',        icon: 'logout'          },
+    { id: 'danger',       label: 'Danger Zone',    icon: 'warning'         },
+  ]
+
+  function scrollTo(id) {
+    document.getElementById(`settings-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: '#f7f9fb' }}>
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f7f9fb' }}>
       <SideNav />
 
-      <main className="flex-1 px-4 md:px-8 lg:px-12 py-8 md:py-12 overflow-y-auto pb-24 md:pb-12">
-        <div className="max-w-4xl mx-auto">
+      <div className="flex-1 flex overflow-hidden">
 
-          {/* Page header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-extrabold tracking-tight" style={{ fontFamily: 'Manrope', color: '#031631', letterSpacing: '-0.02em' }}>
-              Settings
-            </h1>
-            <p className="mt-1 text-sm" style={{ color: '#44474d' }}>Manage your account, billing, and preferences.</p>
+        {/* Settings secondary nav */}
+        <nav className="hidden md:flex w-56 flex-shrink-0 flex-col border-r overflow-y-auto custom-scroll bg-white"
+          style={{ borderColor: 'rgba(197,198,206,0.15)' }}>
+          <div className="px-4 pt-8 pb-4">
+            <p className="text-[10px] font-black uppercase tracking-widest px-3 mb-3" style={{ color: '#8293b4' }}>Settings</p>
+            <div className="space-y-0.5">
+              {NAV_ITEMS.map(item => (
+                <button key={item.id} onClick={() => scrollTo(item.id)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all text-left hover:bg-[#f2f4f6]"
+                  style={{ color: item.id === 'danger' ? '#93000a' : '#44474d' }}>
+                  <span className="material-symbols-outlined text-[18px]"
+                    style={{ color: item.id === 'danger' ? '#93000a' : '#8293b4' }}>
+                    {item.icon}
+                  </span>
+                  {item.label}
+                </button>
+              ))}
+            </div>
           </div>
+        </nav>
+
+        <main className="flex-1 overflow-y-auto pb-24 md:pb-12">
+          <div className="max-w-3xl mx-auto px-4 md:px-8 py-8 md:py-12">
 
           <div className="space-y-6">
 
             {/* Account */}
-            <Section title="Account" subtitle="Your personal information and login details.">
-              <Field label="First Name">
-                <Input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" />
-              </Field>
-              <Field label="Last Name">
-                <Input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" />
+            <Section id="settings-account" title="Account" subtitle="Your personal information and login details.">
+              <Field label="Full Name">
+                <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Your full name" />
               </Field>
               <Field label="Email Address" hint="Contact support to change your email.">
                 <Input value={user?.email || ''} disabled />
@@ -249,7 +275,7 @@ export default function Settings() {
             </Section>
 
             {/* Subscription */}
-            <Section title="Subscription" subtitle="Your current plan and usage.">
+            <Section id="settings-subscription" title="Subscription" subtitle="Your current plan and usage.">
               <Field label="Current Plan">
                 <div className="flex items-center gap-3">
                   <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest text-white"
@@ -312,7 +338,7 @@ export default function Settings() {
 
             {/* Security */}
             {!isGoogleUser && (
-              <Section title="Security" subtitle="Update your password.">
+              <Section id="settings-security" title="Security" subtitle="Update your password.">
                 <Field label="New Password" hint="Minimum 8 characters.">
                   <div className="space-y-3">
                     <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="New password" />
@@ -332,7 +358,7 @@ export default function Settings() {
             )}
 
             {/* Preferences */}
-            <Section title="Preferences" subtitle="Control how JobBlitz communicates with you.">
+            <Section id="settings-preferences" title="Preferences" subtitle="Control how JobBlitz communicates with you.">
               <Field label="Email Notifications" hint="Receive tips, session summaries, and product updates.">
                 <button
                   onClick={handleNotifToggle}
@@ -349,7 +375,7 @@ export default function Settings() {
             </Section>
 
             {/* Data & Privacy */}
-            <Section title="Data & Privacy" subtitle="Your data, your control.">
+            <Section id="settings-data" title="Data & Privacy" subtitle="Your data, your control.">
               <Field label="Export Your Data" hint="Download everything we have stored for your account.">
                 <button
                   onClick={handleExportData}
@@ -371,7 +397,7 @@ export default function Settings() {
             </Section>
 
             {/* Sign Out */}
-            <Section title="Session">
+            <Section id="settings-session" title="Session">
               <Field label="Sign Out" hint="You'll need to log in again to access your account.">
                 <button
                   onClick={handleSignOut}
@@ -384,7 +410,7 @@ export default function Settings() {
             </Section>
 
             {/* Danger Zone */}
-            <div className="rounded-2xl overflow-hidden border-2" style={{ borderColor: 'rgba(147,0,10,0.2)' }}>
+            <div id="settings-danger" className="rounded-2xl overflow-hidden border-2" style={{ borderColor: 'rgba(147,0,10,0.2)' }}>
               <div className="px-8 py-6 border-b" style={{ borderColor: 'rgba(147,0,10,0.1)', backgroundColor: 'rgba(255,218,214,0.15)' }}>
                 <h2 className="font-extrabold text-lg" style={{ fontFamily: 'Manrope', color: '#93000a' }}>Danger Zone</h2>
                 <p className="text-sm mt-0.5" style={{ color: '#44474d' }}>Irreversible actions. Proceed with caution.</p>
@@ -403,8 +429,9 @@ export default function Settings() {
             </div>
 
           </div>
-        </div>
-      </main>
+          </div>
+        </main>
+      </div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (

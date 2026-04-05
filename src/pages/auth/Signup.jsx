@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import logoWordmark from '../../assets/brand/jobblitz-wordmark-transparent.png'
+import { PLAN_LIMITS } from '../../lib/planLimits'
 
 export default function Signup() {
   const navigate = useNavigate()
@@ -11,8 +12,7 @@ export default function Signup() {
     document.title = 'Sign Up | JobBlitz'
     if (!authLoading && user) navigate('/app/dashboard', { replace: true })
   }, [user, authLoading, navigate])
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -22,11 +22,10 @@ export default function Signup() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-    if (!firstName.trim() || !lastName.trim()) { setError('Please enter your first and last name'); return }
     if (password.length < 8) { setError('Password must be at least 8 characters'); return }
     setLoading(true)
     try {
-      await signUp({ email, password, firstName, lastName })
+      await signUp({ email, password })
       setSuccess(true)
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.')
@@ -104,7 +103,7 @@ export default function Signup() {
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-6"
             style={{ backgroundColor: '#e1e0ff', color: '#2f2ebe' }}>
             <span className="material-symbols-outlined icon-filled text-[12px]">star</span>
-            FREE · 3 tailoring sessions included
+            FREE · {PLAN_LIMITS.free.monthly_tailors} tailoring sessions / mo
           </div>
 
           <h1 className="text-3xl font-extrabold tracking-tight mb-2"
@@ -146,24 +145,7 @@ export default function Signup() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: '#031631' }}>First Name</label>
-                <input type="text" required value={firstName} onChange={e => setFirstName(e.target.value)}
-                  autoComplete="given-name"
-                  className="w-full px-4 py-3.5 rounded-xl border focus:outline-none focus:ring-2 transition-all bg-white"
-                  style={{ borderColor: 'rgba(197,198,206,0.3)', color: '#031631' }}
-                  placeholder="Alex" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: '#031631' }}>Last Name</label>
-                <input type="text" required value={lastName} onChange={e => setLastName(e.target.value)}
-                  autoComplete="family-name"
-                  className="w-full px-4 py-3.5 rounded-xl border focus:outline-none focus:ring-2 transition-all bg-white"
-                  style={{ borderColor: 'rgba(197,198,206,0.3)', color: '#031631' }}
-                  placeholder="Sterling" />
-              </div>
-            </div>
+
             <div>
               <label className="block text-sm font-semibold mb-2" style={{ color: '#031631' }}>Email</label>
               <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
@@ -189,8 +171,8 @@ export default function Signup() {
 
           <p className="text-xs text-center mt-8" style={{ color: '#75777e' }}>
             By signing up, you agree to our{' '}
-            <a href="#" className="underline">Terms of Service</a> and{' '}
-            <a href="#" className="underline">Privacy Policy</a>.
+            <a href="/terms" className="underline">Terms of Service</a> and{' '}
+            <a href="/privacy" className="underline">Privacy Policy</a>.
           </p>
         </div>
       </div>

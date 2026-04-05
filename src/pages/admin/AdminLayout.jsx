@@ -8,7 +8,7 @@ import AdminSideNav from '../../components/admin/AdminSideNav'
  */
 export default function AdminLayout() {
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-blue-600/30">
+    <div className="flex h-screen overflow-hidden bg-slate-950 text-slate-200 font-sans selection:bg-blue-600/30">
       {/* Sidebar - fixed width */}
       <AdminSideNav />
 

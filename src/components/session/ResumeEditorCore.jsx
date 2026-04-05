@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSession } from '../../context/SessionContext'
 import { useSessions } from '../../hooks/useSessions'
+import { useAuth } from '../../context/AuthContext'
 import { templates, AtelierTemplate, MinimalTemplate, ImpactTemplate } from '../ResumeTemplates'
 
 const PAPER_WIDTH = 794
@@ -10,6 +11,7 @@ export default function ResumeEditorCore() {
   const navigate = useNavigate()
   const { activeSession } = useSession()
   const { saveResumeVersion } = useSessions()
+  const { isPro } = useAuth()
   const [activeTemplate, setActiveTemplate] = useState('atelier')
   const [zoom, setZoom] = useState(90)
   const [saving, setSaving] = useState(false)
@@ -56,6 +58,10 @@ export default function ResumeEditorCore() {
 
   function handleExportPDF() {
     if (!resume) return
+    if (!isPro) {
+      navigate('/pricing')
+      return
+    }
     const prev = document.title
     document.title = resume.name
       ? `${resume.name} — Resume`
@@ -65,6 +71,15 @@ export default function ResumeEditorCore() {
     window.print()
     // Restore after a tick so the print dialog can capture the title first
     setTimeout(() => { document.title = prev }, 500)
+  }
+
+  function handleTemplateSelect(templateId) {
+    const proTemplates = ['minimal', 'impact']
+    if (proTemplates.includes(templateId) && !isPro) {
+      navigate('/pricing')
+      return
+    }
+    setActiveTemplate(templateId)
   }
 
   const ResumeTemplate = activeTemplate === 'atelier'
@@ -107,8 +122,9 @@ export default function ResumeEditorCore() {
           </div>
           <button onClick={handleExportPDF} disabled={!resume}
             className="px-4 md:px-5 py-2 text-sm font-bold rounded-lg text-white shadow-lg transition-all active:scale-95 ai-glow-btn flex items-center gap-1.5 disabled:opacity-40">
-            <span className="material-symbols-outlined text-[16px]">download</span>
+            <span className="material-symbols-outlined text-[16px]">{isPro ? 'download' : 'lock'}</span>
             <span className="hidden sm:inline">Export PDF</span>
+            {!isPro && <span className="text-[9px] font-black uppercase tracking-wider opacity-80">Pro</span>}
           </button>
         </header>
 
@@ -156,20 +172,33 @@ export default function ResumeEditorCore() {
         <div className="px-6 py-5 border-b" style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
           <h3 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#8293b4' }}>Template</h3>
           <div className="space-y-2">
-            {templates.map(t => (
-              <button key={t.id} onClick={() => setActiveTemplate(t.id)}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all"
-                style={{
-                  backgroundColor: activeTemplate === t.id ? '#031631' : 'white',
-                  color: activeTemplate === t.id ? 'white' : '#031631',
-                  border: activeTemplate === t.id ? 'none' : '1px solid rgba(197,198,206,0.1)'
-                }}>
-                {t.label}
-                {activeTemplate === t.id && (
-                  <span className="material-symbols-outlined icon-filled text-[16px]">check_circle</span>
-                )}
-              </button>
-            ))}
+            {templates.map(t => {
+              const isLocked = ['minimal', 'impact'].includes(t.id) && !isPro
+              return (
+                <button key={t.id} onClick={() => handleTemplateSelect(t.id)}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all"
+                  style={{
+                    backgroundColor: activeTemplate === t.id ? '#031631' : 'white',
+                    color: activeTemplate === t.id ? 'white' : isLocked ? '#75777e' : '#031631',
+                    border: activeTemplate === t.id ? 'none' : '1px solid rgba(197,198,206,0.1)',
+                    opacity: isLocked ? 0.7 : 1,
+                  }}>
+                  <span className="flex items-center gap-2">
+                    {t.label}
+                    {isLocked && (
+                      <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                        style={{ backgroundColor: '#e1e0ff', color: '#2f2ebe' }}>Pro</span>
+                    )}
+                  </span>
+                  {activeTemplate === t.id
+                    ? <span className="material-symbols-outlined icon-filled text-[16px]">check_circle</span>
+                    : isLocked
+                      ? <span className="material-symbols-outlined text-[14px]">lock</span>
+                      : null
+                  }
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -213,16 +242,20 @@ export default function ResumeEditorCore() {
         <div className="px-4 py-3">
           {/* Template selector — horizontal scroll */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar mb-3">
-            {templates.map(t => (
-              <button key={t.id} onClick={() => setActiveTemplate(t.id)}
-                className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all"
-                style={{
-                  backgroundColor: activeTemplate === t.id ? '#031631' : '#f2f4f6',
-                  color: activeTemplate === t.id ? 'white' : '#44474d',
-                }}>
-                {t.label}
-              </button>
-            ))}
+            {templates.map(t => {
+              const isLocked = ['minimal', 'impact'].includes(t.id) && !isPro
+              return (
+                <button key={t.id} onClick={() => handleTemplateSelect(t.id)}
+                  className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                  style={{
+                    backgroundColor: activeTemplate === t.id ? '#031631' : '#f2f4f6',
+                    color: activeTemplate === t.id ? 'white' : '#44474d',
+                  }}>
+                  {isLocked && <span className="material-symbols-outlined text-[12px]">lock</span>}
+                  {t.label}
+                </button>
+              )
+            })}
           </div>
           {/* Actions */}
           <div className="flex gap-2">
@@ -236,8 +269,8 @@ export default function ResumeEditorCore() {
             </button>
             <button onClick={handleExportPDF} disabled={!resume}
               className="flex-1 py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 ai-glow-btn disabled:opacity-40 transition-all">
-              <span className="material-symbols-outlined text-[16px]">download</span>
-              Export PDF
+              <span className="material-symbols-outlined text-[16px]">{isPro ? 'download' : 'lock'}</span>
+              {isPro ? 'Export PDF' : 'PDF (Pro)'}
             </button>
           </div>
           {saveMsg && (

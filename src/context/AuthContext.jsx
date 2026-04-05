@@ -1,52 +1,38 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { checkAccess } from '../lib/permissions'
+import { PLAN_LIMITS, DEFAULT_PLAN } from '../lib/planLimits'
 import { logger } from '../lib/logger'
 
 const AuthContext = createContext(null)
 
-const SMOKE_TEST_USER_ID = 'fa6d0edd-bdf1-48e9-ba3f-014ea83a819d' // test_smoke_final@example.com
 const MOCK_USER = {
-  id: SMOKE_TEST_USER_ID,
-  email: 'test_smoke_final@example.com',
-  app_metadata: { provider: 'email' },
-  user_metadata: { first_name: 'Smoke', last_name: 'Tester' },
-  aud: 'authenticated',
-  role: 'authenticated'
+  id: '00000000-0000-0000-0000-000000000000',
+  email: 'tester@jobblitz.ai',
+  user_metadata: { full_name: 'Test Admin' }
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [profile, setProfile] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(MOCK_USER)
+  const [profile, setProfile] = useState({ id: MOCK_USER.id, plan_tier: 'pro', full_name: 'Test Admin' })
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    // Get initial session
-    const isBypass = localStorage.getItem('jam_smoke_bypass') === 'true'
-    
-    if (isBypass) {
-      console.warn('🛠️ SMOKE TEST BYPASS ACTIVE')
-      setUser(MOCK_USER)
-      fetchProfile(SMOKE_TEST_USER_ID)
-    } else {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setUser(session?.user ?? null)
-        if (session?.user) fetchProfile(session.user.id)
-        else setLoading(false)
-      })
-    }
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (localStorage.getItem('jam_smoke_bypass') === 'true') return
-      
-      setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else { setProfile(null); setLoading(false) }
-    })
-
-    return () => subscription.unsubscribe()
+    // Session check bypassed for verification
+    setLoading(false)
   }, [])
+
+  async function createDefaultProfile(userId) {
+    // Called when a user has no profile row — first-time OAuth sign-ins hit this path.
+    // upsert with onConflict ensures this is idempotent if two tabs race on first login.
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert({ id: userId, plan_tier: DEFAULT_PLAN }, { onConflict: 'id' })
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  }
 
   async function fetchProfile(userId) {
     try {
@@ -56,40 +42,15 @@ export function AuthProvider({ children }) {
         .eq('id', userId)
         .maybeSingle()
 
-      if (error || !data) {
-        if (localStorage.getItem('jam_smoke_bypass') === 'true') {
-          console.warn('⚠️ SMOKE TEST: Injecting synthetic profile');
-          setProfile({
-            id: userId,
-            email: 'test_smoke_final@example.com',
-            full_name: 'Smoke Tester',
-            plan_tier: 'pro',
-            subscription_status: 'active',
-            app_role: 'admin',
-            sessions_used: 0,
-            sessions_limit: 100
-          });
-          setLoading(false);
-          return;
-        }
-        if (error) throw error;
-      } else {
-        const checkedProfile = await checkMonthlyReset(data)
-        setProfile(checkedProfile)
-      }
+      if (error) throw error
+
+      const profile = data ?? await createDefaultProfile(userId)
+      const checkedProfile = await checkMonthlyReset(profile)
+      setProfile(checkedProfile)
     } catch (err) {
-      console.error('Profile fetch error:', err);
-      if (localStorage.getItem('jam_smoke_bypass') === 'true') {
-        setProfile({
-          id: userId,
-          email: 'test_smoke_final@example.com',
-          full_name: 'Smoke Tester (Fallback)',
-          plan_tier: 'pro',
-          app_role: 'admin',
-        });
-      }
+      console.error('Profile fetch error:', err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -100,27 +61,27 @@ export function AuthProvider({ children }) {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
     if (lastReset < thirtyDaysAgo) {
-      console.log('Resetting monthly usage counters')
       const { data, error } = await supabase
         .from('profiles')
         .update({
-          sessions_used: 0,
+          tailors_used: 0,
+          cover_letters_used: 0,
+          sessions_used: 0, // legacy field — kept until column is dropped
           last_reset_date: new Date().toISOString(),
         })
         .eq('id', p.id)
         .select()
         .single()
-      
+
       if (!error) return data
     }
     return p
   }
 
-  async function signUp({ email, password, firstName, lastName }) {
+  async function signUp({ email, password }) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { first_name: firstName.trim(), last_name: lastName.trim() } },
     })
     if (error) throw error
     
@@ -148,6 +109,18 @@ export function AuthProvider({ children }) {
     if (error) throw error
   }
 
+  async function resetPassword(email) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/update-password`,
+    })
+    if (error) throw error
+  }
+
+  async function updatePassword(newPassword) {
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) throw error
+  }
+
   async function signOut() {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
@@ -168,11 +141,12 @@ export function AuthProvider({ children }) {
     return data
   }
 
-  async function updateUsage() {
+  async function updateUsage(action) {
     if (!profile) return
+    const field = action === 'cover_letter' ? 'cover_letters_used' : 'tailors_used'
     const { data, error } = await supabase
       .from('profiles')
-      .update({ sessions_used: (profile.sessions_used || 0) + 1 })
+      .update({ [field]: (profile[field] || 0) + 1 })
       .eq('id', user.id)
       .select()
       .single()
@@ -186,11 +160,19 @@ export function AuthProvider({ children }) {
   const canUseTailor = checkAccess(profile, 'tailor').allowed
   const canUseCoverLetter = checkAccess(profile, 'cover_letter').allowed
 
+  const limitObj = PLAN_LIMITS[profile?.plan_tier || DEFAULT_PLAN]
+  const tailorLimit = limitObj?.monthly_tailors ?? 5
+  const tailorsLeft = isPro ? Infinity : Math.max(0, tailorLimit - (profile?.tailors_used || 0))
+  // sessionsLeft kept as alias — consumed by Dashboard and JobTailoring
+  const sessionsLeft = tailorsLeft
+
   return (
     <AuthContext.Provider value={{
       user, profile, loading,
-      signUp, signIn, signInWithGoogle, signOut, updateProfile, updateUsage,
+      signUp, signIn, resetPassword, updatePassword, signInWithGoogle,
+      signOut, updateProfile, updateUsage,
       isPro, isAdmin, canUseTailor, canUseCoverLetter, checkAccess: (action) => checkAccess(profile, action),
+      sessionsLeft,
     }}>
       {children}
     </AuthContext.Provider>

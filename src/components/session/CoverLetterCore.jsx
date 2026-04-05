@@ -13,7 +13,7 @@ export default function CoverLetterCore() {
   const { activeSession } = useSession()
   const { saveCoverLetter } = useSessions()
   const { profile: masterProfile } = useMasterProfile()
-  const { checkAccess, updateUsage } = useAuth()
+  const { checkAccess, updateUsage, isPro } = useAuth()
 
   const [tone, setTone] = useState('Professional')
   const [letterText, setLetterText] = useState(activeSession?.coverLetter || '')
@@ -57,9 +57,44 @@ export default function CoverLetterCore() {
   const hasSession = !!activeSession && !!letterText
 
   return (
-    <div className="flex flex-1 overflow-hidden h-full relative">
-      {/* Left Controls — Desktop Only */}
-      <aside className="hidden lg:flex w-72 flex-shrink-0 flex flex-col border-r overflow-y-auto custom-scroll"
+    <div className="flex flex-1 overflow-hidden h-full relative flex-col lg:flex-row bg-[#f7f9fb]">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto p-4 md:p-10 custom-scroll dot-grid flex justify-center items-start"
+          style={{ paddingBottom: '10rem' }}>
+          {hasSession ? (
+            <div className="w-full flex justify-center animate-slide-in">
+              <div className="bg-white p-6 md:p-[64px_72px] paper-shadow w-full md:w-[816px]" style={{ minHeight: '1056px' }}>
+                <textarea
+                  value={letterText}
+                  onChange={e => setLetterText(e.target.value)}
+                  className="w-full h-full bg-transparent border-none resize-none focus:outline-none leading-relaxed text-[13px] md:text-sm custom-scroll"
+                  style={{ color: '#333', minHeight: '850px', fontFamily: '"Inter", sans-serif' }}
+                  placeholder="Your cover letter text will appear here..."
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-6 py-24 text-center px-4 w-full">
+              <div className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg" style={{ backgroundColor: '#f2f4f6' }}>
+                <span className="material-symbols-outlined text-[40px]" style={{ color: '#0e0099' }}>mail</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-extrabold mb-2" style={{ fontFamily: 'Manrope', color: '#031631' }}>No cover letter yet</h2>
+                <p className="max-w-sm text-sm font-semibold text-[#8293b4]">Finish tailoring your session to generate a high-impact cover letter.</p>
+              </div>
+              <button onClick={() => navigate('/app/tailor')}
+                className="px-8 py-4 text-white font-black rounded-xl ai-glow-btn flex items-center gap-3 active:scale-95 transition-all">
+                <span className="material-symbols-outlined icon-filled text-[20px]">bolt</span>
+                Start Tailoring
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Right Controls — Desktop Only */}
+      <aside className="hidden lg:flex w-72 flex-shrink-0 flex flex-col border-l overflow-y-auto custom-scroll"
         style={{ backgroundColor: '#f2f4f6', borderColor: 'rgba(197,198,206,0.15)' }}>
         <header className="px-6 py-5 border-b" style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
           <h2 className="font-bold text-base" style={{ fontFamily: 'Manrope', color: '#031631' }}>Letter Settings</h2>
@@ -68,18 +103,34 @@ export default function CoverLetterCore() {
         <div className="px-6 py-5 border-b" style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
           <h3 className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: '#8293b4' }}>Tone</h3>
           <div className="grid grid-cols-1 gap-2">
-            {tones.map(t => (
-              <button key={t} onClick={() => setTone(t)}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all"
-                style={{
-                  backgroundColor: tone === t ? '#031631' : 'white',
-                  color: tone === t ? 'white' : '#44474d',
-                  border: tone === t ? 'none' : '1px solid rgba(197,198,206,0.1)'
-                }}>
-                {t}
-                {tone === t && <span className="material-symbols-outlined icon-filled text-[16px]">check_circle</span>}
-              </button>
-            ))}
+            {tones.map((t, i) => {
+              const isLocked = i > 0 && !isPro
+              return (
+                <button key={t}
+                  onClick={() => isLocked ? navigate('/pricing') : setTone(t)}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all"
+                  style={{
+                    backgroundColor: tone === t ? '#031631' : 'white',
+                    color: tone === t ? 'white' : isLocked ? '#75777e' : '#44474d',
+                    border: tone === t ? 'none' : '1px solid rgba(197,198,206,0.1)',
+                    opacity: isLocked ? 0.7 : 1,
+                  }}>
+                  <span className="flex items-center gap-2">
+                    {t}
+                    {isLocked && (
+                      <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                        style={{ backgroundColor: '#e1e0ff', color: '#2f2ebe' }}>Pro</span>
+                    )}
+                  </span>
+                  {tone === t
+                    ? <span className="material-symbols-outlined icon-filled text-[16px]">check_circle</span>
+                    : isLocked
+                      ? <span className="material-symbols-outlined text-[14px]">lock</span>
+                      : null
+                  }
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -105,49 +156,6 @@ export default function CoverLetterCore() {
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-white">
-        <div className="flex-1 overflow-y-auto p-4 md:p-12 custom-scroll dot-grid flex justify-center items-start"
-          style={{ paddingBottom: '10rem' }}>
-          {hasSession ? (
-            <div className="w-full max-w-3xl animate-slide-in">
-              <div className="bg-white rounded-2xl p-6 md:p-12 paper-shadow border" style={{ minHeight: '600px', borderColor: 'rgba(197,198,206,0.15)' }}>
-                <textarea
-                  value={letterText}
-                  onChange={e => setLetterText(e.target.value)}
-                  className="w-full bg-transparent border-none resize-none focus:outline-none leading-relaxed text-sm md:text-base custom-scroll"
-                  style={{ color: '#191c1e', minHeight: '540px', fontFamily: '"Inter", sans-serif' }}
-                  placeholder="Your cover letter text will appear here..."
-                />
-              </div>
-              <div className="flex items-center justify-between mt-4 px-2">
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#b0b1bd]">
-                  {letterText.split(/\s+/).filter(Boolean).length} words · {tone} Tone
-                </p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#b0b1bd]">
-                  Editable Area
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center gap-6 py-24 text-center px-4 w-full">
-              <div className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg" style={{ backgroundColor: '#f2f4f6' }}>
-                <span className="material-symbols-outlined text-[40px]" style={{ color: '#0e0099' }}>mail</span>
-              </div>
-              <div>
-                <h2 className="text-xl font-extrabold mb-2" style={{ fontFamily: 'Manrope', color: '#031631' }}>No cover letter yet</h2>
-                <p className="max-w-sm text-sm font-semibold text-[#8293b4]">Finish tailoring your session to generate a high-impact cover letter.</p>
-              </div>
-              <button onClick={() => navigate('/app/tailor')}
-                className="px-8 py-4 text-white font-black rounded-xl ai-glow-btn flex items-center gap-3 active:scale-95 transition-all">
-                <span className="material-symbols-outlined icon-filled text-[20px]">bolt</span>
-                Start Tailoring
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Mobile Action Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t"
         style={{
@@ -159,16 +167,21 @@ export default function CoverLetterCore() {
         <div className="px-4 py-3">
           {/* Tone Selector — horizontal scroll */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar mb-3">
-            {tones.map(t => (
-              <button key={t} onClick={() => setTone(t)}
-                className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all"
-                style={{
-                  backgroundColor: tone === t ? '#031631' : '#f2f4f6',
-                  color: tone === t ? 'white' : '#44474d',
-                }}>
-                {t}
-              </button>
-            ))}
+            {tones.map((t, i) => {
+              const isLocked = i > 0 && !isPro
+              return (
+                <button key={t}
+                  onClick={() => isLocked ? navigate('/pricing') : setTone(t)}
+                  className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                  style={{
+                    backgroundColor: tone === t ? '#031631' : '#f2f4f6',
+                    color: tone === t ? 'white' : '#44474d',
+                  }}>
+                  {isLocked && <span className="material-symbols-outlined text-[12px]">lock</span>}
+                  {t}
+                </button>
+              )
+            })}
           </div>
           {/* Actions */}
           <div className="flex gap-2">

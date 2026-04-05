@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:medevel.com)",
+      "WebFetch(domain:developers.googleblog.com)",
+      "Bash(node tests/ux-audit.js)",
+      "Bash(node -e \":*)"
+    ]
+  }
+}

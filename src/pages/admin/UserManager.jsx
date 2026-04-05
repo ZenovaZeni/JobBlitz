@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { Link } from 'react-router-dom'
 
 /**
  * UserManager
@@ -139,14 +139,14 @@ export default function UserManager() {
                      {new Date(u.created_at).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' })}
                   </td>
                   <td className="px-6 py-4 text-right pr-6">
-                     <div className="flex items-center justify-end gap-2">
-                        <button className="p-2 rounded-xl text-slate-500 hover:text-white hover:bg-slate-800 transition-all opacity-0 group-hover:opacity-100" title="View details">
-                           <span className="material-symbols-outlined text-[18px]">visibility</span>
-                        </button>
-                        <button className="p-2 rounded-xl text-slate-500 hover:text-white hover:bg-slate-800 transition-all" title="More options">
-                           <span className="material-symbols-outlined text-[18px]">more_vert</span>
-                        </button>
-                     </div>
+                    <div className="flex items-center justify-end gap-2">
+                       <Link to={`/admin/users/${u.id}`} className="p-2 rounded-xl text-slate-500 hover:text-white hover:bg-slate-800 transition-all opacity-0 group-hover:opacity-100 flex items-center justify-center" title="View details">
+                          <span className="material-symbols-outlined text-[18px]">visibility</span>
+                       </Link>
+                       <button className="p-2 rounded-xl text-slate-500 hover:text-white hover:bg-slate-800 transition-all" title="More options">
+                          <span className="material-symbols-outlined text-[18px]">more_vert</span>
+                       </button>
+                    </div>
                   </td>
                 </tr>
               ))}
