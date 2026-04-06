@@ -39,6 +39,7 @@ export default function Dashboard() {
   const { user, profile, isPro, sessionsLeft } = useAuth()
   const { setActiveSession } = useSession()
   const { profile: masterProfile, loading: profileLoading } = useMasterProfile()
+  const { sessions, loading: sessionsLoading } = useSessions()
   const [showRetry, setShowRetry] = useState(false)
   const [forceEntry, setForceEntry] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(() => {
