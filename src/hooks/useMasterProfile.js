@@ -13,20 +13,38 @@ export function useMasterProfile() {
   const [error, setError] = useState(null)
 
   const load = useCallback(async () => {
-    if (!user) return
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('master_profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    if (!user) {
+      setLoading(false)
+      return
+    }
 
-    if (error) setError(error.message)
-    setProfile(data)
-    setLoading(false)
+    setLoading(true)
+    const timeout = setTimeout(() => {
+      console.warn('[useMasterProfile] Sync timed out after 10s')
+      setLoading(false)
+    }, 10000)
+
+    try {
+      const { data, error } = await supabase
+        .from('master_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (error) throw error
+      setProfile(data)
+    } catch (err) {
+      setError(err.message)
+      console.error('[useMasterProfile] Load Error:', err.message)
+    } finally {
+      clearTimeout(timeout)
+      setLoading(false)
+    }
   }, [user])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { 
+    load() 
+  }, [load])
 
   const save = useCallback(async (updates) => {
     if (!user) return

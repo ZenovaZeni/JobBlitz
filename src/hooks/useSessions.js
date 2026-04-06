@@ -11,19 +11,37 @@ export function useSessions() {
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
-    if (!user) return
+    if (!user) {
+      setLoading(false)
+      return
+    }
+    
     setLoading(true)
-    const { data, error } = await supabase
-      .from('sessions')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-    if (error) console.error('Failed to load sessions:', error.message)
-    setSessions(data || [])
-    setLoading(false)
+    const timeout = setTimeout(() => {
+      console.warn('[useSessions] Sync timed out after 10s')
+      setLoading(false)
+    }, 10000)
+
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        
+      if (error) throw error
+      setSessions(data || [])
+    } catch (err) {
+      console.error('[useSessions] Load Error:', err.message)
+    } finally {
+      clearTimeout(timeout)
+      setLoading(false)
+    }
   }, [user])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { 
+    load() 
+  }, [load])
 
   const createSession = useCallback(async ({ company, role, jd_text }) => {
     const { data, error } = await supabase
