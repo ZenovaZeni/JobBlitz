@@ -9,8 +9,12 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [isAuthReady, setIsAuthReady] = useState(false)
+  const [isProfileReady, setIsProfileReady] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
+
+  // Backward compatibility alias
+  const loading = !isAuthReady
 
   useEffect(() => {
     let mounted = true
@@ -18,16 +22,19 @@ export function AuthProvider({ children }) {
     
     // Safety timeout: the "Nuclear Option" to ensure the app ALWAYS boots
     const globalAuthTimeout = setTimeout(() => {
-      if (mounted && loading) {
+      if (mounted && !isAuthReady) {
         console.error('[AuthContext] CRITICAL: Auth initialization timed out after 8s. Force-clearing loading state.')
-        setLoading(false)
+        setIsAuthReady(true)
       }
     }, 8000)
 
     const initAuth = async () => {
+      const startTime = performance.now()
       try {
         console.log('[AuthContext] SESSION_SYNCING')
         const { data: { session }, error } = await supabase.auth.getSession()
+        const sessionTime = performance.now()
+        console.log(`[AuthTiming] Session sync: ${(sessionTime - startTime).toFixed(0)}ms`)
         
         if (error) {
           console.error('[AuthContext] Session Hydration Error:', error)
@@ -40,15 +47,18 @@ export function AuthProvider({ children }) {
         setUser(currentUser)
         
         if (currentUser) {
-          console.log('[AuthContext] PROFILE_SYNCING for', currentUser.email)
-          await fetchProfile(currentUser.id)
+          // Immediately unblock the UI shell by setting isAuthReady true
+          setIsAuthReady(true)
+          console.log('[AuthContext] PROFILE_SYNCING in background...')
+          fetchProfile(currentUser.id, startTime) // Parallel background sync
         } else {
           console.log('[AuthContext] READY - No active session')
-          setLoading(false)
+          setIsAuthReady(true)
+          setIsProfileReady(true) // Nothing to load
         }
       } catch (err) {
         console.error('[AuthContext] Bootstrap Failed:', err)
-        if (mounted) setLoading(false)
+        if (mounted) setIsAuthReady(true)
       } finally {
         if (mounted) clearTimeout(globalAuthTimeout)
       }
@@ -64,10 +74,12 @@ export function AuthProvider({ children }) {
       setUser(currentUser)
       
       if (currentUser) {
-        await fetchProfile(currentUser.id)
+        setIsAuthReady(true)
+        fetchProfile(currentUser.id)
       } else {
         setProfile(null)
-        setLoading(false)
+        setIsAuthReady(true)
+        setIsProfileReady(true)
       }
     })
 
@@ -103,8 +115,9 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function fetchProfile(userId) {
+  async function fetchProfile(userId, startTime = performance.now()) {
     try {
+      setIsProfileReady(false)
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -125,14 +138,17 @@ export function AuthProvider({ children }) {
       if (userProfile) {
         const checkedProfile = await checkMonthlyReset(userProfile)
         setProfile(checkedProfile)
-        console.log('[AuthContext] READY - Profile Loaded')
+        const totalTime = performance.now() - startTime
+        console.log(`[AuthContext] READY - Profile Loaded in ${totalTime.toFixed(0)}ms`)
       } else {
         console.warn('[AuthContext] READY - Proceeding with NULL profile (fallback mode)')
       }
     } catch (err) {
       console.error('[AuthContext] Final Profile Fetch Error:', err)
     } finally {
-      setLoading(false)
+      setIsProfileReady(true)
+      // Safety: always ensure auth is ready if profile somehow finished first or errored
+      setIsAuthReady(true)
     }
   }
 
@@ -255,7 +271,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, profile, loading,
+      user, profile, loading, isAuthReady, isProfileReady,
       signUp, signIn, resetPassword, updatePassword, signInWithGoogle,
       signOut, isSigningOut, updateProfile, updateUsage,
       isPro, isAdmin, canUseTailor, canUseCoverLetter, checkAccess: (action) => checkAccess(profile, action),

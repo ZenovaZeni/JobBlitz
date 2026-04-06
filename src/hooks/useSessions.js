@@ -17,6 +17,7 @@ export function useSessions() {
     }
     
     setLoading(true)
+    const startTime = performance.now()
     const timeout = setTimeout(() => {
       console.warn('[useSessions] Sync timed out after 10s')
       setLoading(false)
@@ -31,6 +32,8 @@ export function useSessions() {
         
       if (error) throw error
       setSessions(data || [])
+      const duration = performance.now() - startTime
+      console.log(`[DataTiming] Sessions loaded in ${duration.toFixed(0)}ms`)
     } catch (err) {
       console.error('[useSessions] Load Error:', err.message)
     } finally {

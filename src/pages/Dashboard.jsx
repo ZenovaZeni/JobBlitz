@@ -7,7 +7,7 @@ import { useSession } from '../context/SessionContext'
 import { useMasterProfile } from '../hooks/useMasterProfile'
 import { useSessions } from '../hooks/useSessions'
 
-function StatCard({ icon, value, label, color = '#031631' }) {
+function StatCard({ icon, value, label, color = '#031631', loading = false }) {
   return (
     <div className="bg-white rounded-2xl p-4 md:p-5 flex items-center gap-3 md:gap-4 border border-transparent transition-all hover:border-[#0e0099]/10 hover:shadow-lg"
       style={{ boxShadow: '0 2px 12px rgba(3,22,49,0.04)' }}>
@@ -18,7 +18,9 @@ function StatCard({ icon, value, label, color = '#031631' }) {
       <div className="min-w-0">
         <div className="text-xl md:text-2xl font-extrabold leading-none mb-0.5 truncate"
           style={{ fontFamily: 'Manrope', color: '#031631' }}>
-          {value}
+          {loading ? (
+            <div className="w-12 h-6 bg-[#eceef0] rounded-lg animate-pulse" />
+          ) : value}
         </div>
         <div className="text-[10px] font-bold uppercase tracking-widest text-[#8293b4]">{label}</div>
       </div>
@@ -36,12 +38,12 @@ function timeAgo(isoDate) {
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { user, profile, isPro, sessionsLeft } = useAuth()
+  const { user, profile, isPro, sessionsLeft, isProfileReady } = useAuth()
   const { setActiveSession } = useSession()
-  const { profile: masterProfile, loading: profileLoading } = useMasterProfile()
+  const { profile: masterProfile, loading: masterProfileLoading } = useMasterProfile()
   const { sessions, loading: sessionsLoading } = useSessions()
   const [showRetry, setShowRetry] = useState(false)
-  const [forceEntry, setForceEntry] = useState(false)
+  const [mountTime] = useState(() => performance.now())
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem('jb_onboarding_skipped')
   })
@@ -53,13 +55,20 @@ export default function Dashboard() {
 
   useEffect(() => {
     let timer
-    if (sessionsLoading && !forceEntry) {
+    if (sessionsLoading) {
       timer = setTimeout(() => {
         setShowRetry(true)
       }, 12000)
     }
     return () => clearTimeout(timer)
-  }, [sessionsLoading, forceEntry])
+  }, [sessionsLoading])
+
+  useEffect(() => {
+    if (!sessionsLoading && isProfileReady && !masterProfileLoading) {
+      const loadTime = performance.now() - mountTime
+      console.log(`[DashboardTiming] Fully hydrated in ${loadTime.toFixed(0)}ms`)
+    }
+  }, [sessionsLoading, isProfileReady, masterProfileLoading, mountTime])
 
   const firstName = (profile?.full_name || user?.email || 'there').split('@')[0].split(' ')[0]
   const avgMatchScore = sessions?.length && sessions.some(s => s.match_score)
@@ -76,44 +85,6 @@ export default function Dashboard() {
 
   const greeting = new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'
 
-  if (sessionsLoading && !forceEntry) {
-    return (
-      <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f7f9fb' }}>
-        <SideNav />
-        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          {!showRetry ? (
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-10 h-10 border-4 border-[#031631] border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm font-bold text-[#031631] animate-pulse">Syncing Dashboard…</p>
-            </div>
-          ) : (
-            <div className="max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-6 border border-amber-100">
-                <span className="material-symbols-outlined text-amber-500 text-3xl">sync_problem</span>
-              </div>
-              <h2 className="text-xl font-black mb-2" style={{ color: '#031631' }}>Sync is taking a while</h2>
-              <p className="text-sm font-medium mb-8" style={{ color: '#8293b4' }}>
-                We're having trouble reaching the database. You can try refreshing or enter the dashboard anyway.
-              </p>
-              <div className="flex flex-col gap-3">
-                <button 
-                  onClick={() => window.location.reload()}
-                  className="w-full py-4 text-white font-bold rounded-2xl ai-glow-btn">
-                  Retry Sync
-                </button>
-                <button 
-                  onClick={() => setForceEntry(true)}
-                  className="w-full py-3 text-sm font-bold rounded-2xl transition-all hover:bg-white"
-                  style={{ color: '#031631' }}>
-                  Enter Dashboard Anyway
-                </button>
-              </div>
-            </div>
-          )}
-        </main>
-      </div>
-    )
-  }
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f7f9fb' }}>
@@ -236,10 +207,10 @@ export default function Dashboard() {
 
                 {/* Stats row */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-5 md:mb-6">
-                  <StatCard icon="description" value={sessions.length} label="Sessions" color="#031631" />
-                  <StatCard icon="analytics" value={avgMatchScore > 0 ? `${avgMatchScore}%` : '—'} label="Avg Match" color="#0e0099" />
-                  <StatCard icon="account_circle" value={`${masterProfile?.completion_pct ?? 0}%`} label="Profile" color="#2f2ebe" />
-                  <StatCard icon="mail" value={sessions.filter(s => s.cover_letter).length || '—'} label="Letters" color="#44474d" />
+                  <StatCard icon="description" value={sessions?.length || 0} label="Sessions" color="#031631" loading={sessionsLoading} />
+                  <StatCard icon="analytics" value={avgMatchScore > 0 ? `${avgMatchScore}%` : '—'} label="Avg Match" color="#0e0099" loading={sessionsLoading} />
+                  <StatCard icon="account_circle" value={`${masterProfile?.completion_pct ?? 0}%`} label="Profile" color="#2f2ebe" loading={masterProfileLoading} />
+                  <StatCard icon="mail" value={sessions?.filter(s => s.cover_letter).length || '—'} label="Letters" color="#44474d" loading={sessionsLoading} />
                 </div>
 
                 {/* Main grid */}
@@ -282,10 +253,14 @@ export default function Dashboard() {
                       </span>
                       <h3 className="font-bold text-sm" style={{ color: '#031631' }}>Master Profile</h3>
                     </div>
-                    {profileLoading ? (
-                      <div className="animate-pulse space-y-2">
+                    {masterProfileLoading ? (
+                      <div className="animate-pulse space-y-3">
                         <div className="h-4 rounded bg-[#eceef0] w-3/4" />
                         <div className="h-3 rounded bg-[#eceef0] w-1/2" />
+                        <div className="space-y-1.5 mt-4">
+                          <div className="h-2 rounded bg-[#eceef0] w-full" />
+                          <div className="h-1.5 rounded bg-[#eceef0] w-full" />
+                        </div>
                       </div>
                     ) : masterProfile ? (
                       <>
@@ -360,35 +335,49 @@ export default function Dashboard() {
                       )}
                     </div>
                     <div className="space-y-2">
-                      {sessions.slice(0, 4).map(session => (
-                        <div
-                          key={session.id}
-                          className="group flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-[#f7f9fb] cursor-pointer border border-transparent hover:border-[#0e0099]/5"
-                          onClick={() => navigate(`/app/session/${session.id}`)}>
-                          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                            style={{ backgroundColor: '#f2f4f6' }}>
-                            <span className="material-symbols-outlined text-[18px]" style={{ color: '#8293b4' }}>description</span>
+                      {sessionsLoading ? (
+                        [1, 2, 3].map(i => (
+                          <div key={i} className="flex items-center gap-3 p-3 rounded-xl animate-pulse">
+                            <div className="w-9 h-9 rounded-xl bg-[#f2f4f6]" />
+                            <div className="flex-1 space-y-2">
+                              <div className="h-3 bg-[#f2f4f6] rounded w-1/3" />
+                              <div className="h-2 bg-[#f2f4f6] rounded w-1/4" />
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-bold text-sm truncate" style={{ color: '#031631' }}>{session.role}</p>
-                            <p className="text-xs truncate" style={{ color: '#8293b4' }}>
-                              {session.company} · {timeAgo(session.created_at)}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            {session.match_score && (
-                              <span className="text-[10px] font-black px-2 py-0.5 rounded-lg"
-                                style={{ backgroundColor: '#e1e0ff', color: '#0e0099' }}>
-                                {session.match_score}%
+                        ))
+                      ) : sessions?.length > 0 ? (
+                        sessions.slice(0, 4).map(session => (
+                          <div
+                            key={session.id}
+                            className="group flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-[#f7f9fb] cursor-pointer border border-transparent hover:border-[#0e0099]/5"
+                            onClick={() => navigate(`/app/session/${session.id}`)}>
+                            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                              style={{ backgroundColor: '#f2f4f6' }}>
+                              <span className="material-symbols-outlined text-[18px]" style={{ color: '#8293b4' }}>description</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-sm truncate" style={{ color: '#031631' }}>{session.role}</p>
+                              <p className="text-xs truncate" style={{ color: '#8293b4' }}>
+                                {session.company} · {timeAgo(session.created_at)}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {session.match_score && (
+                                <span className="text-[10px] font-black px-2 py-0.5 rounded-lg"
+                                  style={{ backgroundColor: '#e1e0ff', color: '#0e0099' }}>
+                                  {session.match_score}%
+                                </span>
+                              )}
+                              <span className="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 transition-opacity"
+                                style={{ color: '#c5c6ce' }}>
+                                chevron_right
                               </span>
-                            )}
-                            <span className="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 transition-opacity"
-                              style={{ color: '#c5c6ce' }}>
-                              chevron_right
-                            </span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p className="text-xs font-semibold py-4 text-center" style={{ color: '#b0b1bd' }}>No recent sessions found.</p>
+                      )}
                     </div>
                   </div>
 
@@ -399,7 +388,16 @@ export default function Dashboard() {
                       <span className="material-symbols-outlined text-[18px]" style={{ color: '#0e0099' }}>timeline</span>
                       <h3 className="font-bold text-sm" style={{ color: '#031631' }}>Recent Activity</h3>
                     </div>
-                    {recentActivity.length === 0 ? (
+                    {sessionsLoading ? (
+                      <div className="space-y-4">
+                        {[1, 2, 3].map(i => (
+                          <div key={i} className="flex items-start gap-3 py-3 animate-pulse">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#eceef0] mt-2" />
+                            <div className="h-3 bg-[#eceef0] rounded w-full" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : recentActivity.length === 0 ? (
                       <div className="py-8 text-center">
                         <span className="material-symbols-outlined text-[28px] block mb-2" style={{ color: '#eceef0' }}>
                           pending_actions

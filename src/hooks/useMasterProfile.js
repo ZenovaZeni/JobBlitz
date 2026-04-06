@@ -19,6 +19,7 @@ export function useMasterProfile() {
     }
 
     setLoading(true)
+    const startTime = performance.now()
     const timeout = setTimeout(() => {
       console.warn('[useMasterProfile] Sync timed out after 10s')
       setLoading(false)
@@ -33,6 +34,8 @@ export function useMasterProfile() {
 
       if (error) throw error
       setProfile(data)
+      const duration = performance.now() - startTime
+      console.log(`[DataTiming] Master Profile loaded in ${duration.toFixed(0)}ms`)
     } catch (err) {
       setError(err.message)
       console.error('[useMasterProfile] Load Error:', err.message)
