@@ -140,8 +140,7 @@ export default function ResumeEditor() {
         {/* Canvas */}
         <div
           ref={canvasRef}
-          className={`flex-1 overflow-y-auto overflow-x-hidden custom-scroll dot-grid flex items-start justify-center ${isDedicatedPreview ? 'p-12' : 'p-4 md:p-10'}`}
-          style={{ paddingBottom: isDedicatedPreview ? '8rem' : '6rem' }}>
+          className={`flex-1 overflow-y-auto overflow-x-hidden custom-scroll dot-grid flex items-start justify-center ${isDedicatedPreview ? 'p-12 pb-32' : 'p-4 md:p-10 pb-36 md:pb-12'}`}>
           {resume ? (
             <div style={{
               transform: `scale(${(isDedicatedPreview ? 100 : effectiveScale * 100) / 100})`,

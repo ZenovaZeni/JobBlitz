@@ -60,11 +60,10 @@ export default function CoverLetterCore() {
     <div className="flex flex-1 overflow-hidden h-full relative flex-col lg:flex-row bg-[#f7f9fb]">
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 md:p-10 custom-scroll dot-grid flex justify-center items-start"
-          style={{ paddingBottom: '10rem' }}>
+        <div className="flex-1 overflow-y-auto p-4 md:p-10 custom-scroll dot-grid flex justify-center items-start pb-40 lg:pb-12">
           {hasSession ? (
             <div className="w-full flex justify-center animate-slide-in">
-              <div className="bg-white p-6 md:p-[64px_72px] paper-shadow w-full md:w-[816px]" style={{ minHeight: '1056px' }}>
+              <div className="bg-white p-6 md:p-[64px_72px] paper-shadow w-full max-w-[816px]" style={{ minHeight: '1056px' }}>
                 <textarea
                   value={letterText}
                   onChange={e => setLetterText(e.target.value)}
@@ -81,13 +80,25 @@ export default function CoverLetterCore() {
               </div>
               <div>
                 <h2 className="text-xl font-extrabold mb-2" style={{ fontFamily: 'Manrope', color: '#031631' }}>No cover letter yet</h2>
-                <p className="max-w-sm text-sm font-semibold text-[#8293b4]">Finish tailoring your session to generate a high-impact cover letter.</p>
+                <p className="max-w-sm text-sm font-semibold text-[#8293b4]">
+                  {activeSession ? 'Generate a personalized cover letter for this role.' : 'Tailor a resume first, then come back to generate your cover letter.'}
+                </p>
               </div>
-              <button onClick={() => navigate('/app/tailor')}
-                className="px-8 py-4 text-white font-black rounded-xl ai-glow-btn flex items-center gap-3 active:scale-95 transition-all">
-                <span className="material-symbols-outlined icon-filled text-[20px]">bolt</span>
-                Start Tailoring
-              </button>
+              {activeSession ? (
+                <button onClick={handleRegenerate} disabled={generating}
+                  className="px-8 py-4 text-white font-black rounded-xl ai-glow-btn flex items-center gap-3 active:scale-95 transition-all disabled:opacity-50">
+                  <span className={`material-symbols-outlined icon-filled text-[20px] ${generating ? 'animate-spin' : ''}`}>
+                    {generating ? 'progress_activity' : 'auto_awesome'}
+                  </span>
+                  {generating ? 'Generating...' : 'Generate Cover Letter'}
+                </button>
+              ) : (
+                <button onClick={() => navigate('/app/tailor')}
+                  className="px-8 py-4 text-white font-black rounded-xl ai-glow-btn flex items-center gap-3 active:scale-95 transition-all">
+                  <span className="material-symbols-outlined icon-filled text-[20px]">bolt</span>
+                  Start Tailoring
+                </button>
+              )}
             </div>
           )}
         </div>

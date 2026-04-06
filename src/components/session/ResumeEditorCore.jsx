@@ -131,8 +131,7 @@ export default function ResumeEditorCore() {
         {/* Canvas */}
         <div
           ref={canvasRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden custom-scroll dot-grid flex items-start justify-center p-4 md:p-10"
-          style={{ paddingBottom: '8rem' }}>
+          className="flex-1 overflow-y-auto overflow-x-hidden custom-scroll dot-grid flex items-start justify-center p-4 md:p-10 pb-36 lg:pb-12">
           {resume ? (
             <div style={{
               transform: `scale(${effectiveScale})`,
@@ -232,7 +231,7 @@ export default function ResumeEditorCore() {
       </aside>
 
       {/* Mobile bottom action bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t"
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t"
         style={{
           backgroundColor: 'rgba(255,255,255,0.98)',
           backdropFilter: 'blur(20px)',

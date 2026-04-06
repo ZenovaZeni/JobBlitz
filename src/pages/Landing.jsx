@@ -1,11 +1,20 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { useEffect } from 'react'
 import logoWordmark from '../assets/brand/jobblitz-wordmark-transparent.png'
 import DemoSection from '../components/landing/DemoSection'
 
 export default function Landing() {
   const navigate = useNavigate()
+  const { user, loading } = useAuth()
   const [openFaq, setOpenFaq] = useState(null)
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/app/dashboard', { replace: true })
+    }
+  }, [user, loading, navigate])
 
   const faqs = [
     {

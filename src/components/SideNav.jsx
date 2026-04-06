@@ -14,7 +14,7 @@ const navItems = [
 
 export default function SideNav() {
   const navigate = useNavigate()
-  const { user, profile, signOut, isPro } = useAuth()
+  const { user, profile, signOut, isSigningOut, isPro } = useAuth()
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'User'
   const initials = displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
@@ -101,10 +101,14 @@ export default function SideNav() {
             <p className="text-xs font-bold truncate" style={{ color: '#031631' }}>{displayName}</p>
             <p className="text-[10px] truncate" style={{ color: '#75777e' }}>{isPro ? 'Pro Plan' : 'Free Plan'}</p>
           </div>
-          <button onClick={handleSignOut} title="Sign out"
-            className="p-1.5 rounded-lg hover:bg-[#eceef0] transition-all"
+          <button onClick={handleSignOut} disabled={isSigningOut} title="Sign out"
+            className="p-1.5 rounded-lg hover:bg-[#eceef0] transition-all disabled:opacity-50"
             style={{ color: '#75777e' }}>
-            <span className="material-symbols-outlined text-[16px]">logout</span>
+            {isSigningOut ? (
+              <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+            ) : (
+              <span className="material-symbols-outlined text-[16px]">logout</span>
+            )}
           </button>
         </div>
       </div>

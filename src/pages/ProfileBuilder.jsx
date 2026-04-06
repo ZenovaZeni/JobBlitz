@@ -553,81 +553,61 @@ export default function ProfileBuilder() {
         )}
         {/* Sticky header */}
         {!isDedicatedPreview && (
-          <header className="bg-white border-b border-[#eceef0] sticky top-0 z-50">
-            <div className="max-w-[1600px] mx-auto px-6 py-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
-                {/* Left: Identity/Context */}
-                <div className="flex items-center gap-4">
-                  <div className="w-1.5 h-10 rounded-full" style={{ background: 'linear-gradient(to bottom, #031631, #0e0099)' }} />
-                  <div>
-                    <h2 className="text-xl font-extrabold tracking-tight" style={{ fontFamily: 'Manrope', color: '#031631' }}>Master Profile</h2>
-                    <p className="text-[11px] font-bold uppercase tracking-wider opacity-50" style={{ color: '#031631' }}>Career Source of Truth</p>
+          <header className="glass-panel border-b border-[#eceef0] sticky top-0 z-50">
+            <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-3 md:py-4">
+              <div className="flex items-center justify-between gap-4">
+                {/* Left: Identity */}
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: 'linear-gradient(to bottom, #031631, #0e0099)' }} />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#0e0099' }}>Master Profile</p>
+                    <h2 className="text-sm md:text-base font-black tracking-tight truncate" style={{ fontFamily: 'Manrope', color: '#031631' }}>Career Source of Truth</h2>
                   </div>
                 </div>
 
-                {/* Center: Status Card */}
-                <div className="flex justify-center">
-                  <div className="flex items-center gap-8 px-8 py-3 rounded-2xl bg-[#f8f9fa] border border-[#eceef0] shadow-sm">
-                    {/* Completion Info */}
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-10 h-10 flex items-center justify-center">
-                        <svg className="w-full h-full -rotate-90">
-                          <circle cx="20" cy="20" r="18" fill="none" stroke="#eceef0" strokeWidth="3" />
-                          <circle cx="20" cy="20" r="18" fill="none" stroke="#0e0099" strokeWidth="3" 
-                            strokeDasharray={113.1} strokeDashoffset={113.1 - (113.1 * completion) / 100}
-                            style={{ transition: 'stroke-dashoffset 1s ease-out' }} />
-                        </svg>
-                        <span className="absolute text-[10px] font-black" style={{ color: '#031631' }}>{completion}%</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black uppercase tracking-widest opacity-40" style={{ color: '#031631' }}>Completion</span>
-                        <span className="text-xs font-bold" style={{ color: '#031631' }}>
-                          {completion < 70 ? 'Building' : completion < 90 ? 'Professional' : 'Elite'}
-                        </span>
-                      </div>
+                {/* Center: Status — hidden on mobile */}
+                <div className="hidden md:flex items-center gap-6 px-6 py-2 rounded-2xl bg-[#f8f9fa] border border-[#eceef0]">
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-8 h-8 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="14" fill="none" stroke="#eceef0" strokeWidth="3" />
+                        <circle cx="18" cy="18" r="14" fill="none" stroke="#0e0099" strokeWidth="3"
+                          strokeDasharray={87.96} strokeDashoffset={87.96 - (87.96 * completion) / 100}
+                          style={{ transition: 'stroke-dashoffset 1s ease-out' }} />
+                      </svg>
+                      <span className="absolute text-[9px] font-black" style={{ color: '#031631' }}>{completion}%</span>
                     </div>
-
-                    <div className="w-px h-8 bg-[#eceef0]" />
-
-                    {/* Readiness Info */}
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-40" style={{ color: '#031631' }}>ATS Readiness</span>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <div className={`w-2 h-2 rounded-full ${completion > 80 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]'}`} />
-                        <span className="text-xs font-bold" style={{ color: '#031631' }}>{completion > 80 ? 'Optimized' : 'Improving'}</span>
-                      </div>
-                    </div>
-
-                    <div className="w-px h-8 bg-[#eceef0]" />
-
-                    {/* Saved Status */}
-                    <div className="flex flex-col min-w-[80px]">
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-40" style={{ color: '#031631' }}>Status</span>
-                      <span className="text-[11px] font-bold mt-0.5" style={{ color: saveMsg?.includes('failed') ? '#93000a' : '#031631' }}>
-                        {saveMsg || (lastSaved ? `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Draft Mode')}
-                      </span>
-                    </div>
+                    <span className="text-xs font-bold" style={{ color: '#031631' }}>
+                      {completion < 70 ? 'Building' : completion < 90 ? 'Professional' : 'Elite'}
+                    </span>
                   </div>
+                  <div className="w-px h-6 bg-[#eceef0]" />
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${completion > 80 ? 'bg-green-500' : 'bg-amber-500'}`} />
+                    <span className="text-xs font-bold" style={{ color: '#031631' }}>{completion > 80 ? 'ATS Ready' : 'Improving'}</span>
+                  </div>
+                  <div className="w-px h-6 bg-[#eceef0]" />
+                  <span className="text-[11px] font-bold" style={{ color: saveMsg?.includes('failed') ? '#93000a' : '#8293b4' }}>
+                    {saving ? 'Saving...' : saveMsg || (lastSaved ? `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Draft Mode')}
+                  </span>
                 </div>
 
                 {/* Right: Actions */}
-                <div className="flex items-center justify-end gap-3">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <button onClick={() => setShowCoach(!showCoach)}
-                    className={`p-2.5 rounded-xl transition-all duration-300 group flex items-center gap-2 border ${showCoach ? 'bg-[#f7f7ff] border-[#0e0099]/20 text-[#0e0099]' : 'border-transparent hover:bg-[#f8f9fa] text-[#031631]'}`}>
+                    className={`hidden lg:flex p-2.5 rounded-xl transition-all duration-300 items-center gap-2 border ${showCoach ? 'bg-[#f7f7ff] border-[#0e0099]/20 text-[#0e0099]' : 'border-transparent hover:bg-[#f8f9fa] text-[#031631]'}`}>
                     <span className="material-symbols-outlined text-[18px]">psychology</span>
-                    <span className="text-sm font-bold hidden lg:block">ATS Coach</span>
+                    <span className="text-sm font-bold">ATS Coach</span>
                   </button>
-                  
                   <button onClick={() => setShowFullPreview(true)}
-                    className="p-2.5 rounded-xl text-[#031631] hover:bg-[#f8f9fa] transition-all duration-300 flex items-center gap-2 px-4">
+                    className="hidden sm:flex p-2.5 rounded-xl text-[#031631] hover:bg-[#f8f9fa] transition-all items-center gap-2">
                     <span className="material-symbols-outlined text-[18px]">fullscreen</span>
-                    <span className="text-sm font-bold hidden sm:block">Full Preview</span>
+                    <span className="text-sm font-bold hidden lg:block">Preview</span>
                   </button>
-
                   <button onClick={handleSave} disabled={saving}
-                    className="px-6 py-2.5 rounded-xl text-white text-sm font-bold ai-glow-btn flex items-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50">
-                    <span className={`material-symbols-outlined text-[18px] ${saving ? 'animate-spin' : ''}`}>save</span>
-                    {saving ? 'Saving...' : 'Save Profile'}
+                    className="px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-white text-xs md:text-sm font-bold ai-glow-btn flex items-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50">
+                    <span className={`material-symbols-outlined text-[16px] md:text-[18px] ${saving ? 'animate-spin' : ''}`}>save</span>
+                    <span>{saving ? 'Saving...' : 'Save'}</span>
                   </button>
                 </div>
               </div>
@@ -663,13 +643,15 @@ export default function ProfileBuilder() {
                     </div>
                   </div>
 
-                  <button onClick={handleSave} disabled={saving}
-                    className="w-full mt-4 h-12 text-sm font-bold text-white rounded-xl shadow-xl active:scale-95 transition-all ai-glow-btn flex items-center justify-center gap-2 disabled:opacity-60">
-                    <span className={`material-symbols-outlined icon-filled text-[18px] ${saving ? 'animate-spin' : ''}`}>
-                      {saving ? 'progress_activity' : 'save'}
+                  <div className="mt-4 pt-4 border-t border-[#f2f4f6] flex items-center gap-2">
+                    <span className={`material-symbols-outlined text-[14px] flex-shrink-0 ${saving ? 'animate-spin' : ''}`}
+                      style={{ color: saveMsg?.includes('failed') ? '#93000a' : '#8293b4' }}>
+                      {saving ? 'progress_activity' : lastSaved ? 'check_circle' : 'edit'}
                     </span>
-                    {saving ? 'Saving...' : 'Save Profile'}
-                  </button>
+                    <span className="text-[11px] font-semibold leading-tight" style={{ color: saveMsg?.includes('failed') ? '#93000a' : '#8293b4' }}>
+                      {saving ? 'Saving...' : saveMsg || (lastSaved ? `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Unsaved changes')}
+                    </span>
+                  </div>
                 </div>
               </aside>
 
@@ -953,6 +935,43 @@ export default function ProfileBuilder() {
           </div>
         </div>
       </main>
+
+      {/* Mobile Edit/Preview Toggle Bar — hidden on xl where both panes are visible */}
+      {!isDedicatedPreview && (
+        <div className="xl:hidden fixed bottom-0 left-0 right-0 z-40 border-t"
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.98)',
+            backdropFilter: 'blur(20px)',
+            borderColor: 'rgba(197,198,206,0.3)',
+            paddingBottom: 'env(safe-area-inset-bottom)',
+          }}>
+          <div className="px-4 py-2 flex gap-2">
+            <button onClick={() => setShowPreview(false)}
+              className="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
+              style={{
+                backgroundColor: !showPreview ? '#031631' : '#f2f4f6',
+                color: !showPreview ? 'white' : '#44474d',
+              }}>
+              <span className="material-symbols-outlined text-[16px]">edit</span>
+              Edit
+            </button>
+            <button onClick={() => setShowPreview(true)}
+              className="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
+              style={{
+                backgroundColor: showPreview ? '#031631' : '#f2f4f6',
+                color: showPreview ? 'white' : '#44474d',
+              }}>
+              <span className="material-symbols-outlined text-[16px]">visibility</span>
+              Preview
+            </button>
+            <button onClick={() => setShowFullPreview(true)}
+              className="px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all border"
+              style={{ borderColor: 'rgba(197,198,206,0.3)', color: '#031631', backgroundColor: 'white' }}>
+              <span className="material-symbols-outlined text-[16px]">fullscreen</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ATS Coach Sliding Panel */}
       {showCoach && !isDedicatedPreview && (

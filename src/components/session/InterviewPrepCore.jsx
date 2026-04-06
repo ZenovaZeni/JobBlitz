@@ -22,7 +22,7 @@ function STARSection({ label, content, onChange }) {
         {!editing && (
           <button
             onClick={() => setEditing(true)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg hover:bg-black/5"
+            className="opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 rounded-lg hover:bg-black/5 active:opacity-100"
             title="Edit">
             <span className="material-symbols-outlined text-[14px]" style={{ color: c.label }}>edit</span>
           </button>
@@ -149,7 +149,7 @@ export default function InterviewPrepCore() {
                     <h3 className="font-black text-xs uppercase tracking-[0.2em] mb-6 text-[#031631] flex items-center gap-2">
                        <span className="w-8 h-[2px] bg-[#031631] rounded-full" />
                        STAR Strategy
-                       <span className="text-[9px] font-semibold normal-case tracking-normal text-[#8293b4] ml-1">— hover a section to edit</span>
+                       <span className="text-[9px] font-semibold normal-case tracking-normal text-[#8293b4] ml-1">— tap to edit</span>
                     </h3>
                     <div className="grid gap-5">
                       <STARSection label="Situation" content={currentQ.star.situation} onChange={v => updateSTAR('situation', v)} />

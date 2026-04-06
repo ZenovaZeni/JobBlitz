@@ -10,6 +10,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isSigningOut, setIsSigningOut] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -203,11 +204,16 @@ export function AuthProvider({ children }) {
   }
 
   async function signOut() {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
-    
-    // Log signout
-    await logger.info('auth', 'signout', 'User signed out', {}, user?.id)
+    setIsSigningOut(true)
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      
+      // Log signout
+      await logger.info('auth', 'signout', 'User signed out', {}, user?.id)
+    } finally {
+      setIsSigningOut(false)
+    }
   }
 
   async function updateProfile(updates) {
@@ -251,7 +257,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider value={{
       user, profile, loading,
       signUp, signIn, resetPassword, updatePassword, signInWithGoogle,
-      signOut, updateProfile, updateUsage,
+      signOut, isSigningOut, updateProfile, updateUsage,
       isPro, isAdmin, canUseTailor, canUseCoverLetter, checkAccess: (action) => checkAccess(profile, action),
       sessionsLeft,
     }}>

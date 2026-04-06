@@ -58,28 +58,32 @@ export default function ResumeVersions() {
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f7f9fb' }}>
       <SideNav />
 
-      <main className="flex-1 px-4 md:px-8 lg:px-12 py-6 md:py-12 overflow-y-auto pb-24 md:pb-12 flex flex-col items-center">
-        <div className="w-full max-w-7xl mx-auto">
-
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-          <div>
-            <h1 className="text-4xl font-extrabold tracking-tight mb-2"
-              style={{ fontFamily: 'Manrope', color: '#031631', letterSpacing: '-0.02em' }}>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Glass-panel sticky header */}
+        <header className="glass-panel border-b px-4 md:px-8 py-3 md:py-4 flex items-center justify-between flex-shrink-0 z-10"
+          style={{ borderColor: 'rgba(197,198,206,0.15)', boxShadow: '0 4px 12px rgba(3,22,49,0.03)' }}>
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-widest mb-0.5" style={{ color: '#0e0099' }}>Sessions</p>
+            <h1 className="text-base md:text-lg font-black truncate tracking-tight"
+              style={{ fontFamily: 'Manrope', color: '#031631' }}>
               Resume Portfolio
+              {!loading && sessions.length > 0 && (
+                <span className="ml-2 text-sm font-semibold" style={{ color: '#8293b4' }}>
+                  {sessions.length} {sessions.length === 1 ? 'version' : 'versions'}{avgScore ? ` · ${avgScore}% avg` : ''}
+                </span>
+              )}
             </h1>
-            <p style={{ color: '#44474d' }}>
-              {loading ? 'Loading...' : sessions.length > 0
-                ? `${sessions.length} tailored ${sessions.length === 1 ? 'version' : 'versions'}${avgScore ? ` · Avg match: ${avgScore}%` : ''}`
-                : 'No tailored versions yet'}
-            </p>
           </div>
           <button onClick={() => navigate('/app/tailor')}
-            className="self-start md:self-auto px-6 py-2.5 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 ai-glow-btn flex items-center gap-2">
-            <span className="material-symbols-outlined icon-filled text-[18px]">add</span>
-            New Version
+            className="flex-shrink-0 px-4 py-2 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 ai-glow-btn flex items-center gap-2">
+            <span className="material-symbols-outlined icon-filled text-[16px]">add</span>
+            <span className="hidden sm:inline">New Version</span>
+            <span className="sm:hidden">New</span>
           </button>
-        </div>
+        </header>
+
+        <main className="flex-1 overflow-y-auto custom-scroll pb-24 md:pb-8">
+        <div className="w-full max-w-7xl mx-auto px-4 md:px-8 lg:px-12 py-6 md:py-8">
 
         {/* Master Profile Banner */}
         {masterProfile && (
@@ -253,6 +257,7 @@ export default function ResumeVersions() {
         )}
         </div>
       </main>
+      </div>
     </div>
   )
 }
