@@ -31,9 +31,9 @@ export default function ResumeEditorCore() {
     return () => obs.disconnect()
   }, [])
 
-  // On small screens auto-fit; on desktop use user zoom
+  // On small screens auto-fit to container width; on desktop use user zoom
   const isMobileCanvas = canvasWidth > 0 && canvasWidth < PAPER_WIDTH
-  const effectiveScale = isMobileCanvas ? (canvasWidth - 32) / PAPER_WIDTH : zoom / 100
+  const effectiveScale = isMobileCanvas ? canvasWidth / PAPER_WIDTH : zoom / 100
 
   const resume = activeSession?.tailoredResume || null
 
@@ -121,10 +121,10 @@ export default function ResumeEditorCore() {
             )}
           </div>
           <button onClick={handleExportPDF} disabled={!resume}
-            className="px-4 md:px-5 py-2 text-sm font-bold rounded-lg text-white shadow-lg transition-all active:scale-95 ai-glow-btn flex items-center gap-1.5 disabled:opacity-40">
+            className="px-3 md:px-5 py-2 text-sm font-bold rounded-lg text-white shadow-lg transition-all active:scale-95 ai-glow-btn flex items-center gap-1.5 disabled:opacity-40">
             <span className="material-symbols-outlined text-[16px]">{isPro ? 'download' : 'lock'}</span>
-            <span className="hidden sm:inline">Export PDF</span>
-            {!isPro && <span className="text-[9px] font-black uppercase tracking-wider opacity-80">Pro</span>}
+            <span className="hidden md:inline">Export PDF</span>
+            {!isPro && <span className="hidden md:inline text-[9px] font-black uppercase tracking-wider opacity-80">Pro</span>}
           </button>
         </header>
 
@@ -150,11 +150,14 @@ export default function ResumeEditorCore() {
               <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ backgroundColor: '#eceef0' }}>
                 <span className="material-symbols-outlined text-[40px]" style={{ color: '#c5c6ce' }}>description</span>
               </div>
-              <h2 className="text-xl font-bold mb-2" style={{ fontFamily: 'Manrope', color: '#031631' }}>No resume loaded</h2>
+              <div>
+                <h2 className="text-xl font-bold mb-2" style={{ fontFamily: 'Manrope', color: '#031631' }}>Resume not generated yet</h2>
+                <p className="text-sm max-w-xs mx-auto" style={{ color: '#8293b4' }}>Build a packet to get a tailored resume written for this role.</p>
+              </div>
               <button onClick={() => navigate('/app/tailor')}
                 className="px-6 py-3 text-white font-bold rounded-xl ai-glow-btn flex items-center gap-2">
                 <span className="material-symbols-outlined icon-filled text-[18px]">bolt</span>
-                Start Tailoring
+                Build a Packet
               </button>
             </div>
           )}
@@ -231,53 +234,55 @@ export default function ResumeEditorCore() {
       </aside>
 
       {/* Mobile bottom action bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t"
+      <div className="lg:hidden fixed above-bottom-nav left-0 right-0 z-40 border-t"
         style={{
           backgroundColor: 'rgba(255,255,255,0.98)',
           backdropFilter: 'blur(20px)',
           borderColor: 'rgba(197,198,206,0.3)',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}>
-        <div className="px-4 py-3">
+        <div className="px-4 pt-2.5 pb-2">
           {/* Template selector — horizontal scroll */}
-          <div className="flex gap-2 overflow-x-auto no-scrollbar mb-3">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar mb-2">
             {templates.map(t => {
               const isLocked = ['minimal', 'impact'].includes(t.id) && !isPro
               return (
                 <button key={t.id} onClick={() => handleTemplateSelect(t.id)}
-                  className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                  className="flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1"
                   style={{
                     backgroundColor: activeTemplate === t.id ? '#031631' : '#f2f4f6',
                     color: activeTemplate === t.id ? 'white' : '#44474d',
                   }}>
-                  {isLocked && <span className="material-symbols-outlined text-[12px]">lock</span>}
+                  {isLocked && <span className="material-symbols-outlined text-[11px]">lock</span>}
                   {t.label}
                 </button>
               )
             })}
           </div>
           {/* Actions */}
-          <div className="flex gap-2">
-            <button onClick={handleSave} disabled={!resume || saving}
-              className="flex-1 py-3 rounded-xl text-sm font-bold border flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-              style={{ borderColor: 'rgba(197,198,206,0.4)', color: '#031631', backgroundColor: 'white' }}>
-              <span className="material-symbols-outlined text-[16px]">
-                {saving ? 'progress_activity' : 'save'}
+          <div className="flex gap-2 items-center">
+            {saveMsg ? (
+              <span className="text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0"
+                style={{ backgroundColor: saveMsg === 'Saved!' ? '#e8f5e9' : '#ffebee', color: saveMsg === 'Saved!' ? '#2e7d32' : '#c62828' }}>
+                {saveMsg}
               </span>
-              {saving ? 'Saving...' : 'Save'}
-            </button>
+            ) : (
+              <button onClick={handleSave} disabled={!resume || saving}
+                className="px-4 py-2.5 rounded-xl text-sm font-bold border flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 flex-shrink-0"
+                style={{ borderColor: 'rgba(197,198,206,0.4)', color: '#031631', backgroundColor: 'white' }}>
+                <span className="material-symbols-outlined text-[15px]">
+                  {saving ? 'progress_activity' : 'save'}
+                </span>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            )}
             <button onClick={handleExportPDF} disabled={!resume}
-              className="flex-1 py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 ai-glow-btn disabled:opacity-40 transition-all">
-              <span className="material-symbols-outlined text-[16px]">{isPro ? 'download' : 'lock'}</span>
-              {isPro ? 'Export PDF' : 'PDF (Pro)'}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-1.5 ai-glow-btn disabled:opacity-40 transition-all">
+              <span className="material-symbols-outlined text-[15px]">{isPro ? 'download' : 'lock'}</span>
+              Export PDF
+              {!isPro && <span className="text-[9px] font-black uppercase tracking-wider opacity-80">Pro</span>}
             </button>
           </div>
-          {saveMsg && (
-            <p className="text-[10px] font-bold text-center mt-2"
-              style={{ color: saveMsg === 'Saved!' ? '#2e7d32' : '#93000a' }}>
-              {saveMsg}
-            </p>
-          )}
         </div>
       </div>
     </div>

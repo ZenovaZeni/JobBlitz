@@ -41,7 +41,7 @@ export default function Dashboard() {
   const { user, profile, isPro, sessionsLeft, isProfileReady } = useAuth()
   const { setActiveSession } = useSession()
   const { profile: masterProfile, loading: masterProfileLoading } = useMasterProfile()
-  const { sessions, loading: sessionsLoading } = useSessions()
+  const { sessions, loading: sessionsLoading, getPacketStats } = useSessions()
   const [showRetry, setShowRetry] = useState(false)
   const [mountTime] = useState(() => performance.now())
   const [showOnboarding, setShowOnboarding] = useState(() => {
@@ -70,21 +70,24 @@ export default function Dashboard() {
     }
   }, [sessionsLoading, isProfileReady, masterProfileLoading, mountTime])
 
+  useEffect(() => { document.title = 'JobBlitz — Dashboard' }, [])
+
   const firstName = (profile?.full_name || user?.email || 'there').split('@')[0].split(' ')[0]
   const avgMatchScore = sessions?.length && sessions.some(s => s.match_score)
     ? Math.round(sessions.filter(s => s.match_score).reduce((a, s) => a + s.match_score, 0) / sessions.filter(s => s.match_score).length)
     : 0
 
-  const recentActivity = sessions?.slice(0, 5).map(s => ({
-    text: `Tailored resume for ${s.role} at ${s.company}`,
-    time: timeAgo(s.created_at),
-    dot: s.match_score >= 80 ? '#0e0099' : '#44474d',
-  })) || []
-
   const hasSessions = (sessions?.length || 0) > 0
 
   const greeting = new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'
 
+  // Latest packet statistics using standardized logic
+  const latestSession = (sessions?.length || 0) > 0 
+    ? sessions.find(s => s.packet_status !== 'draft' && s.packet_status !== 'failed') || sessions[0] 
+    : null
+  
+  const { readyCount, isComplete, hasResume, hasCover, hasInterview, statusLabel } = getPacketStats(latestSession)
+  const isGenerating = statusLabel === 'generating' || (statusLabel === 'ready' && readyCount < 3 && sessionsLoading)
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f7f9fb' }}>
@@ -133,7 +136,7 @@ export default function Dashboard() {
         </header>
 
         {/* Scrollable main content */}
-        <main className="flex-1 overflow-y-auto custom-scroll px-4 md:px-8 lg:px-10 py-6 md:py-8 pb-24 md:pb-10">
+        <main className="flex-1 overflow-y-auto custom-scroll px-4 md:px-8 lg:px-10 py-6 md:py-8 page-pb-mobile md:pb-10">
 
           {/* Onboarding wizard overlay */}
           {!hasSessions && showOnboarding && (
@@ -151,7 +154,7 @@ export default function Dashboard() {
                     Let's get you hired.
                   </h2>
                   <p className="font-medium" style={{ color: '#8293b4' }}>
-                    Take 2 minutes to set up your first tailoring session.
+                    Take 2 minutes to set up your first application packet.
                   </p>
                 </div>
                 <QuickStartWizard onSkip={handleSkip} />
@@ -175,14 +178,14 @@ export default function Dashboard() {
                   Your dashboard is ready.
                 </h2>
                 <p className="text-base mb-8" style={{ color: '#8293b4' }}>
-                  Start your first tailoring session to see analytics, tailored resumes, and cover letters here.
+                  Build your first application packet to see analytics, tailored resumes, and cover letters here.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-sm mx-auto sm:max-w-none">
                   <button
                     onClick={() => navigate('/app/tailor')}
                     className="flex items-center justify-center gap-3 py-4 text-white font-bold rounded-2xl ai-glow-btn active:scale-95 transition-all">
                     <span className="material-symbols-outlined icon-filled text-[20px]">bolt</span>
-                    Start First Session
+                    Get Started
                   </button>
                   <button
                     onClick={() => navigate('/app/profile')}
@@ -195,51 +198,112 @@ export default function Dashboard() {
               </div>
             ) : (
               <>
-                {/* Mobile quick-action — Start New Session immediately visible on phone */}
+                {/* Mobile quick-action — context-aware: continue in-progress or start new */}
                 <div className="md:hidden mb-5">
-                  <button
-                    onClick={() => navigate('/app/tailor')}
-                    className="w-full py-4 text-white font-bold rounded-2xl ai-glow-btn flex items-center justify-center gap-2 active:scale-95 transition-all">
-                    <span className="material-symbols-outlined icon-filled text-[20px]">bolt</span>
-                    Start New Session
-                  </button>
+                  {latestSession ? (
+                    <div className="rounded-2xl p-4 space-y-3"
+                      style={{ background: 'linear-gradient(135deg, #031631 0%, #0e0099 100%)' }}>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-white/50 mb-0.5 whitespace-nowrap">
+                          {isGenerating ? 'Generating Packet...' : readyCount < 3 ? 'In Progress' : 'Latest Packet'}
+                        </p>
+                        <p className="text-sm font-black text-white truncate leading-tight">
+                          {latestSession.role}
+                        </p>
+                        <p className="text-[11px] text-white/60 mt-0.5">
+                          {latestSession.company} · {isGenerating ? 'Processing assets...' : `${readyCount} of 3 ready`}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => navigate(`/app/session/${latestSession.id}`)}
+                          className="flex-1 py-2.5 bg-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+                          style={{ color: '#031631' }}>
+                          <span className="material-symbols-outlined icon-filled text-[15px]">
+                            {isGenerating ? 'hourglass_empty' : readyCount < 3 ? 'arrow_forward' : 'folder_open'}
+                          </span>
+                          {isGenerating ? 'View Status' : readyCount < 3 ? 'Continue Packet' : 'Open Packet'}
+                        </button>
+                        <button
+                          onClick={() => navigate('/app/tailor')}
+                          title="New Application"
+                          className="w-10 rounded-xl flex items-center justify-center active:scale-95 transition-all"
+                          style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'white', backgroundColor: 'transparent' }}>
+                          <span className="material-symbols-outlined icon-filled text-[18px]">add</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => navigate('/app/tailor')}
+                      className="w-full py-4 text-white font-bold rounded-2xl ai-glow-btn flex items-center justify-center gap-2 active:scale-95 transition-all">
+                      <span className="material-symbols-outlined icon-filled text-[20px]">bolt</span>
+                      New Application
+                    </button>
+                  )}
                 </div>
 
                 {/* Stats row */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-5 md:mb-6">
-                  <StatCard icon="description" value={sessions?.length || 0} label="Sessions" color="#031631" loading={sessionsLoading} />
+                  <StatCard icon="description" value={sessions?.length || 0} label="Applications" color="#031631" loading={sessionsLoading} />
                   <StatCard icon="analytics" value={avgMatchScore > 0 ? `${avgMatchScore}%` : '—'} label="Avg Match" color="#0e0099" loading={sessionsLoading} />
                   <StatCard icon="account_circle" value={`${masterProfile?.completion_pct ?? 0}%`} label="Profile" color="#2f2ebe" loading={masterProfileLoading} />
-                  <StatCard icon="mail" value={sessions?.filter(s => s.cover_letter).length || '—'} label="Letters" color="#44474d" loading={sessionsLoading} />
+                  <StatCard icon="mail" value={sessions?.filter(s => s.cover_letters?.length > 0).length || '—'} label="Letters" color="#44474d" loading={sessionsLoading} />
                 </div>
 
                 {/* Main grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5">
 
                   {/* Primary CTA card — desktop only (mobile uses the strip above) */}
-                  <div className="hidden md:flex lg:col-span-2 rounded-2xl p-8 text-white flex-col justify-between min-h-[200px] relative overflow-hidden group"
+                  <div className="hidden md:flex lg:col-span-2 rounded-2xl p-8 text-white flex-col justify-between min-h-[220px] relative overflow-hidden group"
                     style={{ background: 'linear-gradient(135deg, #031631 0%, #0e0099 100%)', boxShadow: '0 8px 32px rgba(14,0,153,0.2)' }}>
                     <div className="relative z-10">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-4"
                         style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
                         <span className="material-symbols-outlined icon-filled text-[12px]">bolt</span>
-                        Ready to tailor
+                        {latestSession && readyCount < 3 ? 'In progress' : 'Ready to tailor'}
                       </span>
                       <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2"
                         style={{ fontFamily: 'Manrope' }}>
-                        Boost Your Next Application
+                        {latestSession && readyCount < 3
+                          ? `Continue: ${latestSession.role}`
+                          : 'Build Your Next Packet'}
                       </h2>
                       <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem', fontWeight: 500 }}>
-                        Generate a tailored resume and cover letter for any job in seconds.
+                        {latestSession && readyCount < 3
+                          ? `${latestSession.company} · ${readyCount} of 3 items ready`
+                          : 'Tailored resume, cover letter, and interview prep — all from one analysis.'}
                       </p>
                     </div>
-                    <button
-                      onClick={() => navigate('/app/tailor')}
-                      className="relative z-10 self-start mt-6 px-6 py-3 bg-white font-black rounded-xl transition-all hover:shadow-xl active:scale-95 flex items-center gap-2"
-                      style={{ color: '#031631' }}>
-                      <span className="material-symbols-outlined icon-filled text-[18px]">auto_awesome</span>
-                      Start New Session
-                    </button>
+                    <div className="relative z-10 flex items-center gap-3 mt-6 flex-wrap">
+                      {latestSession && readyCount < 3 && (
+                        <button
+                          onClick={() => navigate(`/app/session/${latestSession.id}`)}
+                          className="px-6 py-3 bg-white font-black rounded-xl transition-all hover:shadow-xl active:scale-95 flex items-center gap-2"
+                          style={{ color: '#031631' }}>
+                          <span className="material-symbols-outlined icon-filled text-[18px]">arrow_forward</span>
+                          Continue Packet
+                        </button>
+                      )}
+                      {latestSession && readyCount === 3 && (
+                        <button
+                          onClick={() => navigate(`/app/session/${latestSession.id}`)}
+                          className="px-6 py-3 bg-white font-black rounded-xl transition-all hover:shadow-xl active:scale-95 flex items-center gap-2"
+                          style={{ color: '#031631' }}>
+                          <span className="material-symbols-outlined icon-filled text-[18px]">folder_open</span>
+                          Open Latest Packet
+                        </button>
+                      )}
+                      <button
+                        onClick={() => navigate('/app/tailor')}
+                        className="px-6 py-3 font-black rounded-xl transition-all active:scale-95 flex items-center gap-2 hover:shadow-xl"
+                        style={latestSession && readyCount < 3
+                          ? { border: '1px solid rgba(255,255,255,0.25)', color: 'white', backgroundColor: 'transparent' }
+                          : { backgroundColor: 'white', color: '#031631' }}>
+                        <span className="material-symbols-outlined icon-filled text-[18px]">add</span>
+                        New Application
+                      </button>
+                    </div>
                     <div className="absolute top-0 right-0 w-64 h-64 rounded-full translate-x-1/2 -translate-y-1/2"
                       style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)' }} />
                   </div>
@@ -280,12 +344,17 @@ export default function Dashboard() {
                               style={{ width: `${masterProfile.completion_pct}%`, background: 'linear-gradient(90deg, #0e0099, #2f2ebe)' }} />
                           </div>
                         </div>
-                        <div className="flex items-center justify-between mt-3">
+                        <p className="text-[10px] mt-1.5 mb-3" style={{ color: '#b0b1bd' }}>
+                          {masterProfile.completion_pct >= 80
+                            ? 'Great coverage — your packets will be highly tailored.'
+                            : 'More detail = more tailored packets.'}
+                        </p>
+                        <div className="flex items-center justify-between">
                           <button
                             onClick={() => navigate('/app/profile')}
                             className="text-xs font-bold transition-all hover:translate-x-0.5 flex items-center gap-1"
                             style={{ color: '#0e0099' }}>
-                            Refine Profile
+                            {masterProfile.completion_pct >= 80 ? 'Edit Profile' : 'Complete Profile'}
                             <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                           </button>
                           <button
@@ -317,13 +386,13 @@ export default function Dashboard() {
                     )}
                   </div>
 
-                  {/* Recent Sessions */}
+                  {/* Recent Applications */}
                   <div className="lg:col-span-2 bg-white rounded-2xl p-5 md:p-6"
                     style={{ boxShadow: '0 2px 12px rgba(3,22,49,0.04)' }}>
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-[18px]" style={{ color: '#0e0099' }}>history</span>
-                        <h3 className="font-bold text-sm" style={{ color: '#031631' }}>Recent Sessions</h3>
+                        <h3 className="font-bold text-sm" style={{ color: '#031631' }}>Recent Applications</h3>
                       </div>
                       {sessions.length > 0 && (
                         <button
@@ -362,6 +431,17 @@ export default function Dashboard() {
                               </p>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
+                              {/* Packet completion dots: Resume · Cover · Interview */}
+                              <div className="flex items-center gap-1" title="Resume / Cover Letter / Interview Prep">
+                                {[
+                                  getPacketStats(session).hasResume,
+                                  getPacketStats(session).hasCover,
+                                  getPacketStats(session).hasInterview,
+                                ].map((has, i) => (
+                                  <span key={i} className="w-2 h-2 rounded-full"
+                                    style={{ backgroundColor: has ? '#2e7d32' : '#eceef0' }} />
+                                ))}
+                              </div>
                               {session.match_score && (
                                 <span className="text-[10px] font-black px-2 py-0.5 rounded-lg"
                                   style={{ backgroundColor: '#e1e0ff', color: '#0e0099' }}>
@@ -376,48 +456,87 @@ export default function Dashboard() {
                           </div>
                         ))
                       ) : (
-                        <p className="text-xs font-semibold py-4 text-center" style={{ color: '#b0b1bd' }}>No recent sessions found.</p>
+                        <p className="text-xs font-semibold py-4 text-center" style={{ color: '#b0b1bd' }}>No applications yet — start one above.</p>
                       )}
                     </div>
                   </div>
 
-                  {/* Recent Activity */}
-                  <div className="bg-white rounded-2xl p-5 md:p-6"
+                  {/* Latest Packet — continue working */}
+                  <div className="bg-white rounded-2xl p-5 md:p-6 border border-transparent transition-all hover:border-[#0e0099]/5"
                     style={{ boxShadow: '0 2px 12px rgba(3,22,49,0.04)' }}>
                     <div className="flex items-center gap-2 mb-4">
-                      <span className="material-symbols-outlined text-[18px]" style={{ color: '#0e0099' }}>timeline</span>
-                      <h3 className="font-bold text-sm" style={{ color: '#031631' }}>Recent Activity</h3>
+                      <span className="material-symbols-outlined icon-filled text-[18px]" style={{ color: '#0e0099' }}>folder_open</span>
+                      <h3 className="font-bold text-sm" style={{ color: '#031631' }}>Latest Packet</h3>
                     </div>
                     {sessionsLoading ? (
-                      <div className="space-y-4">
-                        {[1, 2, 3].map(i => (
-                          <div key={i} className="flex items-start gap-3 py-3 animate-pulse">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#eceef0] mt-2" />
-                            <div className="h-3 bg-[#eceef0] rounded w-full" />
-                          </div>
-                        ))}
+                      <div className="animate-pulse space-y-3">
+                        <div className="h-4 bg-[#eceef0] rounded w-3/4" />
+                        <div className="h-3 bg-[#eceef0] rounded w-1/2" />
+                        <div className="space-y-2 mt-5">
+                          {[1, 2, 3].map(i => <div key={i} className="h-3 bg-[#eceef0] rounded" />)}
+                        </div>
                       </div>
-                    ) : recentActivity.length === 0 ? (
+                    ) : latestSession ? (
+                      <>
+                        <div className="mb-4">
+                          <p className="font-extrabold text-base truncate mb-0.5"
+                            style={{ fontFamily: 'Manrope', color: '#031631' }}>
+                            {latestSession.role}
+                          </p>
+                          <p className="text-xs font-semibold" style={{ color: '#8293b4' }}>
+                            {latestSession.company} · {timeAgo(latestSession.updated_at || latestSession.created_at)}
+                          </p>
+                          {latestSession.match_score && (
+                            <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-lg text-[10px] font-black"
+                              style={{ backgroundColor: '#e1e0ff', color: '#0e0099' }}>
+                              {latestSession.match_score}% match
+                            </span>
+                          )}
+                        </div>
+                        <div className="space-y-2.5 mb-5">
+                          {[
+                            { label: 'Resume',         has: hasResume    },
+                            { label: 'Cover Letter',   has: hasCover     },
+                            { label: 'Interview Prep', has: hasInterview },
+                          ].map(item => (
+                            <div key={item.label} className="flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: item.has ? '#2e7d32' : '#eceef0' }} />
+                              <span className="text-xs font-semibold flex-1"
+                                style={{ color: item.has ? '#031631' : '#c5c6ce' }}>
+                                {item.label}
+                              </span>
+                              <span className="text-[9px] font-black uppercase tracking-wider"
+                                style={{ color: item.has ? '#2e7d32' : '#c5c6ce' }}>
+                                {item.has ? 'Ready' : 'Pending'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        {readyCount === 3 ? (
+                          <button
+                            onClick={() => navigate(`/app/session/${latestSession.id}`)}
+                            className="w-full py-2.5 font-bold rounded-xl text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ai-glow-btn text-white">
+                            <span className="material-symbols-outlined icon-filled text-[16px]">folder_open</span>
+                            Open Packet
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => navigate(`/app/session/${latestSession.id}`)}
+                            className="w-full py-2 text-xs font-bold rounded-xl border flex items-center justify-center gap-1.5 transition-all hover:bg-[#f2f4f6]"
+                            style={{ borderColor: 'rgba(197,198,206,0.2)', color: '#0e0099' }}>
+                            View Details →
+                          </button>
+                        )}
+                      </>
+                    ) : (
                       <div className="py-8 text-center">
                         <span className="material-symbols-outlined text-[28px] block mb-2" style={{ color: '#eceef0' }}>
-                          pending_actions
+                          folder_open
                         </span>
                         <p className="text-xs font-semibold" style={{ color: '#b0b1bd' }}>
-                          Activity will appear here after your first session.
+                          Build your first packet to see it here.
                         </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-0">
-                        {recentActivity.map((a, i) => (
-                          <div key={i} className="flex items-start gap-3 py-3 border-b last:border-0"
-                            style={{ borderColor: 'rgba(197,198,206,0.08)' }}>
-                            <span className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: a.dot }} />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate" style={{ color: '#031631' }}>{a.text}</p>
-                              <p className="text-[10px] font-bold mt-0.5" style={{ color: '#b0b1bd' }}>{a.time}</p>
-                            </div>
-                          </div>
-                        ))}
                       </div>
                     )}
                   </div>
@@ -425,7 +544,7 @@ export default function Dashboard() {
                   {/* Quick links */}
                   <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                     {[
-                      { icon: 'description', label: 'Resume Portfolio', sub: `${sessions.length} tailored versions`, route: '/app/resumes', color: '#031631' },
+                      { icon: 'description', label: 'Applications', sub: `${sessions?.length || 0} tailored ${sessions?.length === 1 ? 'resume' : 'resumes'}`, route: '/app/resumes', color: '#031631' },
                       { icon: 'mail', label: 'Cover Letters', sub: 'All saved letters', route: '/app/cover-letter', color: '#0e0099' },
                       { icon: 'psychology', label: 'Interview Prep', sub: 'STAR-method questions', route: '/app/interview', color: '#2f2ebe' },
                     ].map(card => (

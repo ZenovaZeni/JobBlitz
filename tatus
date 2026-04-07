@@ -1,0 +1,63 @@
+warning: in the working copy of '.claude/settings.local.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/App.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/BottomNav.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/ResumeTemplates.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/SideNav.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/UsageGate.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/session/CoverLetterCore.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/session/InterviewPrepCore.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/session/ResumeEditorCore.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/tailoring/MobileTailoringWizard.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/tailoring/TailoringSteps.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/tailoring/UpgradeGateModal.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/hooks/useSessions.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/hooks/useTailorEngine.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/index.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/openai.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/CoverLetter.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/Dashboard.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/InterviewPrep.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/JobTailoring.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/Landing.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/ProfileBuilder.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/ResumeEditor.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/ResumeImport.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/ResumeVersions.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/SessionView.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/Settings.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/auth/Login.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/auth/Signup.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'supabase/functions/openai-proxy/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'supabase/functions/stripe-webhook/index.ts', LF will be replaced by CRLF the next time Git touches it
+ .claude/settings.local.json                        |   6 [32m+[m[31m-[m
+ src/App.jsx                                        | 140 [32m++[m[31m--[m
+ src/components/BottomNav.jsx                       | 229 [32m++++[m[31m--[m
+ src/components/ResumeTemplates.jsx                 |  81 [32m++[m[31m-[m
+ src/components/SideNav.jsx                         | 165 [32m+++[m[31m--[m
+ src/components/UsageGate.jsx                       |  22 [32m+[m[31m-[m
+ src/components/session/CoverLetterCore.jsx         |  93 [32m++[m[31m-[m
+ src/components/session/InterviewPrepCore.jsx       | 233 [32m++++[m[31m--[m
+ src/components/session/ResumeEditorCore.jsx        |  63 [32m+[m[31m-[m
+ src/components/tailoring/MobileTailoringWizard.jsx | 212 [32m+++[m[31m---[m
+ src/components/tailoring/TailoringSteps.jsx        |   4 [32m+[m[31m-[m
+ src/components/tailoring/UpgradeGateModal.jsx      |   6 [32m+[m[31m-[m
+ src/hooks/useSessions.js                           | 126 [32m+++[m[31m-[m
+ src/hooks/useTailorEngine.js                       | 146 [32m+++[m[31m-[m
+ src/index.css                                      |  46 [32m+[m[31m-[m
+ src/lib/openai.js                                  |  72 [32m+[m[31m-[m
+ src/pages/CoverLetter.jsx                          | 176 [32m+++[m[31m--[m
+ src/pages/Dashboard.jsx                            | 247 [32m+++++[m[31m--[m
+ src/pages/InterviewPrep.jsx                        | 113 [32m++[m[31m-[m
+ src/pages/JobTailoring.jsx                         | 777 [32m++++++++++[m[31m-----------[m
+ src/pages/Landing.jsx                              |   4 [32m+[m[31m-[m
+ src/pages/ProfileBuilder.jsx                       | 312 [32m+++++++[m[31m--[m
+ src/pages/ResumeEditor.jsx                         |  17 [32m+[m[31m-[m
+ src/pages/ResumeImport.jsx                         | 155 [32m+++[m[31m-[m
+ src/pages/ResumeVersions.jsx                       | 153 [32m++[m[31m--[m
+ src/pages/SessionView.jsx                          | 242 [32m+++++[m[31m--[m
+ src/pages/Settings.jsx                             |  99 [32m++[m[31m-[m
+ src/pages/auth/Login.jsx                           |  18 [32m+[m[31m-[m
+ src/pages/auth/Signup.jsx                          |  18 [32m+[m[31m-[m
+ supabase/functions/openai-proxy/index.ts           | 142 [32m+++[m[31m-[m
+ supabase/functions/stripe-webhook/index.ts         | 142 [32m+++[m[31m-[m
+ 31 files changed, 2982 insertions(+), 1277 deletions(-)

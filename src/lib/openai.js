@@ -16,47 +16,69 @@ export async function callAI(messages, options = {}, retryCount = 0) {
 
   try {
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) throw new Error('Not authenticated')
+    if (!session) {
+      console.error('[openai] No session found')
+      throw new Error('Not authenticated')
+    }
 
-    const edgeFunctionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai-proxy`
+    console.log('[openai] Calling AI with session:', session.user.id)
+    
+    // Explicitly provide the anon key in headers to satisfy the Supabase gateway,
+    // as it sometimes fails to automatically attach it when a custom session is active.
+    const { data: { publicAnonKey } } = { data: { publicAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY } }
 
-    const res = await fetch(edgeFunctionUrl, {
-      method: 'POST',
+    const { data, error: invokeError } = await supabase.functions.invoke('openai-proxy', {
+      body: { messages, options },
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
         'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({ messages, options }),
+        'Authorization': `Bearer ${session.access_token}`
+      }
     })
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
+    if (invokeError) {
+      const status = invokeError.status || 500
+      const errorData = invokeError.context?.json || {}
+      const errorCode = errorData.error || 'AI_ERROR'
+      const errorDetails = errorData.details || invokeError.message
+      const errorFull = `${errorCode}: ${errorDetails}`
       
-      // If limit reached (403), stop retrying
-      if (res.status === 403) {
-        throw Object.assign(new Error('SESSION_LIMIT_REACHED'), { code: 'SESSION_LIMIT_REACHED' })
+      // Handle specific error codes from our Edge Function
+      if (status === 402 || errorCode === 'SESSION_LIMIT_REACHED') {
+        console.warn('[openai] Session limit reached:', errorDetails)
+        throw Object.assign(new Error('SESSION_LIMIT_REACHED'), { code: 'SESSION_LIMIT_REACHED', details: errorDetails })
       }
-      
+
+      if (status === 401 || errorCode === 'UNAUTHORIZED') {
+        console.error('[openai] 401 Authentication Failure in AI Pipeline:', errorFull)
+        throw Object.assign(new Error('AUTHENTICATION_FAILED'), { code: 'UNAUTHORIZED', details: errorFull })
+      }
+
+      if (errorCode === 'AI_NOT_CONFIGURED') {
+        console.error('[openai] AI Proxy not configured:', errorDetails)
+        throw Object.assign(new Error('AI_NOT_CONFIGURED'), { code: 'AI_NOT_CONFIGURED', details: errorDetails })
+      }
+
       // If server error or rate limit and we have retries left, wait and retry
-      if ((res.status >= 500 || res.status === 429) && retryCount < MAX_RETRIES) {
-        console.warn(`AI request failed (${res.status}). Retrying in ${delay}ms... (Attempt ${retryCount + 1}/${MAX_RETRIES})`)
+      if ((status >= 500 || status === 429) && retryCount < MAX_RETRIES) {
+        console.warn(`[openai] Request failed (${status}). Retrying in ${delay}ms... (Attempt ${retryCount + 1}/${MAX_RETRIES})`)
         await new Promise(r => setTimeout(r, delay))
         return callAI(messages, options, retryCount + 1)
       }
 
-      await logger.error('generation', 'callAI', `AI request failed: ${res.status}`, {
-        status: res.status,
-        error: err,
+      await logger.error('generation', 'callAI', `AI request failed: ${errorCode}`, {
+        status,
+        code: errorCode,
+        details: errorDetails,
         retry_count: retryCount
       }, user?.id)
 
-      throw new Error(err?.error || `AI request failed (${res.status})`)
+      console.error(`[openai] AI Proxy Error (${status}):`, errorCode, errorDetails)
+      throw Object.assign(new Error(errorDetails), { code: errorCode, status, details: errorDetails })
+
     }
 
-    const data = await res.json()
     const content = data.choices?.[0]?.message?.content ?? data.content ?? ''
 
     // Log successful generation
@@ -125,7 +147,7 @@ Return a JSON object with these exact keys:
   "summary": string (2-3 sentence honest assessment)
 }`,
     },
-  ], { json: true, maxTokens: 1200 })
+  ], { json: true, maxTokens: 1200, isTailoringCall: true })
 }
 
 // =============================================
@@ -175,7 +197,7 @@ Return JSON with these exact keys:
   "education": [{ "degree": string, "school": string }]
 }`,
     },
-  ], { json: true, maxTokens: 2500, temperature: 0.6 })
+  ], { json: true, maxTokens: 2500, temperature: 0.6, isTailoringCall: true })
 }
 
 // =============================================
@@ -211,7 +233,7 @@ ${jdText}
 
 Write a 3-paragraph cover letter (opening hook, body connecting experience to role, compelling close with CTA). Do not include the date, address headers, or sign-off — just the 3 paragraphs.`,
     },
-  ], { maxTokens: 800, temperature: 0.75 })
+  ], { maxTokens: 800, temperature: 0.75, isTailoringCall: true })
 }
 
 // =============================================
@@ -256,7 +278,7 @@ Generate 4 interview questions with STAR answers. Return JSON:
   ]
 }`,
     },
-  ], { json: true, maxTokens: 3000, temperature: 0.65 })
+  ], { json: true, maxTokens: 3000, temperature: 0.65, isTailoringCall: true })
 }
 
 // =============================================

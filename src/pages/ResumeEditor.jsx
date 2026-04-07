@@ -33,9 +33,9 @@ export default function ResumeEditor() {
     return () => obs.disconnect()
   }, [])
 
-  // On small screens auto-fit; on desktop use user zoom
+  // On small screens auto-fit to container width; on desktop use user zoom
   const isMobileCanvas = canvasWidth > 0 && canvasWidth < PAPER_WIDTH
-  const effectiveScale = isMobileCanvas ? (canvasWidth - 32) / PAPER_WIDTH : zoom / 100
+  const effectiveScale = isMobileCanvas ? canvasWidth / PAPER_WIDTH : zoom / 100
 
   const resume = activeSession?.tailoredResume || null
 
@@ -123,11 +123,6 @@ export default function ResumeEditor() {
                 </button>
               </div>
 
-              <button onClick={() => window.open(location.pathname + '?preview=true', '_blank')} className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-[#eceef0] text-[#031631] font-bold text-sm transition-colors" title="View full page preview">
-                <span className="material-symbols-outlined text-[18px]">fullscreen</span>
-                <span>Full Page</span>
-              </button>
-
               <button onClick={handleExportPDF} disabled={!resume}
                 className="px-4 md:px-5 py-2 text-sm font-bold rounded-lg text-white shadow-lg transition-all active:scale-95 ai-glow-btn flex items-center gap-1.5 disabled:opacity-40">
                 <span className="material-symbols-outlined text-[16px]">download</span>
@@ -163,13 +158,13 @@ export default function ResumeEditor() {
               <div>
                 <h2 className="text-xl font-bold mb-2" style={{ fontFamily: 'Manrope', color: '#031631' }}>No resume loaded</h2>
                 <p className="max-w-sm text-sm" style={{ color: '#44474d' }}>
-                  Run a tailoring session first to generate your AI-optimized resume.
+                  Build an application packet first to generate your optimized resume.
                 </p>
               </div>
               <button onClick={() => navigate('/app/tailor')}
                 className="px-6 py-3 text-white font-bold rounded-xl ai-glow-btn flex items-center gap-2">
                 <span className="material-symbols-outlined icon-filled text-[18px]">bolt</span>
-                Start Tailoring
+                Build Application Packet
               </button>
             </div>
           )}
@@ -239,7 +234,7 @@ export default function ResumeEditor() {
             <button onClick={() => navigate('/app/tailor')}
               className="w-full px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all text-white ai-glow-btn">
               <span className="material-symbols-outlined text-[18px]">bolt</span>
-              New Session
+              New Application
             </button>
           </div>
         </aside>
@@ -247,7 +242,7 @@ export default function ResumeEditor() {
 
       {/* Mobile bottom action bar */}
       {!isDedicatedPreview && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t"
+        <div className="md:hidden fixed above-bottom-nav left-0 right-0 z-40 border-t"
           style={{
             backgroundColor: 'rgba(255,255,255,0.95)',
             backdropFilter: 'blur(20px)',

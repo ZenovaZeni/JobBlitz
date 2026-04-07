@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SideNav from '../components/SideNav'
 import { useSession } from '../context/SessionContext'
+import { useSessions } from '../hooks/useSessions'
 
 function STARSection({ label, content }) {
   const colors = {
@@ -28,12 +29,79 @@ const TAG_COLORS = {
 
 export default function InterviewPrep() {
   const navigate = useNavigate()
-  const { activeSession } = useSession()
+  const { activeSession, setActiveSession } = useSession()
+  const { sessions, loading: sessionsLoading, fetchFullPacket } = useSessions()
+  const [loading, setLoading] = useState(false)
+
+  // Auto-hydrate if no session is active or explicitly loaded
+  useEffect(() => {
+    let cancelled = false
+    let timeout = null
+
+    async function hydrate() {
+      // Prioritize identifying if we should даже start loading
+      if (activeSession || sessionsLoading) return
+      
+      // If no sessions exist after loading finishes, we resolve immediately to empty state
+      if (sessions.length === 0) {
+        setLoading(false)
+        return
+      }
+
+      setLoading(true)
+      // Safety fallback: stop showing loading after 8s even if fetch hangs
+      timeout = setTimeout(() => {
+        if (!cancelled) setLoading(false)
+      }, 8000)
+
+      try {
+        const fullPacket = await fetchFullPacket(sessions[0].id)
+        if (fullPacket && !cancelled) setActiveSession(fullPacket)
+      } catch (err) {
+        console.error('[InterviewPrep] Hydration failed:', err)
+      } finally {
+        clearTimeout(timeout)
+        if (!cancelled) setLoading(false)
+      }
+    }
+    hydrate()
+    return () => { cancelled = true; clearTimeout(timeout) }
+  }, [activeSession, sessions, sessionsLoading, fetchFullPacket, setActiveSession])
+
+  useEffect(() => { document.title = 'JobBlitz — Interview Prep' }, [])
 
   const questions = activeSession?.interviewData?.questions || []
   const [activeQ, setActiveQ] = useState(0)
   // Track which question indices the user has marked as prepared
   const [prepared, setPrepared] = useState(new Set())
+
+  function handleExportPrep() {
+    if (!questions.length) return
+    const header = activeSession?.role
+      ? `Interview Prep — ${activeSession.role} at ${activeSession.company}\n${'='.repeat(60)}\n\n`
+      : 'Interview Prep\n==============\n\n'
+    const body = questions.map((q, i) => {
+      const lines = [`Question ${i + 1}: ${q.question}`, q.tag ? `Type: ${q.tag}` : '', '']
+      if (q.key_points?.length) {
+        lines.push('Key Points to Lead With:')
+        q.key_points.forEach(pt => lines.push(`  • ${pt}`))
+        lines.push('')
+      }
+      if (q.star) {
+        lines.push('SITUATION:', `  ${q.star.situation}`, '', 'TASK:', `  ${q.star.task}`, '',
+          'ACTION:', `  ${q.star.action}`, '', 'RESULT:', `  ${q.star.result}`, '')
+      }
+      return lines.filter(l => l !== undefined).join('\n')
+    }).join('\n---\n\n')
+    const filename = activeSession?.role
+      ? `Interview Prep — ${activeSession.role} at ${activeSession.company}.txt`
+      : 'Interview Prep.txt'
+    const blob = new Blob([header + body], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = filename; a.click()
+    URL.revokeObjectURL(url)
+  }
 
   const currentQ = questions[activeQ] || null
   const hasSession = questions.length > 0
@@ -70,7 +138,11 @@ export default function InterviewPrep() {
             </p>
             <h1 className="text-base md:text-lg font-black truncate tracking-tight"
               style={{ fontFamily: 'Manrope', color: '#031631' }}>
-              {activeSession ? `${activeSession.role} · ${activeSession.company}` : 'No session loaded'}
+              {loading || sessionsLoading 
+                ? 'Loading prep...' 
+                : activeSession 
+                  ? `${activeSession.role} · ${activeSession.company}` 
+                  : 'No application loaded'}
             </h1>
           </div>
 
@@ -84,13 +156,22 @@ export default function InterviewPrep() {
                 </span>
               </div>
             )}
+            {hasSession && (
+              <button
+                onClick={handleExportPrep}
+                className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border transition-all hover:bg-[#eceef0]"
+                style={{ color: '#031631', borderColor: 'rgba(197,198,206,0.3)' }}>
+                <span className="material-symbols-outlined text-[14px]">download</span>
+                <span className="hidden sm:inline">Export</span>
+              </button>
+            )}
             {activeSession && (
               <button
                 onClick={() => navigate(`/app/session/${activeSession.sessionId}`)}
                 className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all hover:bg-[#eceef0]"
                 style={{ color: '#44474d' }}>
                 <span className="material-symbols-outlined text-[14px]">arrow_back</span>
-                <span className="hidden sm:inline">Back to Session</span>
+                <span className="hidden sm:inline">Back to Application</span>
               </button>
             )}
           </div>
@@ -199,12 +280,12 @@ export default function InterviewPrep() {
                     psychology
                   </span>
                   <p className="text-sm leading-relaxed mb-4" style={{ color: '#75777e' }}>
-                    No questions yet. Start a tailoring session to generate your prep.
+                    No questions yet. Build an application packet to generate your prep.
                   </p>
                   <button
                     onClick={() => navigate('/app/tailor')}
                     className="w-full py-2.5 text-white text-sm font-bold rounded-xl ai-glow-btn">
-                    Start Session
+                    Get Started
                   </button>
                 </div>
               )}
@@ -426,7 +507,7 @@ export default function InterviewPrep() {
                           No STAR answer available
                         </p>
                         <p className="text-sm mb-6" style={{ color: '#75777e' }}>
-                          This question was not included in your AI-generated prep bundle.
+                          This question doesn't have a strategy prepared yet.
                         </p>
                         {!isLastQuestion && (
                           <button
@@ -441,6 +522,20 @@ export default function InterviewPrep() {
                   </div>
                 </div>
               </>
+            ) : (loading || sessionsLoading) && !activeSession ? (
+              /* Loading / Hydrating State */
+              <div className="flex-1 flex items-center justify-center px-6 page-pb-mobile">
+                <div className="max-w-sm w-full text-center">
+                  <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-5"
+                    style={{ borderColor: '#e1e0ff', borderTopColor: '#0e0099' }} />
+                  <h2 className="text-lg font-extrabold mb-1.5" style={{ fontFamily: 'Manrope', color: '#031631' }}>
+                    Loading prep...
+                  </h2>
+                  <p className="text-sm" style={{ color: '#8293b4' }}>
+                    Finding your latest application.
+                  </p>
+                </div>
+              </div>
             ) : (
               /* No session — structured empty state */
               <div className="flex-1 flex items-center justify-center px-6 page-pb-mobile">
@@ -456,13 +551,13 @@ export default function InterviewPrep() {
                     No interview prep yet
                   </h2>
                   <p className="text-sm leading-relaxed mb-6" style={{ color: '#75777e' }}>
-                    Run a tailoring session for a specific role to get personalized STAR-method questions and answers.
+                    Build an application packet for a specific role to get personalized STAR-method questions and answers.
                   </p>
                   <button
                     onClick={() => navigate('/app/tailor')}
                     className="px-8 py-3.5 text-white font-bold rounded-xl ai-glow-btn inline-flex items-center gap-2 active:scale-95 transition-all">
                     <span className="material-symbols-outlined icon-filled text-[18px]">bolt</span>
-                    Start Tailoring
+                    Build Application Packet
                   </button>
                 </div>
               </div>

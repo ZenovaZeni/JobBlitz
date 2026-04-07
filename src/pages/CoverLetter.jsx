@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SideNav from '../components/SideNav'
 import { useAuth } from '../context/AuthContext'
@@ -11,21 +11,80 @@ const tones = ['Professional', 'Passionate', 'Confident', 'Creative']
 
 export default function CoverLetter() {
   const navigate = useNavigate()
-  const { activeSession } = useSession()
-  const { saveCoverLetter } = useSessions()
+  const { activeSession, setActiveSession } = useSession()
   const { profile: masterProfile } = useMasterProfile()
   const { checkAccess, updateUsage, isPro } = useAuth()
+  const { sessions, loading: sessionsLoading, fetchFullPacket, saveCoverLetter } = useSessions()
 
+  const [letterText, setLetterText] = useState('')
+  const [loading, setLoading] = useState(false)
   const [tone, setTone] = useState('Professional')
-  const [letterText, setLetterText] = useState(activeSession?.coverLetter || '')
   const [copied, setCopied] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
 
+  useEffect(() => { document.title = 'JobBlitz — Cover Letter' }, [])
+
+  // Auto-hydrate if no session is active or explicitly loaded
+  useEffect(() => {
+    let cancelled = false
+    let timeout = null
+
+    async function hydrate() {
+      // If session is already there or we are still loading basic session list, wait
+      if (activeSession || sessionsLoading) return
+
+      // If no sessions exist after loading finishes, we resolve immediately to empty state
+      if (sessions.length === 0) {
+        setLoading(false)
+        return
+      }
+
+      setLoading(true)
+      // Safety fallback: stop showing loading after 8s even if fetch hangs
+      timeout = setTimeout(() => {
+        if (!cancelled) setLoading(false)
+      }, 8000)
+
+      try {
+        const fullPacket = await fetchFullPacket(sessions[0].id)
+        if (fullPacket && !cancelled) setActiveSession(fullPacket)
+      } catch (err) {
+        console.error('[CoverLetter] Hydration failed:', err)
+      } finally {
+        clearTimeout(timeout)
+        if (!cancelled) setLoading(false)
+      }
+    }
+    hydrate()
+    return () => { cancelled = true; clearTimeout(timeout) }
+  }, [activeSession, sessions, sessionsLoading, fetchFullPacket, setActiveSession])
+
+  useEffect(() => {
+    if (activeSession?.coverLetter) {
+      setLetterText(activeSession.coverLetter)
+    }
+  }, [activeSession])
+
   function handleCopy() {
+    if (!letterText) return
     navigator.clipboard.writeText(letterText)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  function handleDownload() {
+    if (!letterText) return
+    const filename = activeSession
+      ? `Cover Letter — ${activeSession.role} at ${activeSession.company}.txt`
+      : 'Cover Letter.txt'
+    const blob = new Blob([letterText], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   async function handleRegenerate() {
@@ -56,6 +115,7 @@ export default function CoverLetter() {
   }
 
   const hasSession = !!activeSession && !!letterText
+  const isHydrating = (loading || sessionsLoading) && !activeSession
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f7f9fb' }}>
@@ -70,7 +130,7 @@ export default function CoverLetter() {
               <p className="text-[10px] font-black uppercase tracking-widest mb-0.5" style={{ color: '#0e0099' }}>Cover Letter</p>
               <h1 className="text-base md:text-lg font-black truncate tracking-tight"
                 style={{ fontFamily: 'Manrope', color: '#031631' }}>
-                {activeSession ? `${activeSession.role} · ${activeSession.company}` : 'No session loaded'}
+                {isHydrating ? 'Loading...' : activeSession ? `${activeSession.role} · ${activeSession.company}` : 'No application loaded'}
               </h1>
             </div>
             {hasSession && (
@@ -109,7 +169,18 @@ export default function CoverLetter() {
           {/* Canvas */}
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto p-4 md:p-10 custom-scroll dot-grid flex justify-center items-start pb-40 lg:pb-12">
-              {hasSession ? (
+              {isHydrating ? (
+                /* Loading / Hydrating State */
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mb-5"
+                    style={{ borderColor: '#e1e0ff', borderTopColor: '#0e0099' }} />
+                  <h2 className="text-lg font-extrabold mb-1.5" style={{ fontFamily: 'Manrope', color: '#031631' }}>
+                    Loading cover letter...
+                  </h2>
+                  <p className="text-sm" style={{ color: '#8293b4' }}>Finding your latest application.</p>
+                </div>
+              ) : hasSession ? (
+                /* Actual Letter Canvas */
                 <div className="w-full flex justify-center animate-slide-in">
                   <div className="bg-white p-6 md:p-[64px_72px] paper-shadow w-full max-w-[816px]" style={{ minHeight: '1056px' }}>
                     <textarea
@@ -121,36 +192,43 @@ export default function CoverLetter() {
                     />
                   </div>
                 </div>
-              ) : (
+              ) : activeSession ? (
+                /* Empty state for active session (no letter yet) */
                 <div className="flex flex-col items-center justify-center gap-6 py-24 text-center px-4 w-full">
                   <div className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg" style={{ backgroundColor: '#f2f4f6' }}>
                     <span className="material-symbols-outlined text-[40px]" style={{ color: '#0e0099' }}>mail</span>
                   </div>
                   <div>
-                    <h2 className="text-xl font-extrabold mb-2" style={{ fontFamily: 'Manrope', color: '#031631' }}>
-                      {activeSession ? 'No cover letter yet' : 'No session loaded'}
-                    </h2>
+                    <h2 className="text-xl font-extrabold mb-2" style={{ fontFamily: 'Manrope', color: '#031631' }}>No cover letter yet</h2>
                     <p className="max-w-sm text-sm font-semibold text-[#8293b4]">
-                      {activeSession
-                        ? 'Generate a personalized cover letter for this role.'
-                        : 'Tailor a resume first, then come back to generate your cover letter.'}
+                      Generate a personalized cover letter for this role.
                     </p>
                   </div>
-                  {activeSession ? (
-                    <button onClick={handleRegenerate} disabled={generating}
-                      className="px-8 py-4 text-white font-black rounded-xl ai-glow-btn flex items-center gap-3 active:scale-95 transition-all disabled:opacity-50">
-                      <span className={`material-symbols-outlined icon-filled text-[20px] ${generating ? 'animate-spin' : ''}`}>
-                        {generating ? 'progress_activity' : 'auto_awesome'}
-                      </span>
-                      {generating ? 'Generating...' : 'Generate Cover Letter'}
-                    </button>
-                  ) : (
-                    <button onClick={() => navigate('/app/tailor')}
-                      className="px-8 py-4 text-white font-black rounded-xl ai-glow-btn flex items-center gap-3 active:scale-95 transition-all">
-                      <span className="material-symbols-outlined icon-filled text-[20px]">bolt</span>
-                      Start Tailoring
-                    </button>
-                  )}
+                  <button onClick={handleRegenerate} disabled={generating}
+                    className="px-8 py-4 text-white font-black rounded-xl ai-glow-btn flex items-center gap-3 active:scale-95 transition-all disabled:opacity-50">
+                    <span className={`material-symbols-outlined icon-filled text-[20px] ${generating ? 'animate-spin' : ''}`}>
+                      {generating ? 'progress_activity' : 'auto_awesome'}
+                    </span>
+                    {generating ? 'Generating...' : 'Generate Cover Letter'}
+                  </button>
+                </div>
+              ) : (
+                /* Truly empty state (no applications at all) */
+                <div className="flex flex-col items-center justify-center gap-6 py-24 text-center px-4 w-full">
+                  <div className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg" style={{ backgroundColor: '#f2f4f6' }}>
+                    <span className="material-symbols-outlined text-[40px]" style={{ color: '#031631' }}>description</span>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-extrabold mb-2" style={{ fontFamily: 'Manrope', color: '#031631' }}>Build your first packet</h2>
+                    <p className="max-w-sm text-sm font-semibold text-[#8293b4]">
+                      Tailor a resume first to unlock cover letter generation.
+                    </p>
+                  </div>
+                  <button onClick={() => navigate('/app/tailor')}
+                    className="px-8 py-4 text-white font-black rounded-xl ai-glow-btn flex items-center gap-3 active:scale-95 transition-all">
+                    <span className="material-symbols-outlined icon-filled text-[20px]">bolt</span>
+                    Get Started
+                  </button>
                 </div>
               )}
             </div>
@@ -160,12 +238,17 @@ export default function CoverLetter() {
           <aside className="hidden lg:flex w-72 flex-shrink-0 flex-col border-l overflow-y-auto custom-scroll"
             style={{ backgroundColor: '#f2f4f6', borderColor: 'rgba(197,198,206,0.15)' }}>
             <header className="px-6 py-5 border-b" style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
-              <h2 className="font-bold text-base" style={{ fontFamily: 'Manrope', color: '#031631' }}>Letter Settings</h2>
+              <h2 className="font-bold text-base" style={{ fontFamily: 'Manrope', color: '#031631' }}>Cover Letter</h2>
+              {activeSession?.role && (
+                <p className="text-[11px] mt-0.5 truncate" style={{ color: '#8293b4' }}>
+                  {activeSession.role} · {activeSession.company}
+                </p>
+              )}
             </header>
 
             {activeSession && (
               <div className="px-6 py-5 border-b" style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
-                <h3 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#8293b4' }}>Session</h3>
+                <h3 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#8293b4' }}>Application</h3>
                 <div className="space-y-2">
                   {[
                     { icon: 'work', label: activeSession.role },
@@ -229,19 +312,28 @@ export default function CoverLetter() {
                 </span>
                 {generating ? 'Working...' : 'Rewrite Letter'}
               </button>
-              <button onClick={handleCopy}
-                disabled={!hasSession}
-                className="w-full py-3.5 text-xs font-bold rounded-xl border flex items-center justify-center gap-2 transition-all hover:bg-[#f2f4f6]"
-                style={{ color: '#031631', borderColor: 'rgba(197,198,206,0.2)' }}>
-                <span className="material-symbols-outlined text-[18px]">{copied ? 'check' : 'content_copy'}</span>
-                {copied ? 'Copied!' : 'Copy to Clipboard'}
-              </button>
+              <div className="flex gap-2">
+                <button onClick={handleCopy}
+                  disabled={!hasSession}
+                  className="flex-1 py-3.5 text-xs font-bold rounded-xl border flex items-center justify-center gap-1.5 transition-all hover:bg-[#f2f4f6] disabled:opacity-40"
+                  style={{ color: '#031631', borderColor: 'rgba(197,198,206,0.2)' }}>
+                  <span className="material-symbols-outlined text-[16px]">{copied ? 'check' : 'content_copy'}</span>
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+                <button onClick={handleDownload}
+                  disabled={!hasSession}
+                  className="flex-1 py-3.5 text-xs font-bold rounded-xl border flex items-center justify-center gap-1.5 transition-all hover:bg-[#f2f4f6] disabled:opacity-40"
+                  style={{ color: '#031631', borderColor: 'rgba(197,198,206,0.2)' }}>
+                  <span className="material-symbols-outlined text-[16px]">download</span>
+                  Download
+                </button>
+              </div>
             </div>
           </aside>
         </div>
 
         {/* Mobile Action Bar */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t"
+        <div className="lg:hidden fixed above-bottom-nav left-0 right-0 z-40 border-t"
           style={{
             backgroundColor: 'rgba(255,255,255,0.98)',
             backdropFilter: 'blur(20px)',
@@ -275,10 +367,16 @@ export default function CoverLetter() {
                 Rewrite
               </button>
               <button onClick={handleCopy} disabled={!hasSession}
-                className="flex-1 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest border flex items-center justify-center gap-2 transition-all active:scale-95"
+                className="flex-1 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest border flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-40"
                 style={{ borderColor: 'rgba(197,198,206,0.4)', color: '#031631', backgroundColor: 'white' }}>
                 <span className="material-symbols-outlined text-[18px]">{copied ? 'check' : 'content_copy'}</span>
                 Copy
+              </button>
+              <button onClick={handleDownload} disabled={!hasSession}
+                className="px-4 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest border flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-40"
+                style={{ borderColor: 'rgba(197,198,206,0.4)', color: '#031631', backgroundColor: 'white' }}>
+                <span className="material-symbols-outlined text-[18px]">download</span>
+                Save
               </button>
             </div>
             {error && <p className="text-[10px] font-bold text-center mt-2 text-[#93000a]">{error}</p>}

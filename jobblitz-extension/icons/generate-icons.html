@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<!--
+  JobBlitz Extension Icon Generator
+  Open this file in Chrome, click each button to download the PNG icons.
+  Place the downloaded files in this icons/ directory as icon16.png, icon48.png, icon128.png.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Generate JobBlitz Icons</title>
+<style>
+  body { font-family: sans-serif; padding: 32px; background: #f7f9fb; color: #031631; }
+  h2 { margin-bottom: 8px; }
+  p  { color: #75777e; margin-bottom: 24px; font-size: 14px; }
+  .row { display: flex; gap: 32px; align-items: flex-end; flex-wrap: wrap; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  canvas { border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+  button {
+    padding: 6px 14px; border-radius: 8px; border: none; cursor: pointer;
+    background: #0e0099; color: white; font-size: 13px; font-weight: 600;
+  }
+  button:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+<h2>JobBlitz Icon Generator</h2>
+<p>Click each Download button, then rename and move the files into this icons/ folder.</p>
+<div class="row" id="row"></div>
+
+<script>
+const SIZES = [
+  { size: 16,  filename: 'icon16.png'  },
+  { size: 48,  filename: 'icon48.png'  },
+  { size: 128, filename: 'icon128.png' },
+]
+
+function drawIcon(canvas, size) {
+  const ctx = canvas.getContext('2d')
+  const r   = size * 0.3  // corner radius
+  const s   = size
+
+  // Background — navy rounded square
+  ctx.clearRect(0, 0, s, s)
+  ctx.beginPath()
+  ctx.moveTo(r, 0)
+  ctx.lineTo(s - r, 0)
+  ctx.quadraticCurveTo(s, 0, s, r)
+  ctx.lineTo(s, s - r)
+  ctx.quadraticCurveTo(s, s, s - r, s)
+  ctx.lineTo(r, s)
+  ctx.quadraticCurveTo(0, s, 0, s - r)
+  ctx.lineTo(0, r)
+  ctx.quadraticCurveTo(0, 0, r, 0)
+  ctx.closePath()
+  const grad = ctx.createLinearGradient(0, 0, s, s)
+  grad.addColorStop(0, '#0e0099')
+  grad.addColorStop(1, '#031631')
+  ctx.fillStyle = grad
+  ctx.fill()
+
+  // Star / bolt shape in white
+  ctx.fillStyle = 'white'
+  ctx.beginPath()
+  const cx = s / 2
+  const cy = s / 2
+  const outerR = s * 0.38
+  const innerR = s * 0.18
+  const points = 5
+  for (let i = 0; i < points * 2; i++) {
+    const angle = (i * Math.PI) / points - Math.PI / 2
+    const rad   = i % 2 === 0 ? outerR : innerR
+    const x = cx + Math.cos(angle) * rad
+    const y = cy + Math.sin(angle) * rad
+    if (i === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  ctx.fill()
+}
+
+const row = document.getElementById('row')
+
+for (const { size, filename } of SIZES) {
+  const col = document.createElement('div')
+  col.className = 'col'
+
+  const canvas = document.createElement('canvas')
+  canvas.width  = size
+  canvas.height = size
+  canvas.style.width  = Math.max(size, 64) + 'px'
+  canvas.style.height = Math.max(size, 64) + 'px'
+  canvas.style.imageRendering = 'pixelated'
+  drawIcon(canvas, size)
+
+  const label = document.createElement('span')
+  label.textContent = `${size}×${size}`
+  label.style.cssText = 'font-size:13px;color:#75777e;font-weight:600'
+
+  const btn = document.createElement('button')
+  btn.textContent = `Download ${filename}`
+  btn.addEventListener('click', () => {
+    const a = document.createElement('a')
+    a.href     = canvas.toDataURL('image/png')
+    a.download = filename
+    a.click()
+  })
+
+  col.append(canvas, label, btn)
+  row.appendChild(col)
+}
+</script>
+</body>
+</html>

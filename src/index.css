@@ -75,6 +75,34 @@
 /* === GLOBAL STYLES === */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* === ACCESSIBILITY: Visible focus rings (keyboard nav only) === */
+/* Hide outline for mouse users, show for keyboard users */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid #0e0099;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+/* Tighter radius on pill/rounded elements */
+.rounded-full:focus-visible  { border-radius: 9999px; }
+.rounded-2xl:focus-visible   { border-radius: 1rem; }
+.rounded-xl:focus-visible    { border-radius: 0.75rem; }
+
+/* === ACCESSIBILITY: Skip-to-content link === */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: 1rem;
+  z-index: 9999;
+  padding: 0.75rem 1.5rem;
+  background: #031631;
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+}
+.skip-to-content:focus { left: 1rem; }
+
 html {
   scroll-behavior: smooth;
   /* Prevent iOS text size adjustment */
@@ -120,7 +148,23 @@ button, a, [role="button"] {
 
 /* Page bottom padding when bottom nav visible */
 .page-pb-mobile {
-  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important;
+}
+
+.pb-nav-safe {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)) !important;
+}
+
+/* Fixed action bar that sits ABOVE the bottom nav on mobile.
+   At md+ the bottom nav is hidden (md:hidden), so fall back to bottom: 0.
+   Bottom nav content height ≈ 3.75rem (60px); safe-area clears gesture bar. */
+.above-bottom-nav {
+  bottom: calc(3.75rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 768px) {
+  .above-bottom-nav {
+    bottom: 0;
+  }
 }
 
 /* Material Symbols */

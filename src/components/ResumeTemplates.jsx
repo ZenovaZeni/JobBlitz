@@ -15,15 +15,24 @@ export function AtelierTemplate({ resume, settings = {} }) {
   return (
     <div className="bg-white text-left" style={{ width: '816px', minHeight: '1056px', padding: '56px 64px', fontFamily: font_family }}>
       <div className="pb-8 mb-8" style={{ borderBottom: `3px solid ${accent_color}` }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 800, color: accent_color, letterSpacing: '-0.02em', marginBottom: '4px' }}>{resume.name || 'Your Name'}</h1>
-        <p style={{ fontSize: '14px', color: '#0e0099', fontWeight: 600, marginBottom: '10px' }}>{resume.title || 'Job Title'}</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 12px', fontSize: '11px', color: '#44474d' }}>
-          <span>{resume.contact || 'Email · Phone · Location'}</span>
-          {resume.linkedin && (
-            <a href={resume.linkedin.startsWith('http') ? resume.linkedin : `https://${resume.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: '#0e0099', fontWeight: 600, textDecoration: 'none' }}>· LinkedIn</a>
-          )}
-          {resume.portfolio && (
-            <a href={resume.portfolio.startsWith('http') ? resume.portfolio : `https://${resume.portfolio}`} target="_blank" rel="noopener noreferrer" style={{ color: '#0e0099', fontWeight: 600, textDecoration: 'none' }}>· Portfolio</a>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={{ fontSize: '32px', fontWeight: 800, color: accent_color, letterSpacing: '-0.02em', marginBottom: '4px' }}>{resume.name || 'Your Name'}</h1>
+            <p style={{ fontSize: '14px', color: '#0e0099', fontWeight: 600, marginBottom: '10px' }}>{resume.title || 'Job Title'}</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 12px', fontSize: '11px', color: '#44474d' }}>
+              <span>{resume.contact || 'Email · Phone · Location'}</span>
+              {resume.linkedin && (
+                <a href={resume.linkedin.startsWith('http') ? resume.linkedin : `https://${resume.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: '#0e0099', fontWeight: 600, textDecoration: 'none' }}>· LinkedIn</a>
+              )}
+              {resume.portfolio && (
+                <a href={resume.portfolio.startsWith('http') ? resume.portfolio : `https://${resume.portfolio}`} target="_blank" rel="noopener noreferrer" style={{ color: '#0e0099', fontWeight: 600, textDecoration: 'none' }}>· Portfolio</a>
+              )}
+            </div>
+          </div>
+          {resume.resume_photo_enabled && resume.avatar_url && (
+            <div style={{ width: '80px', hieght: '80px', borderRadius: '12px', overflow: 'hidden', border: `1px solid #eceef0`, flexShrink: 0 }}>
+              <img src={resume.avatar_url} alt="" style={{ width: '100%', height: '100%', objectCover: 'cover' }} />
+            </div>
           )}
         </div>
       </div>
@@ -129,15 +138,24 @@ export function MinimalTemplate({ resume, settings = {} }) {
   return (
     <div className="bg-white text-left" style={{ width: '816px', minHeight: '1056px', padding: '64px 72px', fontFamily: font_family }}>
       <div style={{ marginBottom: baseSpacing(40) }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 700, color: accent_color, letterSpacing: '-0.01em', marginBottom: '8px' }}>{resume.name || 'Your Name'}</h1>
-        <p style={{ fontSize: '13px', color: '#555', marginBottom: '8px' }}>{resume.title || 'Job Title'}</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 12px', fontSize: '11px', color: '#888' }}>
-          <span>{resume.contact || 'Email · Phone · Location'}</span>
-          {resume.linkedin && (
-            <a href={resume.linkedin.startsWith('http') ? resume.linkedin : `https://${resume.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: accent_color, fontWeight: 600, textDecoration: 'none' }}>· LinkedIn</a>
-          )}
-          {resume.portfolio && (
-            <a href={resume.portfolio.startsWith('http') ? resume.portfolio : `https://${resume.portfolio}`} target="_blank" rel="noopener noreferrer" style={{ color: accent_color, fontWeight: 600, textDecoration: 'none' }}>· Portfolio</a>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: accent_color, letterSpacing: '-0.01em', marginBottom: '8px' }}>{resume.name || 'Your Name'}</h1>
+            <p style={{ fontSize: '13px', color: '#555', marginBottom: '8px' }}>{resume.title || 'Job Title'}</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 12px', fontSize: '11px', color: '#888' }}>
+              <span>{resume.contact || 'Email · Phone · Location'}</span>
+              {resume.linkedin && (
+                <a href={resume.linkedin.startsWith('http') ? resume.linkedin : `https://${resume.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: accent_color, fontWeight: 600, textDecoration: 'none' }}>· LinkedIn</a>
+              )}
+              {resume.portfolio && (
+                <a href={resume.portfolio.startsWith('http') ? resume.portfolio : `https://${resume.portfolio}`} target="_blank" rel="noopener noreferrer" style={{ color: accent_color, fontWeight: 600, textDecoration: 'none' }}>· Portfolio</a>
+              )}
+            </div>
+          </div>
+          {resume.resume_photo_enabled && resume.avatar_url && (
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', overflow: 'hidden', border: `1px solid #ccc`, flexShrink: 0 }}>
+              <img src={resume.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
           )}
         </div>
       </div>
@@ -227,15 +245,24 @@ export function ImpactTemplate({ resume, settings = {} }) {
   return (
     <div className="bg-white text-left" style={{ width: '816px', minHeight: '1056px', fontFamily: font_family }}>
       <div style={{ backgroundColor: accent_color, padding: '48px 56px', color: 'white' }}>
-        <h1 style={{ fontSize: '34px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '6px' }}>{resume.name || 'Your Name'}</h1>
-        <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.75)', marginBottom: '16px' }}>{resume.title || 'Job Title'}</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
-          <span>{resume.contact || 'Email · Phone · Location'}</span>
-          {resume.linkedin && (
-            <a href={resume.linkedin.startsWith('http') ? resume.linkedin : `https://${resume.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: 'white', fontWeight: 600, textDecoration: 'none' }}>· LinkedIn</a>
-          )}
-          {resume.portfolio && (
-            <a href={resume.portfolio.startsWith('http') ? resume.portfolio : `https://${resume.portfolio}`} target="_blank" rel="noopener noreferrer" style={{ color: 'white', fontWeight: 600, textDecoration: 'none' }}>· Portfolio</a>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{ fontSize: '34px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '6px' }}>{resume.name || 'Your Name'}</h1>
+            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.75)', marginBottom: '16px' }}>{resume.title || 'Job Title'}</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
+              <span>{resume.contact || 'Email · Phone · Location'}</span>
+              {resume.linkedin && (
+                <a href={resume.linkedin.startsWith('http') ? resume.linkedin : `https://${resume.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: 'white', fontWeight: 600, textDecoration: 'none' }}>· LinkedIn</a>
+              )}
+              {resume.portfolio && (
+                <a href={resume.portfolio.startsWith('http') ? resume.portfolio : `https://${resume.portfolio}`} target="_blank" rel="noopener noreferrer" style={{ color: 'white', fontWeight: 600, textDecoration: 'none' }}>· Portfolio</a>
+              )}
+            </div>
+          </div>
+          {resume.resume_photo_enabled && resume.avatar_url && (
+            <div style={{ width: '90px', height: '90px', borderRadius: '50%', overflow: 'hidden', border: `3px solid rgba(255,255,255,0.2)`, flexShrink: 0 }}>
+              <img src={resume.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
           )}
         </div>
       </div>

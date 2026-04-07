@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { JD_MAX_CHARS } from '../../config/constants'
+import VoiceMicButton from '../VoiceMicButton'
 
 const MIN_JD_CHARS = 100
 
@@ -25,16 +26,12 @@ function StepDots({ current, total }) {
   )
 }
 
-// ── Pinned action bar ─────────────────────────────────────────────────────────
-function ActionBar({ onBack, onNext, nextLabel, nextDisabled, showBack }) {
+// ── Inline action buttons — renders inside the scroll area, right below content ──
+function StepActions({ onBack, onNext, nextLabel, nextDisabled, showBack }) {
   return (
     <div
-      className="flex-shrink-0 px-5 pt-3 pb-safe border-t"
-      style={{
-        backgroundColor: 'white',
-        borderColor: 'rgba(197,198,206,0.15)',
-        paddingBottom: 'max(env(safe-area-inset-bottom), 1.25rem)',
-      }}
+      className="px-5 pt-4 pb-6"
+      style={{ paddingBottom: 'calc(3.75rem + env(safe-area-inset-bottom) + 1rem)' }}
     >
       <div className="flex gap-3">
         {showBack && (
@@ -121,51 +118,53 @@ export default function MobileTailoringWizard({
 
         {/* ── Step 0: Job info ── */}
         {step === 0 && (
-          <div className="px-5 py-7 space-y-6">
-            <div>
-              <h2 className="text-2xl font-extrabold mb-1" style={{ fontFamily: 'Manrope', color: '#031631' }}>
-                What role are you targeting?
-              </h2>
-              <p className="text-sm" style={{ color: '#75777e' }}>
-                Just the company and title — we'll use the full job description next.
-              </p>
-            </div>
-
-            <div className="space-y-4">
+          <div className="space-y-6">
+            <div className="px-5 pt-7 space-y-6">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#44474d' }}>
-                  Company
-                </label>
-                <input
-                  value={company}
-                  onChange={e => setCompany(e.target.value)}
-                  className="w-full px-4 py-4 rounded-2xl border-0 font-medium focus:outline-none focus:ring-2 transition-all"
-                  style={{ backgroundColor: 'white', color: '#031631', boxShadow: '0 2px 12px rgba(3,22,49,0.07)' }}
-                  placeholder="e.g. Stripe"
-                  autoComplete="organization"
-                  enterKeyHint="next"
-                />
+                <h2 className="text-2xl font-extrabold mb-1" style={{ fontFamily: 'Manrope', color: '#031631' }}>
+                  What role are you targeting?
+                </h2>
+                <p className="text-sm" style={{ color: '#75777e' }}>
+                  Just the company and title — we'll use the full job description next.
+                </p>
               </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#44474d' }}>
-                  Role Title
-                </label>
-                <input
-                  value={role}
-                  onChange={e => setRole(e.target.value)}
-                  className="w-full px-4 py-4 rounded-2xl border-0 font-medium focus:outline-none focus:ring-2 transition-all"
-                  style={{ backgroundColor: 'white', color: '#031631', boxShadow: '0 2px 12px rgba(3,22,49,0.07)' }}
-                  placeholder="e.g. Senior Software Engineer"
-                  autoComplete="off"
-                  enterKeyHint="done"
-                  onKeyDown={e => e.key === 'Enter' && canAdvanceStep0 && next()}
-                />
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#44474d' }}>
+                    Company
+                  </label>
+                  <input
+                    value={company}
+                    onChange={e => setCompany(e.target.value)}
+                    className="w-full px-4 py-4 rounded-2xl border-0 font-medium focus:outline-none focus:ring-2 transition-all"
+                    style={{ backgroundColor: 'white', color: '#031631', boxShadow: '0 2px 12px rgba(3,22,49,0.07)' }}
+                    placeholder="e.g. Stripe"
+                    autoComplete="organization"
+                    enterKeyHint="next"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#44474d' }}>
+                    Role Title
+                  </label>
+                  <input
+                    value={role}
+                    onChange={e => setRole(e.target.value)}
+                    className="w-full px-4 py-4 rounded-2xl border-0 font-medium focus:outline-none focus:ring-2 transition-all"
+                    style={{ backgroundColor: 'white', color: '#031631', boxShadow: '0 2px 12px rgba(3,22,49,0.07)' }}
+                    placeholder="e.g. Senior Software Engineer"
+                    autoComplete="off"
+                    enterKeyHint="done"
+                    onKeyDown={e => e.key === 'Enter' && canAdvanceStep0 && next()}
+                  />
+                </div>
               </div>
             </div>
 
             {/* What you'll get */}
             <div
-              className="p-4 rounded-2xl space-y-3"
+              className="mx-5 p-4 rounded-2xl space-y-3"
               style={{ backgroundColor: 'rgba(225,224,255,0.3)', border: '1px solid rgba(14,0,153,0.08)' }}
             >
               <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#2f2ebe' }}>
@@ -190,58 +189,83 @@ export default function MobileTailoringWizard({
                 ))}
               </div>
             </div>
+
+            <StepActions
+              showBack={false}
+              onNext={next}
+              nextLabel="Next"
+              nextDisabled={!canAdvanceStep0}
+            />
           </div>
         )}
 
         {/* ── Step 1: Job description ── */}
         {step === 1 && (
-          <div className="px-5 py-7 space-y-5">
-            <div>
-              <h2 className="text-2xl font-extrabold mb-1" style={{ fontFamily: 'Manrope', color: '#031631' }}>
-                Paste the job description
-              </h2>
-              <p className="text-sm" style={{ color: '#75777e' }}>
-                For {role} at {company}. The more detail, the better the packet.
-              </p>
-            </div>
-
-            <div>
-              <textarea
-                value={jdText}
-                onChange={e => setJdText(e.target.value)}
-                rows={12}
-                maxLength={JD_MAX_CHARS}
-                className="w-full px-4 py-4 rounded-2xl border-0 font-medium resize-none focus:outline-none focus:ring-2 transition-all text-sm leading-relaxed"
-                style={{ backgroundColor: 'white', color: '#031631', boxShadow: '0 2px 12px rgba(3,22,49,0.07)' }}
-                placeholder="Paste the full job posting here — requirements, responsibilities, qualifications…"
-                autoComplete="off"
-              />
-              <div className="flex justify-between mt-2 px-1">
-                {!canAdvanceStep1 && jdText.length > 0 ? (
-                  <p className="text-xs font-medium" style={{ color: '#75777e' }}>
-                    {jdCharsLeft} more character{jdCharsLeft !== 1 ? 's' : ''} needed
-                  </p>
-                ) : (
-                  <span />
-                )}
-                <p className="text-xs ml-auto" style={{ color: '#c5c6ce' }}>
-                  {jdText.length.toLocaleString()} / {JD_MAX_CHARS.toLocaleString()}
+          <div className="space-y-5">
+            <div className="px-5 pt-7 space-y-5">
+              <div>
+                <h2 className="text-2xl font-extrabold mb-1" style={{ fontFamily: 'Manrope', color: '#031631' }}>
+                  Paste the job description
+                </h2>
+                <p className="text-sm" style={{ color: '#75777e' }}>
+                  For {role} at {company}. The more detail, the better the packet.
                 </p>
               </div>
+
+              <div>
+                <div className="relative">
+                  <textarea
+                    value={jdText}
+                    onChange={e => setJdText(e.target.value)}
+                    rows={12}
+                    maxLength={JD_MAX_CHARS}
+                    className="w-full px-4 py-4 rounded-2xl border-0 font-medium resize-none focus:outline-none focus:ring-2 transition-all text-sm leading-relaxed"
+                    style={{ backgroundColor: 'white', color: '#031631', boxShadow: '0 2px 12px rgba(3,22,49,0.07)' }}
+                    placeholder="Paste the full job posting here — requirements, responsibilities, qualifications…"
+                    autoComplete="off"
+                  />
+                  <div className="absolute bottom-3 right-3">
+                    <VoiceMicButton
+                      onTranscript={text => setJdText(v => v ? v + ' ' + text : text)}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-between mt-2 px-1">
+                  {!canAdvanceStep1 && jdText.length > 0 ? (
+                    <p className="text-xs font-medium" style={{ color: '#75777e' }}>
+                      {jdCharsLeft} more character{jdCharsLeft !== 1 ? 's' : ''} needed
+                    </p>
+                  ) : (
+                    <span />
+                  )}
+                  <p className="text-xs ml-auto" style={{ color: '#c5c6ce' }}>
+                    {jdText.length.toLocaleString()} / {JD_MAX_CHARS.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {error && (
+                <div className="p-4 rounded-xl flex items-center gap-3" style={{ backgroundColor: '#ffdad6', color: '#93000a' }}>
+                  <span className="material-symbols-outlined icon-filled text-[16px]">error</span>
+                  <p className="text-sm font-semibold">{error}</p>
+                </div>
+              )}
             </div>
 
-            {error && (
-              <div className="p-4 rounded-xl flex items-center gap-3" style={{ backgroundColor: '#ffdad6', color: '#93000a' }}>
-                <span className="material-symbols-outlined icon-filled text-[16px]">error</span>
-                <p className="text-sm font-semibold">{error}</p>
-              </div>
-            )}
+            <StepActions
+              showBack
+              onBack={() => setStep(s => s - 1)}
+              onNext={next}
+              nextLabel="Next"
+              nextDisabled={!canAdvanceStep1}
+            />
           </div>
         )}
 
         {/* ── Step 2: Confirm & launch ── */}
         {step === 2 && (
-          <div className="px-5 py-7 space-y-5">
+          <div className="space-y-5">
+            <div className="px-5 pt-7 space-y-5">
             <div>
               <h2 className="text-2xl font-extrabold mb-1" style={{ fontFamily: 'Manrope', color: '#031631' }}>
                 Ready to build
@@ -332,22 +356,18 @@ export default function MobileTailoringWizard({
                 <p className="text-sm font-semibold">{error}</p>
               </div>
             )}
+            </div>
+
+            <StepActions
+              showBack
+              onBack={() => setStep(s => s - 1)}
+              onNext={next}
+              nextLabel="Build My Packet"
+              nextDisabled={!hasProfile}
+            />
           </div>
         )}
       </div>
-
-      {/* ── Pinned action bar ── */}
-      <ActionBar
-        showBack={step > 0}
-        onBack={() => setStep(s => s - 1)}
-        onNext={next}
-        nextLabel={step === 2 ? 'Build My Packet' : 'Next'}
-        nextDisabled={
-          (step === 0 && !canAdvanceStep0) ||
-          (step === 1 && !canAdvanceStep1) ||
-          (step === 2 && !hasProfile)
-        }
-      />
     </div>
   )
 }

@@ -6,7 +6,11 @@
       "WebFetch(domain:developers.googleblog.com)",
       "Bash(node tests/ux-audit.js)",
       "Bash(node -e \":*)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(grep -n \"ai-glow\\\\|AI\" /c/Josh/Projects/JobBlitz/src/pages/*.jsx)",
+      "Bash(grep -n \"ai-glow\\\\|AI\" /c/Josh/Projects/JobBlitz/src/components/*.jsx)",
+      "Bash(grep -rn \">AI\\\\b\\\\|>ai\\\\b\" /c/Josh/Projects/JobBlitz/src --include=*.jsx)",
+      "Bash(grep:*)"
     ]
   }
 }

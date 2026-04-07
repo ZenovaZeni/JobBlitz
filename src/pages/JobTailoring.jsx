@@ -139,287 +139,159 @@ function CoverPreview({ text }) {
 }
 
 // ── Results view ──────────────────────────────────────────────────────────────
+// ── Results view (Success / Celebration) ──────────────────────────────────────
 function ResultsView({ results, role, company, navigate, onReset }) {
-  const [tab, setTab] = useState('resume')
-  const [detailsOpen, setDetailsOpen] = useState(false)
-
   const score = results.matchData?.match_score || 0
   const scoreLabel = score >= 80 ? 'Strong Match' : score >= 60 ? 'Good Fit' : 'Some Gaps'
   const scoreColor = score >= 80 ? '#0e0099' : score >= 60 ? '#2f2ebe' : '#44474d'
-  const scoreBg    = score >= 80 ? '#e1e0ff'  : score >= 60 ? '#e1e0ff'  : '#eceef0'
-
-  const tabs = [
-    { id: 'resume',    label: 'Tailored Resume', short: 'Resume',    icon: 'description' },
-    { id: 'cover',     label: 'Cover Letter',    short: 'Cover',     icon: 'mail'        },
-    { id: 'interview', label: 'Interview Prep',  short: 'Interview', icon: 'psychology'  },
-  ]
+  
+  const hasResume    = !!results.tailoredResume
+  const hasCover     = !!results.coverLetter
+  const hasInterview = !!(results.interviewData?.questions?.length)
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-
-      {/* ── Sticky header ── */}
-      <header className="px-4 md:px-8 py-5 border-b glass-panel flex-shrink-0 z-10"
-        style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-4 min-w-0">
-            {/* Inline score badge */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full flex-shrink-0"
-              style={{ backgroundColor: scoreBg }}>
-              <span className="text-sm font-black" style={{ color: scoreColor }}>{score}</span>
-              <span className="text-xs font-bold" style={{ color: scoreColor }}>{scoreLabel}</span>
+    <div className="flex-1 flex flex-col overflow-hidden bg-[#f7f9fb]">
+      <div className="flex-1 overflow-y-auto custom-scroll page-pb-mobile">
+        
+        {/* Celebration Hero */}
+        <section className="relative py-12 md:py-20 px-4 overflow-hidden text-center"
+                 style={{ background: 'linear-gradient(135deg, #031631 0%, #0e0099 100%)' }}>
+          <div className="max-w-3xl mx-auto relative z-10 animate-slide-up">
+            <div className="w-20 h-20 bg-white/10 rounded-3xl flex items-center justify-center mx-auto mb-8 backdrop-blur-xl border border-white/20 shadow-2xl">
+              <span className="material-symbols-outlined text-[40px] text-white icon-filled">rocket_launch</span>
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#75777e' }}>Packet ready</p>
-              <h2 className="text-lg md:text-xl font-extrabold tracking-tight truncate"
-                style={{ fontFamily: 'Manrope', color: '#031631' }}>
-                {role} · {company}
-              </h2>
+            <h1 className="text-3xl md:text-5xl font-black text-white mb-4 tracking-tight" style={{ fontFamily: 'Manrope' }}>
+              Your Packet is Ready!
+            </h1>
+            <p className="text-lg md:text-xl text-white/70 font-medium mb-10 max-w-xl mx-auto leading-relaxed">
+              We've analyzed the <span className="text-white font-bold">{role}</span> role at <span className="text-white font-bold">{company}</span> and tailored every asset for maximum impact.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button
+                onClick={() => navigate(`/app/session/${results.sessionId}`)}
+                className="w-full sm:w-auto px-10 py-5 bg-white text-[#031631] font-black rounded-2xl shadow-2xl active:scale-95 transition-all text-lg flex items-center justify-center gap-3">
+                <span className="material-symbols-outlined icon-filled">dashboard_customize</span>
+                Open Workspace
+              </button>
+              <button onClick={onReset} className="w-full sm:w-auto px-6 py-5 text-white/80 font-bold hover:text-white transition-all text-lg flex items-center justify-center gap-2">
+                <span className="material-symbols-outlined text-[20px]">add</span>
+                Build Another
+              </button>
             </div>
           </div>
-          <div className="flex gap-3 flex-shrink-0">
-            <button
-              onClick={onReset}
-              className="p-2 md:px-4 md:py-2 text-sm font-bold border rounded-xl hover:bg-[#eceef0] transition-all flex items-center gap-1.5"
-              style={{ color: '#031631', borderColor: 'rgba(197,198,206,0.4)' }}>
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              <span className="hidden md:inline">New Packet</span>
-            </button>
-            <button
-              onClick={() => navigate(`/app/session/${results.sessionId}`)}
-              className="px-4 md:px-5 py-2 text-white text-sm font-bold rounded-xl ai-glow-btn flex items-center gap-1.5">
-              <span className="material-symbols-outlined icon-filled text-[16px]">open_in_full</span>
-              <span className="hidden sm:inline">Open in Editor</span>
-              <span className="sm:hidden">Editor</span>
-            </button>
-          </div>
-        </div>
-      </header>
+          
+          {/* Background Decorative Rings */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full border border-white/5 pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border border-white/10 pointer-events-none" />
+        </section>
 
-      {/* ── Tab bar ── */}
-      <div className="px-4 md:px-8 border-b flex-shrink-0" style={{ borderColor: 'rgba(197,198,206,0.1)', backgroundColor: 'white' }}>
-        <div className="flex gap-1">
-          {tabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className="flex items-center gap-2 px-3 md:px-4 py-3.5 text-sm font-bold transition-all relative"
-              style={{ color: tab === t.id ? '#031631' : '#75777e' }}>
-              <span className="material-symbols-outlined icon-filled text-[16px]">{t.icon}</span>
-              <span className="hidden md:inline">{t.label}</span>
-              <span className="md:hidden">{t.short}</span>
-              {tab === t.id && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full"
-                  style={{ backgroundColor: '#0e0099' }} />
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Tab content ── */}
-      <div className="flex-1 overflow-y-auto custom-scroll page-pb-mobile" style={{ backgroundColor: '#f7f9fb' }}>
-        <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-6">
-
-          {/* ── Resume tab ── */}
-          {tab === 'resume' && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest mb-0.5" style={{ color: '#0e0099' }}>
-                    Tailored for this role
-                  </p>
-                  <h3 className="text-lg font-extrabold" style={{ fontFamily: 'Manrope', color: '#031631' }}>
-                    {role} at {company}
-                  </h3>
-                </div>
-                <button
-                  onClick={() => navigate(`/app/session/${results.sessionId}?tab=resume`)}
-                  className="px-4 py-2 text-sm font-bold rounded-xl transition-all hover:bg-[#e1e0ff] flex items-center gap-1.5"
-                  style={{ color: '#0e0099' }}>
-                  <span className="material-symbols-outlined text-[16px]">edit</span>
-                  Edit
-                </button>
+        <div className="max-w-6xl mx-auto px-4 md:px-8 -mt-12 mb-20 relative z-20 space-y-8">
+          
+          {/* Match Analysis Summary */}
+          <div className="bg-white rounded-3xl p-6 md:p-10 border flex flex-col md:flex-row gap-10 items-center" 
+               style={{ borderColor: 'rgba(197,198,206,0.2)', boxShadow: '0 12px 40px rgba(3,22,49,0.08)' }}>
+            <div className="flex-shrink-0 text-center">
+              <MatchRing score={score} size={160} />
+              <div className="mt-4 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest inline-block" 
+                   style={{ backgroundColor: '#e1e0ff', color: '#0e0099' }}>
+                {scoreLabel}
               </div>
-
-              {/* Document card */}
-              <div className="bg-white rounded-2xl border overflow-hidden"
-                style={{ borderColor: 'rgba(197,198,206,0.2)', boxShadow: '0 4px 32px rgba(3,22,49,0.07)' }}>
-                {/* Document toolbar */}
-                <div className="px-6 py-3 border-b flex items-center gap-3"
-                  style={{ backgroundColor: '#f7f9fb', borderColor: 'rgba(197,198,206,0.15)' }}>
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'rgba(197,198,206,0.5)' }} />
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'rgba(197,198,206,0.5)' }} />
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'rgba(197,198,206,0.5)' }} />
-                  </div>
-                  <div className="flex-1 h-5 rounded-md mx-4" style={{ backgroundColor: 'rgba(197,198,206,0.2)' }} />
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md"
-                    style={{ backgroundColor: '#e1e0ff' }}>
-                    <span className="material-symbols-outlined icon-filled text-[11px]" style={{ color: '#0e0099' }}>check_circle</span>
-                    <span className="text-[10px] font-bold" style={{ color: '#0e0099' }}>ATS optimized</span>
-                  </div>
-                </div>
-                {/* Scaled resume preview */}
-                <div className="overflow-hidden" style={{ backgroundColor: '#f7f9fb' }}>
-                  <div style={{
-                    transform: 'scale(0.6)',
-                    transformOrigin: 'top center',
-                    width: '794px',
-                    marginLeft: 'calc(50% - 397px)',
-                    marginBottom: `${Math.round(794 * 1.414 * (0.6 - 1))}px`,
-                  }}>
-                    <AtelierTemplate resume={results.tailoredResume} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Matched keywords strip */}
-              {results.matchData?.ats_keywords?.length > 0 && (
-                <div className="mt-4 p-4 rounded-xl flex flex-wrap items-center gap-x-3 gap-y-2"
-                  style={{ backgroundColor: '#e1e0ff' }}>
-                  <span className="text-[10px] font-bold uppercase tracking-widest flex-shrink-0" style={{ color: '#2f2ebe' }}>
-                    Keywords woven in
+            </div>
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="text-2xl font-extrabold mb-4" style={{ fontFamily: 'Manrope', color: '#031631' }}>Smart Match Analysis</h3>
+              <p className="text-lg leading-relaxed mb-8" style={{ color: '#44474d' }}>
+                {results.matchData?.summary || "Tailoring complete. We've optimized your profile to highlight the skills and experience most relevant to this role."}
+              </p>
+              <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                {(results.matchData?.matched_skills || []).slice(0, 10).map(skill => (
+                  <span key={skill} className="px-4 py-2 rounded-xl text-sm font-bold border" style={{ backgroundColor: '#fcfdfe', color: '#031631', borderColor: 'rgba(197,198,206,0.2)' }}>
+                    {skill}
                   </span>
-                  {results.matchData.ats_keywords.map(kw => (
-                    <span key={kw} className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white"
-                      style={{ color: '#0e0099' }}>
-                      {kw}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Cover letter tab ── */}
-          {tab === 'cover' && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest mb-0.5" style={{ color: '#0e0099' }}>
-                    Matches your resume
-                  </p>
-                  <h3 className="text-lg font-extrabold" style={{ fontFamily: 'Manrope', color: '#031631' }}>
-                    Cover Letter
-                  </h3>
-                </div>
-                <button
-                  onClick={() => navigate(`/app/session/${results.sessionId}?tab=cover`)}
-                  className="px-4 py-2 text-sm font-bold rounded-xl transition-all hover:bg-[#e1e0ff] flex items-center gap-1.5"
-                  style={{ color: '#0e0099' }}>
-                  <span className="material-symbols-outlined text-[16px]">edit</span>
-                  Edit
-                </button>
-              </div>
-              <div className="bg-white rounded-2xl border overflow-hidden"
-                style={{ borderColor: 'rgba(197,198,206,0.2)', boxShadow: '0 4px 32px rgba(3,22,49,0.07)' }}>
-                <div className="px-8 md:px-14 py-10">
-                  <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans"
-                    style={{ color: '#031631', fontFamily: 'Inter, sans-serif', lineHeight: '1.8' }}>
-                    {results.coverLetter || 'Cover letter is loading — open the editor to view.'}
-                  </pre>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── Interview prep tab ── */}
-          {tab === 'interview' && (
-            <div>
-              <div className="mb-4">
-                <p className="text-xs font-bold uppercase tracking-widest mb-0.5" style={{ color: '#0e0099' }}>
-                  Tied to this role
-                </p>
-                <h3 className="text-lg font-extrabold" style={{ fontFamily: 'Manrope', color: '#031631' }}>
-                  Interview Prep
-                </h3>
-              </div>
-              <div className="space-y-4">
-                {(results.interviewData?.questions || []).map((q, i) => (
-                  <InterviewCard key={i} question={q} index={i} />
                 ))}
-                {(!results.interviewData?.questions?.length) && (
-                  <div className="bg-white rounded-2xl border p-8 text-center"
-                    style={{ borderColor: 'rgba(197,198,206,0.2)' }}>
-                    <p className="text-sm" style={{ color: '#75777e' }}>
-                      Open the editor to view your interview prep.
-                    </p>
-                    <button
-                      onClick={() => navigate(`/app/session/${results.sessionId}?tab=interview`)}
-                      className="mt-3 px-5 py-2.5 text-white text-sm font-bold rounded-xl ai-glow-btn">
-                      Open Interview Prep
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
-          )}
+          </div>
 
-          {/* ── Match details (collapsible) ── */}
-          <div className="bg-white rounded-2xl border overflow-hidden"
-            style={{ borderColor: 'rgba(197,198,206,0.2)' }}>
-            <button
-              className="w-full flex items-center justify-between px-6 py-4 text-left"
-              onClick={() => setDetailsOpen(o => !o)}>
-              <div className="flex items-center gap-3">
-                <MatchRing score={score} size={44} />
-                <div>
-                  <p className="font-bold text-sm" style={{ color: '#031631' }}>{scoreLabel}</p>
-                  <p className="text-xs" style={{ color: '#75777e' }}>{results.matchData?.summary}</p>
+          {/* Asset Preview Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Resume Preview */}
+            <div className="bg-white rounded-3xl p-8 border flex flex-col group transition-all hover:shadow-xl hover:border-[#0e0099]/20" style={{ borderColor: 'rgba(197,198,206,0.2)' }}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-[#e1e0ff] flex items-center justify-center">
+                  <span className="material-symbols-outlined icon-filled text-[#0e0099] text-[24px]">description</span>
+                </div>
+                <h4 className="font-extrabold text-lg" style={{ color: '#031631' }}>Tailored Resume</h4>
+              </div>
+              <div className="flex-1 space-y-4 mb-8">
+                <div className="p-4 rounded-xl bg-[#f7f9fb] border border-dashed border-[#c5c6ce]">
+                  <p className="text-xs font-bold text-[#8293b4] uppercase tracking-widest mb-2">Strategy</p>
+                  <p className="text-sm font-medium text-[#44474d] leading-relaxed">
+                    Emphasized experience with {results.matchData?.matched_skills?.[0] || 'core requirements'} and updated summary metrics.
+                  </p>
                 </div>
               </div>
-              <span className="material-symbols-outlined transition-transform flex-shrink-0"
-                style={{ color: '#75777e', transform: detailsOpen ? 'rotate(180deg)' : 'none' }}>
-                expand_more
-              </span>
-            </button>
+              <button onClick={() => navigate(`/app/session/${results.sessionId}?tab=resume`)}
+                      className="w-full py-4 rounded-2xl border-2 font-black text-sm transition-all bg-[#0e0099] text-white hover:bg-[#031631] border-transparent">
+                Edit & Export Resume
+              </button>
+            </div>
 
-            {detailsOpen && (
-              <div className="px-6 pb-6 space-y-5 border-t" style={{ borderColor: 'rgba(197,198,206,0.15)' }}>
-                <div className="pt-5 grid md:grid-cols-2 gap-5">
-                  {/* Matched skills */}
-                  {results.matchData?.matched_skills?.length > 0 && (
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: '#44474d' }}>
-                        Matched skills
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {results.matchData.matched_skills.map(skill => (
-                          <span key={skill} className="px-3 py-1 rounded-full text-xs font-bold"
-                            style={{ backgroundColor: '#e1e0ff', color: '#2f2ebe' }}>
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Gaps */}
-                  {results.matchData?.gaps?.length > 0 && (
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: '#44474d' }}>
-                        Gaps to address
-                      </p>
-                      <div className="space-y-2">
-                        {results.matchData.gaps.map((gap, i) => (
-                          <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl"
-                            style={{ backgroundColor: gap.severity === 'high' ? '#ffdad6' : '#f2f4f6' }}>
-                            <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
-                              style={{ backgroundColor: gap.severity === 'high' ? '#93000a' : '#0e0099' }} />
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-xs" style={{ color: '#031631' }}>{gap.label}</p>
-                              {gap.suggestion && (
-                                <p className="text-xs mt-0.5" style={{ color: '#44474d' }}>{gap.suggestion}</p>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+            {/* Cover Letter Preview */}
+            <div className="bg-white rounded-3xl p-8 border flex flex-col group transition-all hover:shadow-xl hover:border-[#0e0099]/20" style={{ borderColor: 'rgba(197,198,206,0.2)' }}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-[#eceef0] flex items-center justify-center">
+                  <span className="material-symbols-outlined icon-filled text-[#031631] text-[24px]">mail</span>
+                </div>
+                <h4 className="font-extrabold text-lg" style={{ color: '#031631' }}>Cover Letter</h4>
+              </div>
+              <div className="flex-1 space-y-4 mb-8">
+                <div className="p-4 rounded-xl bg-[#f7f9fb] border border-dashed border-[#c5c6ce]">
+                   <p className="text-xs font-bold text-[#8293b4] uppercase tracking-widest mb-2">Snippet</p>
+                   <p className="text-sm font-medium text-[#44474d] italic leading-relaxed line-clamp-3">
+                     "{results.coverLetter?.split('\n').find(l => l.length > 40) || 'A personalized letter connecting your background...'}"
+                   </p>
                 </div>
               </div>
-            )}
+              <button onClick={() => navigate(`/app/session/${results.sessionId}?tab=cover`)}
+                      className="w-full py-4 rounded-2xl border-2 font-black text-sm transition-all hover:bg-[#f2f4f6]"
+                      style={{ color: '#031631', borderColor: 'rgba(197,198,206,0.3)' }}>
+                Personalize Letter
+              </button>
+            </div>
+
+            {/* Interview Prep Preview */}
+            <div className="bg-white rounded-3xl p-8 border flex flex-col group transition-all hover:shadow-xl hover:border-[#0e0099]/20" style={{ borderColor: 'rgba(197,198,206,0.2)' }}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-[#d6e3ff] flex items-center justify-center">
+                  <span className="material-symbols-outlined icon-filled text-[#0e0099] text-[24px]">psychology</span>
+                </div>
+                <h4 className="font-extrabold text-lg" style={{ color: '#031631' }}>Interview Prep</h4>
+              </div>
+              <div className="flex-1 space-y-4 mb-8">
+                <div className="p-4 rounded-xl bg-[#f7f9fb] border border-dashed border-[#c5c6ce]">
+                  <p className="text-xs font-bold text-[#8293b4] uppercase tracking-widest mb-2">Likely Question</p>
+                  <p className="text-sm font-bold text-[#031631] leading-relaxed">
+                    "{results.interviewData?.questions?.[0]?.question || "Tell me about a time you handled a difficult project..."}"
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => navigate(`/app/session/${results.sessionId}?tab=interview`)}
+                      className="w-full py-4 rounded-2xl border-2 font-black text-sm transition-all hover:bg-[#f2f4f6]"
+                      style={{ color: '#031631', borderColor: 'rgba(197,198,206,0.3)' }}>
+                Start Prep Session
+              </button>
+            </div>
+
+          </div>
+
+          <div className="text-center py-10">
+             <button onClick={() => navigate(`/app/session/${results.sessionId}`)}
+                     className="text-[#0e0099] font-black uppercase tracking-[0.2em] text-xs flex items-center gap-2 mx-auto hover:gap-3 transition-all">
+                Enter Full Packet Workspace
+                <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+             </button>
           </div>
 
         </div>
@@ -436,40 +308,85 @@ function InterviewCard({ question, index }) {
   const typeBg    = q.type === 'behavioral' ? '#e1e0ff'  : q.type === 'technical' ? '#d6e3ff'  : '#eceef0'
 
   return (
-    <div className="bg-white rounded-2xl border overflow-hidden transition-all"
-      style={{ borderColor: open ? 'rgba(14,0,153,0.2)' : 'rgba(197,198,206,0.2)', boxShadow: '0 2px 16px rgba(3,22,49,0.04)' }}>
-      <button className="w-full flex items-start justify-between gap-4 px-6 py-5 text-left"
+    <div className="bg-white rounded-3xl border overflow-hidden transition-all group"
+      style={{ borderColor: open ? 'rgb(14,0,153,0.3)' : 'rgba(197,198,206,0.2)', boxShadow: open ? '0 8px 32px rgba(3,22,49,0.08)' : '0 2px 12px rgba(3,22,49,0.03)' }}>
+      <button className="w-full flex items-start justify-between gap-4 px-6 md:px-8 py-5 md:py-6 text-left"
         onClick={() => setOpen(o => !o)}>
-        <div className="flex items-start gap-3 flex-1 min-w-0">
-          <span className="text-sm font-black flex-shrink-0 mt-0.5" style={{ color: '#c5c6ce', fontFamily: 'Manrope' }}>
-            {String(index + 1).padStart(2, '0')}
-          </span>
-          <div className="flex-1 min-w-0">
-            {q.type && (
-              <span className="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider mb-2"
-                style={{ backgroundColor: typeBg, color: typeColor }}>
-                {q.type}
-              </span>
-            )}
-            <p className="font-semibold text-sm leading-snug" style={{ color: '#031631' }}>
+        <div className="flex items-start gap-4 flex-1 min-w-0">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" 
+               style={{ backgroundColor: open ? '#0e0099' : '#f2f4f6', transition: 'all 0.3s' }}>
+            <span className="text-sm font-black" style={{ color: open ? 'white' : '#75777e', fontFamily: 'Manrope' }}>
+              {String(index + 1).padStart(2, '0')}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0 pt-0.5">
+            <div className="flex items-center gap-2 mb-2">
+              {q.type && (
+                <span className="inline-flex px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider"
+                  style={{ backgroundColor: typeBg, color: typeColor }}>
+                  {q.type}
+                </span>
+              )}
+              {!open && q.star_answer && (
+                <span className="text-[10px] font-bold text-[#2e7d32] flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[12px] icon-filled">check_circle</span>
+                  Answer Ready
+                </span>
+              )}
+            </div>
+            <p className="font-extrabold text-base leading-snug group-hover:text-[#0e0099] transition-colors" style={{ color: '#031631', fontFamily: 'Manrope' }}>
               {q.question || q.q || 'Interview question'}
             </p>
+            {!open && (q.star_answer || q.answer) && (
+              <p className="text-xs mt-2 text-[#8293b4] line-clamp-1 italic">
+                "{q.star_answer?.split('.')[0]}..."
+              </p>
+            )}
           </div>
         </div>
-        <span className="material-symbols-outlined flex-shrink-0 transition-transform mt-0.5"
-          style={{ color: '#75777e', fontSize: 20, transform: open ? 'rotate(180deg)' : 'none' }}>
-          expand_more
-        </span>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center border flex-shrink-0 mt-1" 
+             style={{ borderColor: 'rgba(197,198,206,0.3)' }}>
+          <span className="material-symbols-outlined transition-transform"
+            style={{ color: '#75777e', fontSize: 18, transform: open ? 'rotate(180deg)' : 'none' }}>
+            expand_more
+          </span>
+        </div>
       </button>
       {open && (
-        <div className="px-6 pb-6">
-          <div className="h-px mb-5" style={{ backgroundColor: '#f2f4f6' }} />
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: '#0e0099' }}>
-            Suggested STAR answer
-          </p>
-          <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#44474d' }}>
-            {q.star_answer || q.answer || q.context || 'Open the full editor to view this answer.'}
-          </p>
+        <div className="px-8 pb-8 animate-slide-down">
+          <div className="h-px mb-6" style={{ backgroundColor: '#f2f4f6' }} />
+          
+          <div className="grid md:grid-cols-4 gap-6">
+            <div className="md:col-span-3 space-y-6">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: '#0e0099' }}>
+                  Suggested STAR answer
+                </p>
+                <div className="p-5 rounded-2xl bg-[#f7f9fb] border border-[#0e0099]/5">
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium" style={{ color: '#031631' }}>
+                    {q.star_answer || q.answer || q.context || 'Open the full editor to view this answer.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-[#e1e0ff]/50 border border-[#0e0099]/10">
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: '#0e0099' }}>Talking Points</p>
+                <ul className="space-y-2">
+                  {(q.highlights || ['Highlight results', 'Show tech impact', 'Mention teamwork']).map((h, i) => (
+                    <li key={i} className="text-[11px] font-semibold flex items-start gap-1.5" style={{ color: '#44474d' }}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0e0099] mt-1 flex-shrink-0" />
+                      {h}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <button className="w-full py-2.5 rounded-xl border border-[#0e0099]/20 text-[#0e0099] text-[11px] font-bold hover:bg-[#e1e0ff] transition-all">
+                Copy Answer
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -482,7 +399,10 @@ export default function JobTailoring() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { sessions, loading: sessionsLoading } = useSessions()
-  const hasStartedRef = useRef(false)
+  const hasStartedRef   = useRef(false)
+  const prefillAppliedRef = useRef(false)
+
+  useEffect(() => { document.title = 'JobBlitz — Build a Packet' }, [])
 
   const {
     company, setCompany,
@@ -517,6 +437,22 @@ export default function JobTailoring() {
       }
     }
   }, [searchParams, sessions, sessionsLoading, startFromSession, setSearchParams, hasProfile])
+
+  // ── Extension prefill ─────────────────────────────────────────────────────
+  // Reads ?company, ?role, ?jd injected by the JobBlitz Chrome extension.
+  // Runs once on mount; cleans the URL afterward so bookmarks stay clean.
+  useEffect(() => {
+    if (prefillAppliedRef.current) return
+    const c   = searchParams.get('company')
+    const r   = searchParams.get('role')
+    const jd  = searchParams.get('jd')
+    if (!c && !r && !jd) return
+    prefillAppliedRef.current = true
+    if (c)  setCompany(c)
+    if (r)  setRole(r)
+    if (jd) setJdText(jd)
+    setSearchParams({}, { replace: true })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f7f9fb' }}>
@@ -639,86 +575,94 @@ export default function JobTailoring() {
             </div>
 
             {/* Right: Profile preview + CTA */}
-            <aside className="w-full md:w-80 flex-shrink-0 flex flex-col overflow-y-auto p-6 space-y-5 border-t md:border-t-0" style={{ backgroundColor: '#f2f4f6' }}>
-              <div className="p-5 rounded-2xl" style={{ backgroundColor: 'white', boxShadow: '0 4px 16px rgba(3,22,49,0.05)' }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="material-symbols-outlined icon-filled text-[16px]" style={{ color: '#0e0099' }}>account_circle</span>
-                  <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#44474d' }}>Master Profile</span>
-                </div>
-                {profileLoading ? (
-                  <div className="animate-pulse space-y-2">
-                    <div className="h-4 rounded" style={{ backgroundColor: '#eceef0', width: '70%' }} />
-                    <div className="h-3 rounded" style={{ backgroundColor: '#eceef0', width: '50%' }} />
+            <aside className="w-full md:w-96 flex-shrink-0 flex flex-col overflow-hidden border-t md:border-t-0" style={{ backgroundColor: '#f2f4f6' }}>
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto custom-scroll p-6 space-y-5">
+                <div className="p-5 rounded-2xl" style={{ backgroundColor: 'white', boxShadow: '0 4px 16px rgba(3,22,49,0.05)' }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="material-symbols-outlined icon-filled text-[16px]" style={{ color: '#0e0099' }}>account_circle</span>
+                    <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#44474d' }}>Master Profile</span>
                   </div>
-                ) : hasProfile ? (
-                  <>
-                    <p className="font-extrabold mb-0.5" style={{ color: '#031631', fontFamily: 'Manrope' }}>
-                      {masterProfile.name || profile?.email}
-                    </p>
-                    <p className="text-xs font-semibold mb-3" style={{ color: '#0e0099' }}>
-                      {masterProfile.title || 'No title set'}
-                    </p>
-                    <div className="space-y-1">
-                      {[
-                        `${masterProfile.experience?.length || 0} roles`,
-                        `${masterProfile.skills?.length || 0} skills`,
-                        `${masterProfile.completion_pct || 0}% complete`,
-                      ].map(stat => (
-                        <div key={stat} className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#0e0099' }} />
-                          <span className="text-xs" style={{ color: '#44474d' }}>{stat}</span>
-                        </div>
-                      ))}
+                  {profileLoading ? (
+                    <div className="animate-pulse space-y-2">
+                      <div className="h-4 rounded" style={{ backgroundColor: '#eceef0', width: '70%' }} />
+                      <div className="h-3 rounded" style={{ backgroundColor: '#eceef0', width: '50%' }} />
                     </div>
-                  </>
-                ) : (
-                  <div>
-                    <p className="text-sm mb-3" style={{ color: '#44474d' }}>
-                      No profile yet. Build yours first to enable tailoring.
-                    </p>
-                    <button
-                      onClick={() => navigate('/app/profile')}
-                      className="w-full py-2.5 text-white text-sm font-bold rounded-xl ai-glow-btn"
-                    >
-                      Build Profile
-                    </button>
+                  ) : hasProfile ? (
+                    <>
+                      <p className="font-extrabold mb-0.5" style={{ color: '#031631', fontFamily: 'Manrope' }}>
+                        {masterProfile.name || profile?.email}
+                      </p>
+                      <p className="text-xs font-semibold mb-3" style={{ color: '#0e0099' }}>
+                        {masterProfile.title || 'No title set'}
+                      </p>
+                      <div className="space-y-1">
+                        {[
+                          `${masterProfile.experience?.length || 0} roles`,
+                          `${masterProfile.skills?.length || 0} skills`,
+                          `${masterProfile.completion_pct || 0}% complete`,
+                        ].map(stat => (
+                          <div key={stat} className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#0e0099' }} />
+                            <span className="text-xs" style={{ color: '#44474d' }}>{stat}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-4">
+                      <div className="w-10 h-10 rounded-xl bg-[#f2f4f6] flex items-center justify-center mx-auto mb-3">
+                        <span className="material-symbols-outlined text-[20px]" style={{ color: '#8293b4' }}>account_circle</span>
+                      </div>
+                      <p className="text-xs font-semibold mb-3 leading-relaxed" style={{ color: '#75777e' }}>
+                        Your profile is empty. Build it first so we can tailor your resume to each role.
+                      </p>
+                      <button
+                        onClick={() => navigate('/app/profile')}
+                        className="w-full py-2.5 text-white text-xs font-bold rounded-xl ai-glow-btn"
+                      >
+                        Build My Profile →
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-5 rounded-2xl" style={{ backgroundColor: 'white', boxShadow: '0 4px 16px rgba(3,22,49,0.05)' }}>
+                  <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: '#44474d' }}>Packet includes</p>
+                  <div className="space-y-3">
+                    {[
+                      { icon: 'description', label: 'Tailored resume'             },
+                      { icon: 'query_stats', label: 'Match score + keyword gaps'  },
+                      { icon: 'mail',        label: 'Personalized cover letter'   },
+                      { icon: 'psychology',  label: 'STAR interview prep'         },
+                    ].map(f => (
+                      <div key={f.label} className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#e1e0ff' }}>
+                          <span className="material-symbols-outlined icon-filled text-[16px]" style={{ color: '#0e0099' }}>{f.icon}</span>
+                        </div>
+                        <span className="text-sm font-medium" style={{ color: '#031631' }}>{f.label}</span>
+                      </div>
+                    ))}
                   </div>
+                </div>
+              </div>
+
+              {/* Sticky CTA footer — always visible */}
+              <div className="p-6 border-t space-y-3 flex-shrink-0" style={{ borderColor: 'rgba(197,198,206,0.15)', backgroundColor: '#f2f4f6' }}>
+                <button
+                  onClick={handleAnalyze}
+                  disabled={!hasProfile || !company || !role || !jdText}
+                  className="w-full py-5 text-white font-bold rounded-2xl shadow-xl transition-all active:scale-95 ai-glow-btn flex items-center justify-center gap-2 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  <span className="material-symbols-outlined icon-filled text-[20px]">bolt</span>
+                  Build My Packet
+                </button>
+                {!isPro && sessionsLeft > 0 && (
+                  <p className="text-center text-xs" style={{ color: '#75777e' }}>
+                    Uses 1 of your {sessionsLeft} free packet{sessionsLeft !== 1 ? 's' : ''} this month
+                  </p>
                 )}
               </div>
-
-              <div className="p-5 rounded-2xl" style={{ backgroundColor: 'white', boxShadow: '0 4px 16px rgba(3,22,49,0.05)' }}>
-                <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: '#44474d' }}>Your packet includes</p>
-                <div className="space-y-3">
-                  {[
-                    { icon: 'description', label: 'Tailored resume'            },
-                    { icon: 'query_stats', label: 'Match score + keyword gaps' },
-                    { icon: 'mail',        label: 'Matching cover letter'       },
-                    { icon: 'psychology',  label: '4 STAR interview answers'    },
-                  ].map(f => (
-                    <div key={f.label} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#e1e0ff' }}>
-                        <span className="material-symbols-outlined icon-filled text-[16px]" style={{ color: '#0e0099' }}>{f.icon}</span>
-                      </div>
-                      <span className="text-sm font-medium" style={{ color: '#031631' }}>{f.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                onClick={handleAnalyze}
-                disabled={!hasProfile || !company || !role || !jdText}
-                className="w-full py-5 text-white font-bold rounded-2xl shadow-xl transition-all active:scale-95 ai-glow-btn flex items-center justify-center gap-2 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-              >
-                <span className="material-symbols-outlined icon-filled text-[20px]">bolt</span>
-                Build My Packet
-              </button>
-
-              {!isPro && sessionsLeft > 0 && (
-                <p className="text-center text-xs" style={{ color: '#75777e' }}>
-                  Uses 1 of your {sessionsLeft} free packet{sessionsLeft !== 1 ? 's' : ''} this month
-                </p>
-              )}
             </aside>
           </div>
           </>
@@ -727,58 +671,89 @@ export default function JobTailoring() {
         {/* ── ANALYZING PHASE ── */}
         {phase === 'analyzing' && (
           <div className="flex-1 overflow-y-auto custom-scroll page-pb-mobile">
-            <div className="flex flex-col items-center px-4 pt-12 pb-10 gap-6 max-w-md mx-auto w-full">
+            <div className="max-w-5xl mx-auto px-4 md:px-8 pt-8 pb-12">
 
-              {/* Header */}
-              <div className="text-center">
-                <div className="inline-flex w-16 h-16 rounded-2xl items-center justify-center mb-5 ai-glow-btn">
-                  <span className="material-symbols-outlined icon-filled text-[30px] text-white animate-pulse">bolt</span>
+              {/* Header row */}
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-11 h-11 rounded-xl flex-shrink-0 ai-glow-btn flex items-center justify-center shadow-lg">
+                  <span className="material-symbols-outlined icon-filled text-[20px] text-white animate-pulse">bolt</span>
                 </div>
-                <h2 className="text-2xl font-extrabold tracking-tight mb-1" style={{ fontFamily: 'Manrope', color: '#031631' }}>
-                  Building your packet…
-                </h2>
-                <p className="text-sm" style={{ color: '#75777e' }}>
-                  {role} at {company}
-                </p>
+                <div className="min-w-0">
+                  <h2 className="text-xl font-extrabold tracking-tight" style={{ fontFamily: 'Manrope', color: '#031631' }}>
+                    Building your packet
+                  </h2>
+                  <p className="text-sm truncate" style={{ color: '#75777e' }}>
+                    {role} · {company}
+                  </p>
+                </div>
               </div>
 
-              {/* Step list */}
-              <TailoringSteps
-                steps={TAILOR_STEPS}
-                currentStep={currentStep}
-                stepErrors={stepErrors}
-                results={results}
-                onRetry={runStep}
-              />
+              {/* Two-column on md+: steps left, live previews right */}
+              <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
 
-              {/* ── Progressive previews — appear as each step completes ── */}
-              {stepData.matchData && (
-                <MatchPreview matchData={stepData.matchData} />
-              )}
-              {stepData.tailoredResume && (
-                <ResumePreview resumeData={stepData.tailoredResume} />
-              )}
-              {stepData.coverLetter && (
-                <CoverPreview text={stepData.coverLetter} />
-              )}
-
-              {/* Error */}
-              {error && (
-                <div className="w-full p-4 rounded-2xl flex items-center gap-3 bg-white border border-[#ffdad6] shadow-sm animate-slide-in">
-                  <span className="material-symbols-outlined icon-filled text-[20px] text-[#93000a]">error</span>
-                  <div className="flex-1">
-                    <p className="text-[11px] font-bold text-[#93000a] uppercase tracking-widest">Step failed</p>
-                    <p className="text-xs font-medium text-[#031631]">{error}</p>
-                  </div>
-                  <button
-                    onClick={() => setPhase('input')}
-                    className="text-[10px] font-black uppercase text-[#8293b4]"
-                  >
-                    Cancel
-                  </button>
+                {/* Left col — step tracker */}
+                <div className="w-full md:w-72 flex-shrink-0">
+                  <TailoringSteps
+                    steps={TAILOR_STEPS}
+                    currentStep={currentStep}
+                    stepErrors={stepErrors}
+                    results={results}
+                    onRetry={runStep}
+                  />
                 </div>
-              )}
 
+                {/* Right col — live content previews */}
+                <div className="flex-1 min-w-0 space-y-4">
+
+                  {stepData.matchData && <MatchPreview matchData={stepData.matchData} />}
+                  {stepData.tailoredResume && <ResumePreview resumeData={stepData.tailoredResume} />}
+                  {stepData.coverLetter && <CoverPreview text={stepData.coverLetter} />}
+
+                  {/* Skeleton placeholders while first step is running */}
+                  {!stepData.matchData && (
+                    <div className="space-y-4 animate-pulse">
+                      <div className="bg-white rounded-2xl border p-5 space-y-3"
+                        style={{ borderColor: 'rgba(197,198,206,0.2)' }}>
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-10 h-10 rounded-xl flex-shrink-0" style={{ backgroundColor: '#eceef0' }} />
+                          <div className="space-y-1.5 flex-1">
+                            <div className="h-3 rounded" style={{ backgroundColor: '#eceef0', width: '40%' }} />
+                            <div className="h-2.5 rounded" style={{ backgroundColor: '#eceef0', width: '25%' }} />
+                          </div>
+                        </div>
+                        <div className="h-2.5 rounded" style={{ backgroundColor: '#eceef0', width: '100%' }} />
+                        <div className="h-2.5 rounded" style={{ backgroundColor: '#eceef0', width: '90%' }} />
+                        <div className="h-2.5 rounded" style={{ backgroundColor: '#eceef0', width: '75%' }} />
+                      </div>
+                      <div className="bg-white rounded-2xl border p-5 space-y-3"
+                        style={{ borderColor: 'rgba(197,198,206,0.2)' }}>
+                        <div className="h-3 rounded" style={{ backgroundColor: '#eceef0', width: '50%' }} />
+                        <div className="h-2.5 rounded" style={{ backgroundColor: '#eceef0', width: '100%' }} />
+                        <div className="h-2.5 rounded" style={{ backgroundColor: '#eceef0', width: '85%' }} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Error banner */}
+                  {error && (
+                    <div className="w-full p-4 rounded-2xl flex items-start gap-3 bg-white border border-[#ffdad6] shadow-sm animate-slide-in">
+                      <span className="material-symbols-outlined icon-filled text-[20px] text-[#93000a] flex-shrink-0 mt-0.5">error</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-bold text-[#93000a] uppercase tracking-widest mb-0.5">Step failed</p>
+                        <p className="text-xs font-medium text-[#031631] leading-relaxed">{error}</p>
+                        <p className="text-[11px] text-[#75777e] mt-1">Use the Retry button on the failed step, or cancel to start over.</p>
+                      </div>
+                      <button
+                        onClick={() => setPhase('input')}
+                        className="flex-shrink-0 text-[10px] font-black uppercase tracking-widest text-[#8293b4] hover:text-[#031631] transition-colors px-2 py-1 rounded-lg"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+              </div>
             </div>
           </div>
         )}

@@ -14,8 +14,9 @@ export default function SessionView() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { activeSession, setActiveSession } = useSession()
-  const { sessions, loading } = useSessions()
-  
+  const { sessions, loading, fetchFullPacket, updateSession } = useSessions()
+  const [fetching, setFetching] = useState(false)
+
   const tabParam = searchParams.get('tab')
   const [activeTab, setActiveTab] = useState(tabParam || 'resume')
 
@@ -31,33 +32,50 @@ export default function SessionView() {
     setSearchParams({ tab: tabId })
   }
 
-  // 1. Sync session from URL to context if needed
+  async function handleMarkApplied() {
+    if (!activeSession?.sessionId) return
+    const next = packetStatus === 'applied' ? derivedStatus : 'applied'
+    try {
+      await updateSession(activeSession.sessionId, { packet_status: next })
+      setActiveSession(prev => ({ ...prev, packetStatus: next }))
+    } catch (err) {
+      console.error('Failed to update applied status:', err)
+    }
+  }
+
+  // Update page title when session loads
   useEffect(() => {
-    if (!loading && sessions.length > 0) {
-      const found = sessions.find(s => s.id === id)
-      if (found) {
-        // Map DB record to Context schema
-        const contextSession = {
-          sessionId: found.id,
-          company: found.company,
-          role: found.role,
-          jdText: found.jd_text,
-          matchData: found.match_data,
-          tailoredResume: found.tailored_resume,
-          coverLetter: found.cover_letter,
-          interviewData: found.interview_data,
-          lastUpdated: found.created_at
-        }
-        
-        // Only update if it's actually different to avoid rerender loops
-        if (activeSession?.sessionId !== id) {
-          setActiveSession(contextSession)
-        }
+    if (activeSession?.role && activeSession?.company) {
+      document.title = `${activeSession.role} · ${activeSession.company} — JobBlitz`
+    } else {
+      document.title = 'JobBlitz — Workspace'
+    }
+    return () => { document.title = 'JobBlitz' }
+  }, [activeSession?.role, activeSession?.company])
+
+  // 1. Sync session from URL to context using the full packet fetcher
+  useEffect(() => {
+    let mounted = true
+
+    async function loadFullPacket() {
+      if (!id || activeSession?.sessionId === id) return
+      setFetching(true)
+      try {
+        const fullPacket = await fetchFullPacket(id)
+        if (fullPacket && mounted) setActiveSession(fullPacket)
+      } finally {
+        if (mounted) setFetching(false)
       }
     }
-  }, [id, loading, sessions, activeSession, setActiveSession])
 
-  if (loading) {
+    if (!loading) {
+      loadFullPacket()
+    }
+
+    return () => { mounted = false }
+  }, [id, loading, fetchFullPacket, activeSession?.sessionId, setActiveSession])
+
+  if (loading || fetching) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#f2f4f6]">
         <div className="flex flex-col items-center gap-4">
@@ -68,12 +86,12 @@ export default function SessionView() {
     )
   }
 
-  if (!activeSession && !loading) {
+  if (!activeSession) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#f2f4f6] p-4 text-center">
         <div>
-          <h2 className="text-xl font-bold text-[#031631] mb-2">Session Not Found</h2>
-          <p className="text-sm text-[#44474d] mb-6">We couldn't find the workspace you're looking for.</p>
+          <h2 className="text-xl font-bold text-[#031631] mb-2">Application Not Found</h2>
+          <p className="text-sm text-[#44474d] mb-6">We couldn't find this application workspace.</p>
           <button onClick={() => navigate('/app/dashboard')} className="px-6 py-2 bg-[#031631] text-white rounded-xl font-bold">
             Back to Dashboard
           </button>
@@ -82,72 +100,158 @@ export default function SessionView() {
     )
   }
 
+  // Derive per-component completion from session data
+  const hasResume = !!activeSession?.tailoredResume
+  const hasCoverLetter = !!activeSession?.coverLetter
+  const hasInterview = (activeSession?.interviewData?.questions?.length || 0) > 0
+  const completedCount = [hasResume, hasCoverLetter, hasInterview].filter(Boolean).length
+
+  // Effective packet status — prefer explicit backend field, fall back to derived
+  const derivedStatus = completedCount === 3 ? 'ready' : completedCount > 0 ? 'partial' : 'empty'
+  const packetStatus = activeSession?.packetStatus ?? derivedStatus
+
+  const STATUS_LABEL = {
+    ready:      { text: 'Complete',   dot: '#2e7d32', bg: '#e8f5e9', color: '#2e7d32' },
+    partial:    { text: `${completedCount} of 3 ready`, dot: '#f59e0b', bg: '#fffbeb', color: '#92400e' },
+    empty:      { text: 'Not generated', dot: '#c5c6ce', bg: '#f2f4f6', color: '#75777e' },
+    draft:      { text: 'Draft',      dot: '#8293b4', bg: '#f2f4f6', color: '#44474d' },
+    generating: { text: 'Generating…', dot: '#0e0099', bg: '#e1e0ff', color: '#2f2ebe' },
+    failed:     { text: 'Failed',     dot: '#93000a', bg: '#ffdad6', color: '#93000a' },
+    applied:    { text: 'Applied',    dot: '#0e0099', bg: '#e1e0ff', color: '#0e0099' },
+  }
+  const statusInfo = STATUS_LABEL[packetStatus] || STATUS_LABEL.empty
+
+  const TAB_DEFS = [
+    { id: 'resume',    label: 'Resume Studio',  icon: 'description', ready: hasResume },
+    { id: 'cover',     label: 'Cover Letter',   icon: 'mail',        ready: hasCoverLetter },
+    { id: 'interview', label: 'Interview Prep', icon: 'psychology',  ready: hasInterview },
+  ]
+
   return (
     <div className="flex h-screen overflow-hidden bg-[#f7f9fb]">
       <SideNav />
 
+      {/* Main Workspace Area — Command Center */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        {/* 🔥 UNIFIED STICKY HEADER */}
-        <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b px-4 md:px-8 py-3 md:py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4"
+        
+        {/* Header */}
+        <header className="glass-panel border-b px-4 md:px-8 py-3 md:py-4 flex items-center justify-between z-20"
           style={{ borderColor: 'rgba(197,198,206,0.15)', boxShadow: '0 4px 12px rgba(3,22,49,0.03)' }}>
-          
-          <div className="flex items-center gap-3 md:gap-5 min-w-0">
-            <Link to="/app/dashboard" className="w-9 h-9 md:w-10 md:h-10 rounded-xl border flex items-center justify-center flex-shrink-0 transition-all hover:bg-[#f2f4f6]"
-              style={{ borderColor: 'rgba(197,198,206,0.2)' }}>
-              <span className="material-symbols-outlined text-[18px] md:text-[20px] text-[#031631]">arrow_back</span>
-            </Link>
-            <div className="min-w-0">
+          <div className="flex items-center gap-4 min-w-0">
+            <button
+              onClick={() => navigate('/app/dashboard')}
+              className="w-10 h-10 rounded-xl border flex items-center justify-center transition-all hover:bg-[#eceef0]"
+              style={{ color: '#44474d', borderColor: 'rgba(197,198,206,0.3)' }}>
+              <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+            </button>
+            <div className="truncate">
               <div className="flex items-center gap-2 mb-0.5">
-                 <h1 className="text-base md:text-xl font-black text-[#031631] truncate tracking-tight font-manrope">
-                  {activeSession?.role}
-                </h1>
-                {activeSession?.matchData?.match_score && (
-                  <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider h-fit mt-0.5 flex items-center gap-1"
-                    style={{ backgroundColor: '#e1e0ff', color: '#0e0099' }}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#0e0099] animate-pulse" />
-                    {activeSession.matchData.match_score}% Match
-                  </span>
-                )}
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: '#0e0099' }}>
+                   Command Center
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#c5c6ce' }} />
+                <span className="text-[10px] font-bold" style={{ color: '#8293b4' }}>
+                  {activeSession?.company}
+                </span>
               </div>
-              <p className="text-[10px] md:text-xs font-semibold text-[#8293b4] truncate uppercase tracking-widest leading-none">
-                {activeSession?.company} · {activeSession?.lastUpdated ? new Date(activeSession.lastUpdated).toLocaleDateString() : 'Just now'}
-              </p>
+              <h1 className="text-base md:text-lg font-black tracking-tight truncate"
+                style={{ fontFamily: 'Manrope', color: '#031631' }}>
+                {activeSession?.role}
+              </h1>
             </div>
           </div>
 
-          {/* TAB BAR (SEGMENTED CONTROL) */}
-          <nav className="flex bg-[#f2f4f6] p-1 rounded-2xl border w-full md:w-auto overflow-x-auto no-scrollbar" style={{ borderColor: 'rgba(3,22,49,0.05)' }}>
-            {[
-              { id: 'resume', label: 'Resume', icon: 'description' },
-              { id: 'cover', label: 'Cover Letter', icon: 'mail' },
-              { id: 'interview', label: 'Interview Prep', icon: 'psychology' }
-            ].map(tab => (
+          {/* TAB BAR with per-tab completion dots */}
+          <nav className="flex bg-[#f2f4f6] p-1 rounded-2xl border w-full md:w-auto overflow-x-auto no-scrollbar"
+            style={{ borderColor: 'rgba(3,22,49,0.05)' }}>
+            {TAB_DEFS.map(tab => (
               <button key={tab.id} onClick={() => handleTabChange(tab.id)}
-                className={`relative flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-[11px] md:text-xs font-bold transition-all duration-300 ${
+                className={`relative flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-[11px] md:text-xs font-bold transition-all duration-300 ${
                   activeTab === tab.id ? 'text-[#031631] shadow-sm bg-white' : 'text-[#8293b4] hover:text-[#031631]'
                 }`}>
-                <span className={`material-symbols-outlined text-[16px] md:text-[18px] ${activeTab === tab.id ? 'icon-filled' : ''}`}>
+                <span className={`material-symbols-outlined text-[15px] md:text-[17px] ${activeTab === tab.id ? 'icon-filled' : ''}`}>
                   {tab.icon}
                 </span>
                 <span className="whitespace-nowrap">{tab.label}</span>
-                {activeTab === tab.id && (
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#0e0099]" />
-                )}
+                {/* Completion dot */}
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: tab.ready ? '#2e7d32' : 'rgba(197,198,206,0.6)' }} />
               </button>
             ))}
           </nav>
 
-          <div className="hidden lg:block text-right">
-             <div className="text-[9px] font-black uppercase tracking-widest text-[#c5c6ce] mb-0.5">Workspace</div>
-             <div className="flex items-center gap-2 justify-end">
-                <span className="w-2 h-2 rounded-full bg-[#2e7d32]" />
-                <span className="text-[11px] font-bold text-[#031631]">Tailored & Active</span>
-             </div>
+          {/* Desktop: packet status + quick export actions */}
+          <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
+            <span className="px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1.5"
+              style={{ backgroundColor: statusInfo.bg, color: statusInfo.color }}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: statusInfo.dot }} />
+              {statusInfo.text}
+            </span>
+            {/* Jump-to-export shortcut */}
+            {hasResume && (
+              <button
+                onClick={() => handleTabChange('resume')}
+                title="Export Resume PDF"
+                className="w-8 h-8 rounded-xl border flex items-center justify-center transition-all hover:bg-[#e1e0ff]"
+                style={{ borderColor: 'rgba(197,198,206,0.2)' }}>
+                <span className="material-symbols-outlined text-[16px]" style={{ color: '#0e0099' }}>download</span>
+              </button>
+            )}
+            {hasCoverLetter && (
+              <button
+                onClick={() => handleTabChange('cover')}
+                title="Open Cover Letter"
+                className="w-8 h-8 rounded-xl border flex items-center justify-center transition-all hover:bg-[#f2f4f6]"
+                style={{ borderColor: 'rgba(197,198,206,0.2)' }}>
+                <span className="material-symbols-outlined text-[16px]" style={{ color: '#031631' }}>mail</span>
+              </button>
+            )}
+            {/* Applied toggle — clickable in both directions */}
+            <button
+              onClick={handleMarkApplied}
+              title={packetStatus === 'applied' ? 'Undo applied status' : 'Mark as Applied'}
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all"
+              style={packetStatus === 'applied'
+                ? { backgroundColor: '#e8f5e9', borderColor: 'rgba(46,125,50,0.2)', color: '#2e7d32' }
+                : { borderColor: 'rgba(197,198,206,0.2)', color: '#44474d', backgroundColor: 'transparent' }
+              }>
+              <span className="material-symbols-outlined text-[14px]"
+                style={{ fontVariationSettings: packetStatus === 'applied' ? "'FILL' 1" : "'FILL' 0" }}>
+                {packetStatus === 'applied' ? 'check_circle' : 'mark_email_read'}
+              </span>
+              {packetStatus === 'applied' ? 'Applied ✓' : 'Applied?'}
+            </button>
           </div>
         </header>
 
+        {/* Packet completeness nudge — tab-aware, excludes the current tab from missing list */}
+        {(() => {
+          const missingItems = [
+            !hasResume      && activeTab !== 'resume'    ? { label: 'Resume',       tab: 'resume' }    : null,
+            !hasCoverLetter && activeTab !== 'cover'     ? { label: 'Cover Letter', tab: 'cover' }     : null,
+            !hasInterview   && activeTab !== 'interview' ? { label: 'Interview Prep', tab: 'interview' } : null,
+          ].filter(Boolean)
+          if (!activeSession || missingItems.length === 0) return null
+          return (
+            <div className="flex-shrink-0 px-4 md:px-8 py-2 flex items-center gap-3 border-b"
+              style={{ backgroundColor: '#fffbeb', borderColor: 'rgba(245,158,11,0.15)' }}>
+              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-[#f59e0b]" />
+              <p className="text-[11px] font-bold flex-1" style={{ color: '#92400e' }}>
+                {missingItems.map(i => i.label).join(', ')} not yet generated
+              </p>
+              {missingItems.length === 1 && (
+                <button onClick={() => handleTabChange(missingItems[0].tab)}
+                  className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg transition-all"
+                  style={{ color: '#92400e' }}>
+                  View →
+                </button>
+              )}
+            </div>
+          )
+        })()}
+
         {/* WORKSPACE AREA */}
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 flex flex-col overflow-y-auto custom-scroll page-pb-mobile">
           {activeTab === 'resume' && <ResumeEditorCore />}
           {activeTab === 'cover' && <CoverLetterCore />}
           {activeTab === 'interview' && <InterviewPrepCore />}

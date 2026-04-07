@@ -206,7 +206,7 @@ export default function Landing() {
             <p className="max-w-2xl mx-auto text-base leading-relaxed" style={{ color: '#44474d' }}>
               Every packet is generated from the same analysis of your background and the job description.
               That's why your resume, cover letter, and interview answers all reference the same experience —
-              they were built together, not in separate sessions.
+              they were built together, not in separate steps.
             </p>
           </div>
           <div className="grid md:grid-cols-12 gap-6">
@@ -365,7 +365,7 @@ export default function Landing() {
                 title: 'Paste any job description',
                 desc: 'Drop in a job posting. JobBlitz reads the role\'s requirements, identifies what from your background matters most, and builds a job-specific analysis — the same one that drives all four packet outputs.',
                 action: () => navigate('/app/tailor'),
-                cta: 'Try a tailoring session →',
+                cta: 'Build your first packet →',
               },
               {
                 num: '03',

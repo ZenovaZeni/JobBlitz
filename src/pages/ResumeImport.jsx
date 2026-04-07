@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import SideNav from '../components/SideNav'
 import { parseResumeText } from '../lib/openai'
+import VoiceMicButton from '../components/VoiceMicButton'
 
 const IMPORT_DRAFT_KEY = 'jb_import_draft'
 
@@ -28,13 +29,24 @@ function ReviewCard({ title, children }) {
 
 export default function ResumeImport() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [stage, setStage] = useState('select') // select | parsing | review | error
   const [progress, setProgress] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [pasteMode, setPasteMode] = useState(false)
+  const [describeMode, setDescribeMode] = useState(false)
   const [pasteText, setPasteText] = useState('')
   const [parsedData, setParsedData] = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
+
+  useEffect(() => { document.title = 'JobBlitz — Import Resume' }, [])
+
+  // Handle ?mode=paste and ?mode=describe from profile builder starter cards
+  useEffect(() => {
+    const mode = searchParams.get('mode')
+    if (mode === 'paste') setPasteMode(true)
+    if (mode === 'describe') setDescribeMode(true)
+  }, [])
 
   const STEPS = [
     { label: 'Select', key: 'select' },
@@ -215,7 +227,7 @@ export default function ResumeImport() {
                   </div>
                 )}
 
-                {!pasteMode ? (
+                {!pasteMode && !describeMode ? (
                   <>
                     {/* Drop zone */}
                     <label
@@ -262,11 +274,11 @@ export default function ResumeImport() {
                       <div className="flex-1 h-px" style={{ backgroundColor: '#eceef0' }} />
                     </div>
 
-                    {/* Alt options */}
+                    {/* Alt options — 2×2 grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <button
                         onClick={() => setPasteMode(true)}
-                        className="flex items-center gap-4 p-5 rounded-2xl text-left border bg-white transition-all hover:border-[rgba(14,0,153,0.2)] hover:shadow-sm"
+                        className="flex items-center gap-4 p-5 rounded-2xl text-left border bg-white transition-all hover:border-[rgba(14,0,153,0.2)] hover:shadow-sm active:scale-[0.98]"
                         style={{ borderColor: 'rgba(197,198,206,0.2)' }}>
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                           style={{ backgroundColor: 'rgba(14,0,153,0.06)' }}>
@@ -279,7 +291,7 @@ export default function ResumeImport() {
                       </button>
                       <button
                         onClick={() => navigate('/app/profile')}
-                        className="flex items-center gap-4 p-5 rounded-2xl text-left border bg-white transition-all hover:border-[rgba(14,0,153,0.2)] hover:shadow-sm"
+                        className="flex items-center gap-4 p-5 rounded-2xl text-left border bg-white transition-all hover:border-[rgba(14,0,153,0.2)] hover:shadow-sm active:scale-[0.98]"
                         style={{ borderColor: 'rgba(197,198,206,0.2)' }}>
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                           style={{ backgroundColor: 'rgba(14,0,153,0.06)' }}>
@@ -290,9 +302,24 @@ export default function ResumeImport() {
                           <p className="text-xs" style={{ color: '#75777e' }}>Fill in manually</p>
                         </div>
                       </button>
+                      <button
+                        onClick={() => setDescribeMode(true)}
+                        className="flex items-center gap-4 p-5 rounded-2xl text-left border bg-white transition-all hover:border-[rgba(14,0,153,0.2)] hover:shadow-sm active:scale-[0.98] sm:col-span-2"
+                        style={{ borderColor: 'rgba(14,0,153,0.12)', background: 'linear-gradient(135deg, #fcfcff, white)' }}>
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                          style={{ background: 'linear-gradient(135deg, rgba(14,0,153,0.1), rgba(14,0,153,0.06))' }}>
+                          <span className="material-symbols-outlined text-[20px]" style={{ color: '#0e0099' }}>record_voice_over</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-sm mb-0.5" style={{ color: '#031631' }}>Describe Your Background</p>
+                          <p className="text-xs" style={{ color: '#75777e' }}>No resume? Write anything — we'll turn it into a profile</p>
+                        </div>
+                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: '#e1e0ff', color: '#2f2ebe' }}>New</span>
+                      </button>
                     </div>
                   </>
-                ) : (
+                ) : pasteMode ? (
                   /* ── PASTE MODE ── */
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -305,20 +332,27 @@ export default function ResumeImport() {
                         Back to upload
                       </button>
                     </div>
-                    <textarea
-                      value={pasteText}
-                      onChange={e => setPasteText(e.target.value)}
-                      placeholder="Paste your full resume here — name, contact info, work experience, skills, education..."
-                      rows={16}
-                      className="w-full px-5 py-4 rounded-2xl text-sm border resize-none focus:outline-none leading-relaxed"
-                      style={{
-                        borderColor: 'rgba(197,198,206,0.3)',
-                        backgroundColor: 'white',
-                        color: '#031631',
-                        fontFamily: 'Inter, sans-serif',
-                        boxShadow: '0 2px 12px rgba(3,22,49,0.04)',
-                      }}
-                    />
+                    <div className="relative">
+                      <textarea
+                        value={pasteText}
+                        onChange={e => setPasteText(e.target.value)}
+                        placeholder="Paste your full resume here — name, contact info, work experience, skills, education..."
+                        rows={16}
+                        className="w-full px-5 py-4 rounded-2xl text-sm border resize-none focus:outline-none leading-relaxed"
+                        style={{
+                          borderColor: 'rgba(197,198,206,0.3)',
+                          backgroundColor: 'white',
+                          color: '#031631',
+                          fontFamily: 'Inter, sans-serif',
+                          boxShadow: '0 2px 12px rgba(3,22,49,0.04)',
+                        }}
+                      />
+                      <div className="absolute bottom-3 right-3">
+                        <VoiceMicButton
+                          onTranscript={text => setPasteText(v => v ? v + ' ' + text : text)}
+                        />
+                      </div>
+                    </div>
                     <div className="flex items-center justify-between">
                       <p className="text-xs" style={{ color: '#c5c6ce' }}>
                         {pasteText.split(/\s+/).filter(Boolean).length} words
@@ -328,7 +362,84 @@ export default function ResumeImport() {
                         disabled={pasteText.trim().length < 50}
                         className="px-6 py-2.5 text-white text-sm font-bold rounded-xl ai-glow-btn flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95">
                         <span className="material-symbols-outlined icon-filled text-[18px]">auto_awesome</span>
-                        Extract with AI
+                        Extract & Build Profile
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* ── DESCRIBE YOUR BACKGROUND MODE ── */
+                  <div className="space-y-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-extrabold text-lg" style={{ fontFamily: 'Manrope', color: '#031631' }}>
+                          Tell us about yourself
+                        </p>
+                        <p className="text-sm mt-0.5" style={{ color: '#75777e' }}>
+                          Write freely — no format required. We'll organize it.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => { setDescribeMode(false); setErrorMsg('') }}
+                        className="flex items-center gap-1 text-xs font-bold transition-all hover:opacity-70 flex-shrink-0 ml-4"
+                        style={{ color: '#44474d' }}>
+                        <span className="material-symbols-outlined text-[14px]">arrow_back</span>
+                        Back
+                      </button>
+                    </div>
+
+                    {/* Guiding prompts */}
+                    <div className="p-4 rounded-2xl space-y-2"
+                      style={{ backgroundColor: 'rgba(225,224,255,0.2)', border: '1px solid rgba(14,0,153,0.08)' }}>
+                      <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: '#8293b4' }}>
+                        Think about
+                      </p>
+                      {[
+                        'Where you\'ve worked and what you did day-to-day',
+                        'Skills, tools, or things people rely on you for',
+                        'Projects or results you\'re proud of',
+                        'What type of role or company you\'re looking for next',
+                      ].map((prompt, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          <span className="w-1 h-1 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: '#0e0099' }} />
+                          <p className="text-xs leading-relaxed" style={{ color: '#44474d' }}>{prompt}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Free-text area with voice */}
+                    <div className="relative">
+                      <textarea
+                        value={pasteText}
+                        onChange={e => setPasteText(e.target.value)}
+                        placeholder="Just start writing — anything works. Talk about your last job, what you're great at, where you're headed, or just your history in any order you remember it..."
+                        rows={14}
+                        className="w-full px-5 py-4 rounded-2xl text-sm border resize-none focus:outline-none leading-relaxed"
+                        style={{
+                          borderColor: 'rgba(197,198,206,0.3)',
+                          backgroundColor: 'white',
+                          color: '#031631',
+                          fontFamily: 'Inter, sans-serif',
+                          boxShadow: '0 2px 12px rgba(3,22,49,0.04)',
+                        }}
+                      />
+                      <div className="absolute bottom-3 right-3">
+                        <VoiceMicButton
+                          size="md"
+                          onTranscript={text => setPasteText(v => v ? v + ' ' + text : text)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs" style={{ color: '#c5c6ce' }}>
+                        {pasteText.split(/\s+/).filter(Boolean).length} words
+                      </p>
+                      <button
+                        onClick={handlePasteSubmit}
+                        disabled={pasteText.trim().length < 30}
+                        className="px-6 py-2.5 text-white text-sm font-bold rounded-xl ai-glow-btn flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95">
+                        <span className="material-symbols-outlined icon-filled text-[18px]">arrow_forward</span>
+                        Build My Profile
                       </button>
                     </div>
                   </div>

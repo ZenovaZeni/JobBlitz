@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SideNav from '../components/SideNav'
 import { useAuth } from '../context/AuthContext'
+import { useMasterProfile } from '../hooks/useMasterProfile'
 import { supabase } from '../lib/supabase'
+import { useRef } from 'react'
 import { PLAN_LIMITS } from '../lib/planLimits'
 
 function Section({ id, title, subtitle, children }) {
@@ -64,6 +66,10 @@ function SaveBtn({ onClick, saving, saved, disabled }) {
 export default function Settings() {
   const navigate = useNavigate()
   const { user, profile, isPro, updateProfile, signOut, isSigningOut } = useAuth()
+  const { profile: mProfile, save: saveMProfile, loading: mLoading } = useMasterProfile()
+
+  const fileInputRef = useRef(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
 
   const [fullName, setFullName] = useState(profile?.full_name || '')
   const [accountSaving, setAccountSaving] = useState(false)
@@ -109,6 +115,51 @@ export default function Settings() {
   function scrollTo(id) {
     setActiveSection(id)
     document.getElementById(`settings-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  async function handleAvatarUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    
+    // Validate file type and size (5MB limit)
+    if (!file.type.startsWith('image/')) { alert('Please upload an image file.'); return }
+    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5MB.'); return }
+
+    setAvatarUploading(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.id}-${Math.random().toString(36).slice(2)}.${fileExt}`
+      const filePath = `${user.id}/${fileName}`
+
+      // Upload to 'avatars' bucket
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      // Update profile
+      await updateProfile({ avatar_url: publicUrl })
+    } catch (err) {
+      console.error('Avatar upload failed:', err)
+      alert('Upload failed: ' + err.message)
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
+
+  async function handleToggleResumePhoto() {
+    if (!mProfile) return
+    try {
+      await saveMProfile({ resume_photo_enabled: !mProfile.resume_photo_enabled })
+    } catch (err) {
+      console.error('Failed to toggle resume photo:', err)
+    }
   }
 
   async function handleSaveAccount() {
@@ -297,10 +348,36 @@ export default function Settings() {
             </div>
 
             {/* Section content */}
-            <div className="max-w-2xl mx-auto px-4 md:px-8 py-8 pb-24 md:pb-16 space-y-5">
+            <div className="max-w-3xl mx-auto px-4 md:px-8 py-8 pb-24 md:pb-16 space-y-5 page-pb-mobile">
 
               {/* Account */}
               <Section id="settings-account" title="Account" subtitle="Your name and login details.">
+                <Field label="Profile Image" hint="Your photo is used for your account avatar and optional resume photos.">
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-[#eceef0] flex items-center justify-center border"
+                      style={{ borderColor: 'rgba(197,198,206,0.3)' }}>
+                      {profile?.avatar_url ? (
+                        <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="material-symbols-outlined text-[32px]" style={{ color: '#c5c6ce' }}>person</span>
+                      )}
+                      {avatarUploading && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <span className="material-symbols-outlined animate-spin text-white text-[20px]">progress_activity</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                       <button onClick={() => fileInputRef.current?.click()} disabled={avatarUploading}
+                        className="px-4 py-2 rounded-xl border text-xs font-bold transition-all hover:bg-[#f2f4f6]"
+                        style={{ borderColor: 'rgba(197,198,206,0.4)', color: '#031631' }}>
+                        {profile?.avatar_url ? 'Change Photo' : 'Upload Photo'}
+                      </button>
+                      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleAvatarUpload} />
+                      <p className="text-[10px]" style={{ color: '#8293b4' }}>JPG, PNG or WEBP. Max 5MB.</p>
+                    </div>
+                  </div>
+                </Field>
                 <Field label="Full Name">
                   <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Your full name" />
                 </Field>
@@ -379,7 +456,7 @@ export default function Settings() {
                           Unlock Pro
                         </p>
                         <p className="text-sm" style={{ color: '#44474d' }}>
-                          $9.99/month — 50 sessions, all templates, PDF export, priority AI.
+                          $9.99/month — unlimited packets, all templates, PDF export, cover letter tones, and more.
                         </p>
                       </div>
                       <button
@@ -459,6 +536,24 @@ export default function Settings() {
                     {notifSaved && (
                       <span className="text-xs font-bold" style={{ color: '#0e0099' }}>Saved ✓</span>
                     )}
+                  </div>
+                </Field>
+
+                <Field label="Resume photo" hint="If enabled, your profile photo will be included in the header of your resumes.">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleToggleResumePhoto}
+                      disabled={mLoading}
+                      className="relative inline-flex items-center h-7 w-12 rounded-full transition-colors duration-200 focus:outline-none flex-shrink-0"
+                      style={{ backgroundColor: mProfile?.resume_photo_enabled ? '#0e0099' : '#c5c6ce' }}>
+                      <span
+                        className="inline-block w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200"
+                        style={{ transform: mProfile?.resume_photo_enabled ? 'translateX(24px)' : 'translateX(4px)' }}
+                      />
+                    </button>
+                    <span className="text-sm font-semibold" style={{ color: '#031631' }}>
+                      {mProfile?.resume_photo_enabled ? 'Included' : 'Hidden'}
+                    </span>
                   </div>
                 </Field>
               </Section>

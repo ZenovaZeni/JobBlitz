@@ -15,7 +15,7 @@ export function UpgradeGateModal({ onDismiss }) {
           style={{ backgroundColor: '#e1e0ff', color: '#2f2ebe' }}
         >
           <span className="material-symbols-outlined icon-filled text-[14px]">auto_awesome</span>
-          FREE SESSIONS USED
+          FREE APPLICATIONS USED
         </div>
 
         <h2
@@ -25,8 +25,8 @@ export function UpgradeGateModal({ onDismiss }) {
           Upgrade to Pro
         </h2>
         <p className="mb-8 leading-relaxed" style={{ color: '#44474d' }}>
-          You've reached your monthly limit for free sessions. Upgrade to Pro for 50 monthly
-          tailorings, unlimited cover letters, and priority AI processing.
+          You've reached your monthly limit for free application packets. Upgrade to Pro for 50 per month,
+          unlimited cover letters, and priority processing.
         </p>
 
         <div className="p-6 rounded-2xl mb-8 text-left" style={{ backgroundColor: '#f2f4f6' }}>

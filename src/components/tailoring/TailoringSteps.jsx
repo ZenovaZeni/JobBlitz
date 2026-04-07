@@ -44,8 +44,8 @@ export function TailoringSteps({ steps, currentStep, stepErrors, results, onRetr
                 {step.label}
               </p>
               {failed && (
-                <p className="text-[10px] font-bold text-[#93000a] mt-0.5">
-                  Connection lost or AI timed out
+                <p className="text-[10px] font-medium text-[#93000a] mt-0.5 leading-snug">
+                  {stepErrors[step.id]?.includes('uthenti') ? 'Auth error — refresh and retry' : 'AI step failed — tap Retry'}
                 </p>
               )}
             </div>

@@ -7,8 +7,9 @@ import { useAuth } from '../context/AuthContext'
 import { useMasterProfile } from '../hooks/useMasterProfile'
 import { templates, AtelierTemplate, MinimalTemplate, ImpactTemplate, ResumeTemplate } from '../components/ResumeTemplates'
 import { ATSCoach } from '../components/profile/ATSCoach'
-import { analyzeMasterProfile } from '../lib/openai'
+import { analyzeMasterProfile, improveBullet } from '../lib/openai'
 import { logger } from '../lib/logger'
+import VoiceMicButton from '../components/VoiceMicButton'
 
 
 
@@ -38,6 +39,7 @@ const EMPTY_FORM = {
   certifications: [], languages: [], positioning: '',
   career_goals: { target_roles: '', short_term: '', long_term: '' },
   preferred_template: 'atelier',
+  resume_photo_enabled: false,
   theme_settings: { font_family: 'Inter, sans-serif', accent_color: '#031631', density: 1 }
 }
 
@@ -45,7 +47,7 @@ function SectionLabel({ children }) {
   return <h3 className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: '#8293b4' }}>{children}</h3>
 }
 
-function ThemeSettingsEditor({ settings, onChange }) {
+function ThemeSettingsEditor({ settings, resumePhotoEnabled, onTogglePhoto, onChange }) {
   const fonts = [
     { name: 'Inter (Clean)', value: 'Inter, sans-serif' },
     { name: 'Roboto (Modern)', value: 'Roboto, sans-serif' },
@@ -105,6 +107,25 @@ function ThemeSettingsEditor({ settings, onChange }) {
           </p>
         </div>
       </div>
+
+      <div>
+        <SectionLabel>Resume Photo</SectionLabel>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#eceef0] flex items-center justify-between">
+          <div>
+            <p className="text-sm font-bold" style={{ color: '#031631' }}>Include Profile Photo</p>
+            <p className="text-[11px] text-[#75777e] mt-0.5">Show your professional headshot in the header. (Recommended for some roles, discouraged for others).</p>
+          </div>
+          <button
+            onClick={onTogglePhoto}
+            className="relative inline-flex items-center h-7 w-12 rounded-full transition-colors duration-200 focus:outline-none flex-shrink-0"
+            style={{ backgroundColor: resumePhotoEnabled ? '#0e0099' : '#c5c6ce' }}>
+            <span
+              className="inline-block w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200"
+              style={{ transform: resumePhotoEnabled ? 'translateX(24px)' : 'translateX(4px)' }}
+            />
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -131,6 +152,20 @@ function TextArea({ value, onChange, placeholder, rows = 4 }) {
     <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={rows}
       className="w-full px-4 py-3 rounded-xl border-0 text-sm font-medium resize-none focus:outline-none focus:ring-2 transition-all leading-relaxed"
       style={{ backgroundColor: 'white', color: '#031631', boxShadow: '0 2px 8px rgba(3,22,49,0.05)' }} />
+  )
+}
+
+// TextArea + mic button for high-friction fields
+function VoiceTextArea({ value, onChange, placeholder, rows = 4 }) {
+  return (
+    <div className="relative">
+      <TextArea value={value} onChange={onChange} placeholder={placeholder} rows={rows} />
+      <div className="absolute bottom-2.5 right-2.5">
+        <VoiceMicButton
+          onTranscript={text => onChange(value ? value + ' ' + text : text)}
+        />
+      </div>
+    </div>
   )
 }
 
@@ -168,6 +203,9 @@ function SkillsInput({ skills, onChange }) {
 }
 
 function ExperienceEditor({ experience, onChange }) {
+  const [enhancing, setEnhancing] = useState(new Set()) // keys: `${expId}-${bIdx}`
+  const [locked, setLocked] = useState(new Set())        // keys: expId
+
   function addExp() { onChange([...experience, { _id: uid(), company: '', role: '', dates: '', bullets: [''] }]) }
   function removeExp(id) { onChange(experience.filter(e => e._id !== id)) }
   function updateExp(id, field, value) { onChange(experience.map(e => e._id === id ? { ...e, [field]: value } : e)) }
@@ -182,45 +220,102 @@ function ExperienceEditor({ experience, onChange }) {
     onChange(experience.map(e => e._id !== id ? e : { ...e, bullets: e.bullets.filter((_, i) => i !== idx) }))
   }
 
+  async function handleEnhanceBullet(exp, bIdx) {
+    const key = `${exp._id}-${bIdx}`
+    const original = exp.bullets[bIdx]
+    if (!original?.trim()) return
+    setEnhancing(s => new Set(s).add(key))
+    try {
+      const improved = await improveBullet({ bullet: original, role: exp.role || '' })
+      updateBullet(exp._id, bIdx, improved.trim())
+    } catch (err) {
+      console.error('[Enhance bullet]', err)
+    } finally {
+      setEnhancing(s => { const n = new Set(s); n.delete(key); return n })
+    }
+  }
+
+  function toggleLock(id) {
+    setLocked(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
+
   return (
     <div className="space-y-4">
-      {experience.map((exp, expIdx) => (
+      {experience.map((exp, expIdx) => {
+        const isLocked = locked.has(exp._id)
+        return (
         <div key={exp._id} className="p-5 rounded-2xl border-l-4"
-          style={{ backgroundColor: 'white', borderLeftColor: '#031631', boxShadow: '0 2px 12px rgba(3,22,49,0.04)' }}>
+          style={{ backgroundColor: 'white', borderLeftColor: isLocked ? '#c5c6ce' : '#031631', boxShadow: '0 2px 12px rgba(3,22,49,0.04)' }}>
           <div className="flex justify-between items-center mb-4">
-            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#8293b4' }}>Position {expIdx + 1}</span>
-            <button onClick={() => removeExp(exp._id)} className="p-1.5 rounded-lg hover:bg-[#ffdad6] transition-colors" style={{ color: '#93000a' }}>
-              <span className="material-symbols-outlined text-[16px]">delete</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#8293b4' }}>Position {expIdx + 1}</span>
+              {isLocked && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider"
+                  style={{ backgroundColor: '#f2f4f6', color: '#8293b4' }}>Locked</span>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => toggleLock(exp._id)}
+                className="p-1.5 rounded-lg hover:bg-[#f2f4f6] transition-colors"
+                style={{ color: isLocked ? '#031631' : '#c5c6ce' }}
+                title={isLocked ? 'Unlock section' : 'Lock section'}>
+                <span className="material-symbols-outlined text-[16px]">{isLocked ? 'lock' : 'lock_open'}</span>
+              </button>
+              {!isLocked && (
+                <button onClick={() => removeExp(exp._id)} className="p-1.5 rounded-lg hover:bg-[#ffdad6] transition-colors" style={{ color: '#93000a' }}>
+                  <span className="material-symbols-outlined text-[16px]">delete</span>
+                </button>
+              )}
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-            <Field label="Job Title"><TextInput value={exp.role} onChange={v => updateExp(exp._id, 'role', v)} placeholder="e.g. Senior Product Designer" /></Field>
-            <Field label="Company"><TextInput value={exp.company} onChange={v => updateExp(exp._id, 'company', v)} placeholder="e.g. Stripe" /></Field>
+            <Field label="Job Title"><TextInput value={exp.role} onChange={v => !isLocked && updateExp(exp._id, 'role', v)} placeholder="e.g. Senior Product Designer" /></Field>
+            <Field label="Company"><TextInput value={exp.company} onChange={v => !isLocked && updateExp(exp._id, 'company', v)} placeholder="e.g. Stripe" /></Field>
           </div>
-          <Field label="Dates"><TextInput value={exp.dates} onChange={v => updateExp(exp._id, 'dates', v)} placeholder="e.g. 2021 – Present" /></Field>
+          <Field label="Dates"><TextInput value={exp.dates} onChange={v => !isLocked && updateExp(exp._id, 'dates', v)} placeholder="e.g. 2021 – Present" /></Field>
           <div className="mt-3">
             <label className="block text-xs font-semibold mb-2" style={{ color: '#44474d' }}>Bullet Points</label>
             <div className="space-y-2">
-              {exp.bullets.map((b, bIdx) => (
+              {exp.bullets.map((b, bIdx) => {
+                const enhKey = `${exp._id}-${bIdx}`
+                const isEnhancing = enhancing.has(enhKey)
+                return (
                 <div key={bIdx} className="flex gap-2 items-start">
                   <span className="mt-3 text-sm flex-shrink-0" style={{ color: '#031631' }}>•</span>
-                  <input value={b} onChange={e => updateBullet(exp._id, bIdx, e.target.value)}
+                  <input value={b} onChange={e => !isLocked && updateBullet(exp._id, bIdx, e.target.value)}
                     placeholder="Describe an achievement with measurable impact..."
                     className="flex-1 px-3 py-2.5 rounded-xl border-0 text-sm font-medium focus:outline-none focus:ring-2 transition-all"
-                    style={{ backgroundColor: '#f7f9fb', color: '#031631' }} />
-                  <button onClick={() => removeBullet(exp._id, bIdx)}
-                    className="mt-2 p-1 rounded-lg hover:bg-[#eceef0] transition-colors flex-shrink-0" style={{ color: '#75777e' }}>
-                    <span className="material-symbols-outlined text-[14px]">close</span>
-                  </button>
+                    style={{ backgroundColor: isEnhancing ? '#f7f7ff' : '#f7f9fb', color: '#031631', opacity: isLocked ? 0.75 : 1 }} />
+                  {/* Enhance button — only shown on non-empty bullets */}
+                  {!isLocked && b?.trim() && (
+                    <button onClick={() => handleEnhanceBullet(exp, bIdx)} disabled={isEnhancing}
+                      className="mt-1.5 p-1.5 rounded-lg transition-colors flex-shrink-0 disabled:opacity-50"
+                      style={{ color: isEnhancing ? '#0e0099' : '#8293b4', backgroundColor: isEnhancing ? '#e1e0ff' : 'transparent' }}
+                      title="Enhance this bullet">
+                      <span className={`material-symbols-outlined text-[15px] ${isEnhancing ? 'animate-spin' : ''}`}>
+                        {isEnhancing ? 'progress_activity' : 'auto_fix_high'}
+                      </span>
+                    </button>
+                  )}
+                  {!isLocked && (
+                    <button onClick={() => removeBullet(exp._id, bIdx)}
+                      className="mt-2 p-1 rounded-lg hover:bg-[#eceef0] transition-colors flex-shrink-0" style={{ color: '#75777e' }}>
+                      <span className="material-symbols-outlined text-[14px]">close</span>
+                    </button>
+                  )}
                 </div>
-              ))}
+                )
+              })}
             </div>
-            <button onClick={() => addBullet(exp._id)} className="mt-2 text-xs font-bold flex items-center gap-1 hover:opacity-70" style={{ color: '#0e0099' }}>
-              <span className="material-symbols-outlined text-[14px]">add</span>Add bullet
-            </button>
+            {!isLocked && (
+              <button onClick={() => addBullet(exp._id)} className="mt-2 text-xs font-bold flex items-center gap-1 hover:opacity-70" style={{ color: '#0e0099' }}>
+                <span className="material-symbols-outlined text-[14px]">add</span>Add bullet
+              </button>
+            )}
           </div>
         </div>
-      ))}
+        )
+      })}
       <button onClick={addExp}
         className="w-full py-3 rounded-2xl border-2 border-dashed text-sm font-bold flex items-center justify-center gap-2 transition-all hover:border-[#0e0099] hover:text-[#0e0099]"
         style={{ borderColor: '#c5c6ce', color: '#44474d' }}>
@@ -290,16 +385,16 @@ function SimpleListEditor({ items, onChange, placeholder }) {
 }
 
 const NAV_SECTIONS = [
-  { id: 'theme', label: 'Theme & Style', icon: 'palette' },
   { id: 'header', label: 'Header', icon: 'person' },
   { id: 'summary', label: 'Summary', icon: 'description' },
   { id: 'experience', label: 'Experience', icon: 'work' },
   { id: 'skills', label: 'Skills', icon: 'psychology' },
   { id: 'education', label: 'Education', icon: 'school' },
-  { id: 'additional', label: 'Additional Details', icon: 'extension' },
   { id: 'projects', label: 'Projects', icon: 'rocket_launch' },
+  { id: 'additional', label: 'Additional Details', icon: 'extension' },
   { id: 'positioning', label: 'Positioning', icon: 'adjust' },
   { id: 'goals', label: 'Career Goals', icon: 'flag' },
+  { id: 'theme', label: 'Theme & Style', icon: 'palette' },
 ]
 
 function PrintPortal({ children }) {
@@ -332,13 +427,14 @@ function formFromData(data, userFallback = {}) {
     positioning: data.positioning || '',
     career_goals: data.career_goals || { target_roles: '', short_term: '', long_term: '' },
     preferred_template: data.preferred_template || 'atelier',
+    resume_photo_enabled: data.resume_photo_enabled || false,
     theme_settings: data.theme_settings || EMPTY_FORM.theme_settings,
   }
 }
 
 export default function ProfileBuilder() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, profile: authProfile } = useAuth()
   const { profile, loading, saving, error: hookError, save } = useMasterProfile()
   const [form, setForm] = useState(EMPTY_FORM)
   const [initialized, setInitialized] = useState(false)
@@ -357,6 +453,8 @@ export default function ProfileBuilder() {
     return saved ? parseInt(saved, 10) : 100
   })
   const [lastSaved, setLastSaved] = useState(null)
+
+  useEffect(() => { document.title = 'JobBlitz — Master Profile' }, [])
 
   useEffect(() => {
     localStorage.setItem('jb_resume_zoom', zoom.toString())
@@ -430,9 +528,10 @@ export default function ProfileBuilder() {
         ...proj,
       })),
       certifications: form.certifications || [],
-      languages: form.languages || []
+      languages: form.languages || [],
+      avatar_url: authProfile?.avatar_url
     };
-  }, [form])
+  }, [form, authProfile?.avatar_url])
 
   useEffect(() => {
     if (profile && !initialized) {
@@ -594,6 +693,11 @@ export default function ProfileBuilder() {
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2 flex-shrink-0">
+                  <button onClick={() => window.print()}
+                    className="hidden lg:flex p-2.5 rounded-xl border border-transparent hover:bg-[#f8f9fa] text-[#031631] transition-all items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px]">download</span>
+                    <span className="text-sm font-bold">Download</span>
+                  </button>
                   <button onClick={() => setShowCoach(!showCoach)}
                     className={`hidden lg:flex p-2.5 rounded-xl transition-all duration-300 items-center gap-2 border ${showCoach ? 'bg-[#f7f7ff] border-[#0e0099]/20 text-[#0e0099]' : 'border-transparent hover:bg-[#f8f9fa] text-[#031631]'}`}>
                     <span className="material-symbols-outlined text-[18px]">psychology</span>
@@ -615,7 +719,7 @@ export default function ProfileBuilder() {
           </header>
         )}
 
-        <div className={`w-full max-w-none ${isDedicatedPreview ? 'flex flex-col items-center py-12' : 'grid grid-cols-1 xl:grid-cols-12 gap-10 px-6 md:px-12 py-10 pb-32'}`}>
+        <div className={`w-full max-w-none ${isDedicatedPreview ? 'flex flex-col items-center py-12' : 'grid grid-cols-1 xl:grid-cols-12 gap-10 px-6 md:px-12 py-10 pb-32 page-pb-mobile'}`}>
           {/* Left Column (Navigation + Form) */}
           {!isDedicatedPreview && (
             <div className={`${showPreview ? 'hidden xl:flex' : 'flex'} xl:col-span-7 gap-10`}>
@@ -657,21 +761,73 @@ export default function ProfileBuilder() {
 
               {/* Form */}
               <div className="flex-1 space-y-8">
-                {/* Theme & Style (Always visible at top or separate) */}
-                <section id="section-theme" className="p-8 rounded-2xl border-2 border-dashed border-[#e1e0ff] bg-[#fcfcff] scroll-mt-24">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-[#0e0099] flex items-center justify-center text-white">
-                      <span className="material-symbols-outlined">palette</span>
+                {/* Profile Start Options — shown when profile is brand new */}
+                {completion === 0 && !importBanner && (
+                  <div className="p-6 rounded-2xl border-2 border-dashed border-[#e1e0ff] bg-gradient-to-br from-[#fcfcff] to-white scroll-mt-24">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'linear-gradient(135deg, #031631, #0e0099)' }}>
+                        <span className="material-symbols-outlined text-white text-[20px]">person_add</span>
+                      </div>
+                      <div>
+                        <h2 className="text-base font-black text-[#031631]">Build Your Profile</h2>
+                        <p className="text-xs text-[#75777e]">Choose how you'd like to get started — or fill in the sections below.</p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-[#031631]">Theme & Aesthetics</h2>
-                      <p className="text-xs text-[#75777e]">Customize your professional look across all templates</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button onClick={() => navigate('/app/import')}
+                        className="flex flex-col items-start gap-3 p-4 bg-white rounded-2xl border-2 border-[#eceef0] hover:border-[#0e0099] hover:shadow-md transition-all text-left active:scale-[0.98]">
+                        <span className="w-9 h-9 rounded-xl bg-[#e1e0ff] flex items-center justify-center flex-shrink-0">
+                          <span className="material-symbols-outlined icon-filled text-[#0e0099] text-[18px]">upload_file</span>
+                        </span>
+                        <div>
+                          <p className="text-sm font-black text-[#031631]">Upload Resume</p>
+                          <p className="text-[11px] text-[#8293b4] leading-tight mt-0.5">Import a PDF or Word doc to pre-fill your profile</p>
+                        </div>
+                      </button>
+                      <button onClick={() => navigate('/app/import?mode=paste')}
+                        className="flex flex-col items-start gap-3 p-4 bg-white rounded-2xl border-2 border-[#eceef0] hover:border-[#2e7d32] hover:shadow-md transition-all text-left active:scale-[0.98]">
+                        <span className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#e8f5e9' }}>
+                          <span className="material-symbols-outlined icon-filled text-[18px]" style={{ color: '#2e7d32' }}>content_paste</span>
+                        </span>
+                        <div>
+                          <p className="text-sm font-black text-[#031631]">Paste Resume Text</p>
+                          <p className="text-[11px] text-[#8293b4] leading-tight mt-0.5">Copy-paste your existing resume to extract it</p>
+                        </div>
+                      </button>
+                      <button onClick={() => navigate('/app/import?mode=describe')}
+                        className="flex flex-col items-start gap-3 p-4 rounded-2xl border-2 transition-all text-left active:scale-[0.98]"
+                        style={{ background: 'linear-gradient(135deg, #fcfcff, white)', borderColor: 'rgba(14,0,153,0.15)' }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = '#0e0099'}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(14,0,153,0.15)'}>
+                        <div className="flex items-center gap-2 w-full">
+                          <span className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style={{ background: 'linear-gradient(135deg, rgba(14,0,153,0.1), rgba(14,0,153,0.06))' }}>
+                            <span className="material-symbols-outlined icon-filled text-[18px]" style={{ color: '#0e0099' }}>record_voice_over</span>
+                          </span>
+                          <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ml-auto"
+                            style={{ backgroundColor: '#e1e0ff', color: '#2f2ebe' }}>New</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-[#031631]">Describe Your Background</p>
+                          <p className="text-[11px] text-[#8293b4] leading-tight mt-0.5">No resume? Write anything — we'll build your profile</p>
+                        </div>
+                      </button>
+                      <button onClick={() => scrollToSection('header')}
+                        className="flex flex-col items-start gap-3 p-4 bg-white rounded-2xl border-2 border-[#eceef0] hover:border-[#031631] hover:shadow-md transition-all text-left active:scale-[0.98]">
+                        <span className="w-9 h-9 rounded-xl bg-[#f2f4f6] flex items-center justify-center flex-shrink-0">
+                          <span className="material-symbols-outlined icon-filled text-[#031631] text-[18px]">edit_note</span>
+                        </span>
+                        <div>
+                          <p className="text-sm font-black text-[#031631]">Build from Scratch</p>
+                          <p className="text-[11px] text-[#8293b4] leading-tight mt-0.5">Fill in each section manually below</p>
+                        </div>
+                      </button>
                     </div>
                   </div>
-                  <ThemeSettingsEditor settings={form.theme_settings} onChange={v => setForm({ ...form, theme_settings: v })} />
-                </section>
+                )}
 
-                {/* Form Sections (Header, Summary, etc.) */}
+                {/* Form Sections */}
                 <section id="section-header" className="p-6 rounded-2xl scroll-mt-24" style={{ backgroundColor: 'white', boxShadow: '0 4px 20px rgba(3,22,49,0.04)' }}>
                   <SectionLabel>Profile Header</SectionLabel>
                   <div className="space-y-6">
@@ -693,8 +849,8 @@ export default function ProfileBuilder() {
 
                 <section id="section-summary" className="p-6 rounded-2xl scroll-mt-24" style={{ backgroundColor: 'white', boxShadow: '0 4px 20px rgba(3,22,49,0.04)' }}>
                   <SectionLabel>Professional Summary</SectionLabel>
-                  <p className="text-xs mb-3" style={{ color: '#75777e' }}>3–5 sentences. Gives the AI full context about who you are.</p>
-                  <TextArea value={form.summary} onChange={v => update('summary', v)}
+                  <p className="text-xs mb-3" style={{ color: '#75777e' }}>3–5 sentences. Used to personalize your tailored resumes and cover letters.</p>
+                  <VoiceTextArea value={form.summary} onChange={v => update('summary', v)}
                     placeholder="Describe your career narrative, core expertise, and what makes you stand out..." rows={5} />
                   <p className="text-xs mt-2 text-right" style={{ color: '#c5c6ce' }}>{form.summary.length} characters</p>
                 </section>
@@ -706,21 +862,13 @@ export default function ProfileBuilder() {
 
                 <section id="section-skills" className="p-6 rounded-2xl scroll-mt-24" style={{ backgroundColor: 'white', boxShadow: '0 4px 20px rgba(3,22,49,0.04)' }}>
                   <SectionLabel>Skills</SectionLabel>
-                  <p className="text-xs mb-3" style={{ color: '#75777e' }}>The AI uses these for match scoring and ATS optimization.</p>
+                  <p className="text-xs mb-3" style={{ color: '#75777e' }}>Used for match scoring and resume optimization.</p>
                   <SkillsInput skills={form.skills} onChange={v => update('skills', v)} />
                 </section>
 
                 <section id="section-education" className="p-6 rounded-2xl scroll-mt-24" style={{ backgroundColor: 'white', boxShadow: '0 4px 20px rgba(3,22,49,0.04)' }}>
                   <SectionLabel>Education</SectionLabel>
                   <EducationEditor education={form.education} onChange={v => update('education', v)} />
-                </section>
-
-                <section id="section-additional" className="p-6 rounded-2xl scroll-mt-24" style={{ backgroundColor: 'white', boxShadow: '0 4px 20px rgba(3,22,49,0.04)' }}>
-                  <SectionLabel>Additional Details</SectionLabel>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <Field label="Certifications"><SimpleListEditor items={form.certifications} onChange={v => update('certifications', v)} placeholder="e.g. AWS Solutions Architect" /></Field>
-                    <Field label="Languages"><SimpleListEditor items={form.languages} onChange={v => update('languages', v)} placeholder="e.g. Spanish (Fluent)" /></Field>
-                  </div>
                 </section>
 
                 <section id="section-projects" className="p-6 rounded-2xl scroll-mt-24" style={{ backgroundColor: 'white', boxShadow: '0 4px 20px rgba(3,22,49,0.04)' }}>
@@ -739,7 +887,7 @@ export default function ProfileBuilder() {
                           <TextInput value={proj.title}
                             onChange={v => update('projects', form.projects.map((p, j) => j === i ? { ...p, title: v } : p))}
                             placeholder="Project name" />
-                          <TextArea value={proj.description}
+                          <VoiceTextArea value={proj.description}
                             onChange={v => update('projects', form.projects.map((p, j) => j === i ? { ...p, description: v } : p))}
                             placeholder="What you built and its impact..." rows={3} />
                         </div>
@@ -753,10 +901,41 @@ export default function ProfileBuilder() {
                   </div>
                 </section>
 
+                <section id="section-additional" className="p-6 rounded-2xl scroll-mt-24" style={{ backgroundColor: 'white', boxShadow: '0 4px 20px rgba(3,22,49,0.04)' }}>
+                    {/* Builder Tools Header */}
+                    <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-white shadow-sm border border-[#eceef0]">
+                      <div>
+                        <h3 className="text-sm font-extrabold" style={{ color: '#031631' }}>Smart Builder Tools</h3>
+                        <p className="text-[10px] text-[#75777e]">Use AI to optimize your source profile for best results.</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => {
+                            setShowCoach(true)
+                            // We can trigger a specific audit here if we wanted
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#eceef0] text-xs font-bold text-[#031631] hover:bg-[#f8f9fa] transition-all">
+                          <span className="material-symbols-outlined text-[16px]">analytics</span>
+                          ATS Revamp
+                        </button>
+                        <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#eceef0] text-xs font-bold text-[#031631] hover:bg-[#f8f9fa] transition-all opacity-50 cursor-not-allowed" title="Coming soon">
+                          <span className="material-symbols-outlined text-[16px]">content_paste_go</span>
+                          Import Draft
+                        </button>
+                      </div>
+                    </div>
+
+                    <SectionLabel>{NAV_SECTIONS.find(s => s.id === activeSection)?.label || 'Profile Section'}</SectionLabel>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <Field label="Certifications"><SimpleListEditor items={form.certifications} onChange={v => update('certifications', v)} placeholder="e.g. AWS Solutions Architect" /></Field>
+                    <Field label="Languages"><SimpleListEditor items={form.languages} onChange={v => update('languages', v)} placeholder="e.g. Spanish (Fluent)" /></Field>
+                  </div>
+                </section>
+
                 <section id="section-positioning" className="p-6 rounded-2xl scroll-mt-24" style={{ backgroundColor: 'white', boxShadow: '0 4px 20px rgba(3,22,49,0.04)' }}>
                   <SectionLabel>Personal Positioning</SectionLabel>
                   <p className="text-xs mb-3" style={{ color: '#75777e' }}>What's your unique professional angle? What type of work energizes you?</p>
-                  <TextArea value={form.positioning} onChange={v => update('positioning', v)}
+                  <VoiceTextArea value={form.positioning} onChange={v => update('positioning', v)}
                     placeholder="e.g. I thrive in early-stage B2B SaaS companies where I can own product direction from 0 to 1..." rows={4} />
                 </section>
 
@@ -772,13 +951,34 @@ export default function ProfileBuilder() {
                         placeholder="e.g. Head of Product, Principal Designer, VP Engineering" />
                     </Field>
                     <Field label="Short-term Goal (1–2 years)">
-                      <TextArea value={form.career_goals.short_term} onChange={v => updateGoals('short_term', v)}
+                      <VoiceTextArea value={form.career_goals.short_term} onChange={v => updateGoals('short_term', v)}
                         placeholder="What do you want to achieve in the next 1–2 years?" rows={3} />
                     </Field>
                     <Field label="Long-term Vision (3–5 years)">
-                      <TextArea value={form.career_goals.long_term} onChange={v => updateGoals('long_term', v)}
+                      <VoiceTextArea value={form.career_goals.long_term} onChange={v => updateGoals('long_term', v)}
                         placeholder="Where do you see yourself in 3–5 years?" rows={3} />
                     </Field>
+                  </div>
+                </section>
+
+                {/* Theme & Style — moved lower; aesthetic choice, not content */}
+                <section id="section-theme" className="p-8 rounded-2xl border border-[#eceef0] bg-white scroll-mt-24" style={{ boxShadow: '0 4px 20px rgba(3,22,49,0.04)' }}>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-[#f2f4f6] flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[#031631]">palette</span>
+                    </div>
+                    <div>
+                      <h2 className="text-base font-black text-[#031631]">Theme & Style</h2>
+                      <p className="text-xs text-[#75777e]">Customize how your resume looks across all templates</p>
+                    </div>
+                  </div>
+                  <div className="max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <ThemeSettingsEditor 
+                      settings={form.theme_settings} 
+                      resumePhotoEnabled={form.resume_photo_enabled}
+                      onTogglePhoto={() => setForm(f => ({ ...f, resume_photo_enabled: !f.resume_photo_enabled }))}
+                      onChange={s => setForm({ ...form, theme_settings: s })} 
+                    />
                   </div>
                 </section>
 
@@ -938,7 +1138,7 @@ export default function ProfileBuilder() {
 
       {/* Mobile Edit/Preview Toggle Bar — hidden on xl where both panes are visible */}
       {!isDedicatedPreview && (
-        <div className="xl:hidden fixed bottom-0 left-0 right-0 z-40 border-t"
+        <div className="xl:hidden fixed above-bottom-nav left-0 right-0 z-40 border-t"
           style={{
             backgroundColor: 'rgba(255,255,255,0.98)',
             backdropFilter: 'blur(20px)',
