@@ -49,14 +49,14 @@ export default function Landing() {
             <a href="#how-it-works" className="transition-colors hover:opacity-70" style={{ color: '#5c6d8c' }}>How It Works</a>
             <a href="/pricing" className="transition-colors hover:opacity-70" style={{ color: '#5c6d8c' }}>Pricing</a>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button onClick={() => navigate('/auth/login')}
-              className="px-5 py-2 text-sm font-semibold rounded-lg transition-all hover:opacity-80"
+              className="px-3 sm:px-5 py-2 text-sm font-semibold rounded-lg transition-all hover:opacity-80"
               style={{ color: '#5c6d8c' }}>
               Login
             </button>
             <button onClick={() => navigate('/auth/signup')}
-              className="px-6 py-2.5 text-white text-sm font-bold rounded-lg shadow-md transition-all active:scale-95 ai-glow-btn">
+              className="px-4 sm:px-6 py-2.5 text-white text-xs sm:text-sm font-bold rounded-lg shadow-md transition-all active:scale-95 ai-glow-btn whitespace-nowrap">
               Get Started Free
             </button>
           </div>
@@ -76,29 +76,29 @@ export default function Landing() {
               <span className="material-symbols-outlined icon-filled text-[14px]">colors_spark</span>
               ONE PASTE. ONE COMPLETE PACKET.
             </div>
-            <h1 className="font-black text-4xl md:text-5xl lg:text-6xl leading-tight tracking-tight mb-6"
+            <h1 className="font-black text-[1.65rem] sm:text-4xl md:text-5xl lg:text-6xl leading-tight tracking-tight mb-6"
               style={{ fontFamily: 'Manrope', color: '#031631', letterSpacing: '-0.02em' }}>
               Paste a job description.{' '}
               <span style={{ color: '#0e0099' }}>Get a complete application packet in under 2 minutes.</span>
             </h1>
-            <p className="text-lg md:text-xl max-w-xl mb-10 leading-relaxed" style={{ color: '#44474d' }}>
+            <p className="text-base sm:text-lg md:text-xl max-w-xl mb-8 sm:mb-10 leading-relaxed" style={{ color: '#44474d' }}>
               Most applications are a generic resume and a cover letter written from scratch — disconnected,
               inconsistent, and forgettable. JobBlitz generates a tailored resume, a matching cover letter,
               and interview prep from the same job analysis. All three read as one coherent application.
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
               <button onClick={() => navigate('/app/import')}
-                className="px-8 py-4 text-white font-bold rounded-xl shadow-xl transition-all active:scale-95 ai-glow-btn">
+                className="px-6 sm:px-8 py-3.5 sm:py-4 text-white text-sm sm:text-base font-bold rounded-xl shadow-xl transition-all active:scale-95 ai-glow-btn">
                 Build my first packet free
               </button>
               <a href="#live-demo"
-                className="px-8 py-4 font-bold rounded-xl flex items-center gap-2 transition-all hover:shadow-md active:scale-95 cursor-pointer"
+                className="px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-bold rounded-xl flex items-center justify-center gap-2 transition-all hover:shadow-md active:scale-95 cursor-pointer"
                 style={{ backgroundColor: '#eceef0', color: '#031631' }}>
                 <span className="material-symbols-outlined">south</span>
                 See it work on a real job
               </a>
             </div>
-            <div className="flex flex-wrap items-center gap-5 mt-10">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 sm:mt-10">
               {[
                 { icon: 'check_circle', label: 'Free to start — no credit card' },
                 { icon: 'lock', label: 'Your resume data stays private' },
@@ -173,7 +173,7 @@ export default function Landing() {
 
       {/* ===== TRANSPARENCY BAR ===== */}
       <div className="py-5 border-y" style={{ backgroundColor: '#f2f4f6', borderColor: '#eceef0' }}>
-        <div className="max-w-screen-xl mx-auto px-8 flex flex-wrap gap-x-10 gap-y-3 justify-center items-center">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-8 flex flex-wrap gap-x-6 sm:gap-x-10 gap-y-3 justify-center items-center">
           {[
             { icon: 'bolt', text: 'Structured output — not keyword stuffing' },
             { icon: 'visibility_off', text: 'Your data is never sold or shared' },
@@ -200,7 +200,7 @@ export default function Landing() {
               <span className="material-symbols-outlined icon-filled text-[12px]">inventory_2</span>
               WHAT'S IN EVERY PACKET
             </div>
-            <h2 className="font-bold text-4xl mb-4" style={{ fontFamily: 'Manrope', color: '#031631' }}>
+            <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl mb-4" style={{ fontFamily: 'Manrope', color: '#031631' }}>
               Four outputs. One job paste. One coherent story.
             </h2>
             <p className="max-w-2xl mx-auto text-base leading-relaxed" style={{ color: '#44474d' }}>
@@ -209,10 +209,10 @@ export default function Landing() {
               they were built together, not in separate steps.
             </p>
           </div>
-          <div className="grid md:grid-cols-12 gap-6">
+          <div className="grid md:grid-cols-12 gap-4 sm:gap-6">
 
             {/* Wide card — Resume */}
-            <div className="md:col-span-8 bg-white rounded-3xl p-8 card-shadow border hover:shadow-md transition-all"
+            <div className="md:col-span-8 bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 card-shadow border hover:shadow-md transition-all"
               style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
               <div className="flex flex-col md:flex-row gap-8 items-center">
                 <div className="flex-1">
@@ -251,7 +251,7 @@ export default function Landing() {
             </div>
 
             {/* Match score card */}
-            <div className="md:col-span-4 rounded-3xl p-8 flex flex-col justify-between text-white"
+            <div className="md:col-span-4 rounded-2xl sm:rounded-3xl p-5 sm:p-8 flex flex-col justify-between text-white"
               style={{ background: 'linear-gradient(135deg, #031631 0%, #0e0099 100%)' }}>
               <div>
                 <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-bold mb-8"
@@ -279,7 +279,7 @@ export default function Landing() {
             </div>
 
             {/* Cover letter card */}
-            <div className="md:col-span-4 rounded-3xl p-8 flex flex-col text-white"
+            <div className="md:col-span-4 rounded-2xl sm:rounded-3xl p-5 sm:p-8 flex flex-col text-white"
               style={{ backgroundColor: '#0e0099' }}>
               <div>
                 <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-bold mb-8"
@@ -300,7 +300,7 @@ export default function Landing() {
             </div>
 
             {/* Wide card — Interview prep */}
-            <div className="md:col-span-8 bg-white rounded-3xl p-8 card-shadow border hover:shadow-md transition-all"
+            <div className="md:col-span-8 bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 card-shadow border hover:shadow-md transition-all"
               style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
               <div className="flex flex-col md:flex-row gap-8 items-center">
                 <div className="flex-1 h-48 w-full rounded-2xl overflow-hidden" style={{ backgroundColor: '#f7f9fb', border: '1px solid #eceef0' }}>
@@ -344,7 +344,7 @@ export default function Landing() {
           <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-16 pb-8"
             style={{ borderBottom: '1px solid rgba(197,198,206,0.15)' }}>
             <div>
-              <h2 className="font-bold text-4xl mb-2" style={{ fontFamily: 'Manrope', color: '#031631' }}>
+              <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl mb-2" style={{ fontFamily: 'Manrope', color: '#031631' }}>
                 How a packet comes together
               </h2>
               <p style={{ color: '#44474d' }}>Three inputs. One coherent output. Usually under 2 minutes.</p>
@@ -394,7 +394,7 @@ export default function Landing() {
       <section className="py-16 md:py-24 px-4 md:px-8" style={{ backgroundColor: '#f2f4f6' }}>
         <div className="max-w-screen-md mx-auto">
           <div className="mb-12">
-            <h2 className="font-bold text-3xl md:text-4xl mb-3" style={{ fontFamily: 'Manrope', color: '#031631' }}>
+            <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl mb-3" style={{ fontFamily: 'Manrope', color: '#031631' }}>
               Common questions
             </h2>
             <p style={{ color: '#44474d' }}>Honest answers — no marketing copy.</p>
@@ -426,13 +426,13 @@ export default function Landing() {
 
       {/* ===== FINAL CTA ===== */}
       <section className="py-16 md:py-24 px-4 md:px-8">
-        <div className="max-w-screen-xl mx-auto rounded-[3rem] overflow-hidden relative"
+        <div className="max-w-screen-xl mx-auto rounded-2xl sm:rounded-[3rem] overflow-hidden relative"
           style={{ backgroundColor: '#031631' }}>
           <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(14,0,153,0.4) 0%, transparent 60%)' }} />
           <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-20"
             style={{ backgroundColor: '#0e0099', transform: 'translate(30%, 30%)' }} />
-          <div className="relative z-10 px-8 py-20 md:py-32 text-center max-w-3xl mx-auto">
-            <h2 className="font-bold text-4xl md:text-5xl text-white mb-6 leading-tight"
+          <div className="relative z-10 px-5 sm:px-8 py-14 sm:py-20 md:py-32 text-center max-w-3xl mx-auto">
+            <h2 className="font-bold text-2xl sm:text-4xl md:text-5xl text-white mb-6 leading-tight"
               style={{ fontFamily: 'Manrope' }}>
               One complete packet. Every job. In under 2 minutes.
             </h2>
@@ -445,12 +445,12 @@ export default function Landing() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button onClick={() => navigate('/app/import')}
-                className="px-10 py-5 font-bold rounded-2xl shadow-xl transition-all active:scale-95 hover:brightness-110"
+                className="px-8 sm:px-10 py-4 sm:py-5 text-sm sm:text-base font-bold rounded-2xl shadow-xl transition-all active:scale-95 hover:brightness-110"
                 style={{ backgroundColor: '#e1e0ff', color: '#07006c' }}>
                 Build my first packet free
               </button>
               <button onClick={() => navigate('/pricing')}
-                className="px-10 py-5 font-bold rounded-2xl transition-all active:scale-95 hover:bg-white/10"
+                className="px-8 sm:px-10 py-4 sm:py-5 text-sm sm:text-base font-bold rounded-2xl transition-all active:scale-95 hover:bg-white/10"
                 style={{ backgroundColor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}>
                 See Pricing
               </button>

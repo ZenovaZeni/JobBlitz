@@ -1,8 +1,7 @@
 'use strict'
 
 // ── Config ────────────────────────────────────────────────────────────────────
-// TODO: Update this to your deployed Vercel URL before publishing.
-const JOBBLITZ_APP_URL = 'https://app.jobblitz.ai'
+const JOBBLITZ_APP_URL = 'https://jobblitzpro.vercel.app'
 
 // Must match JD_MAX_CHARS in src/config/constants.js
 const JD_MAX_CHARS = 15_000

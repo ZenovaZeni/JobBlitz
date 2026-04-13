@@ -18,28 +18,17 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let mounted = true
-    console.log('[AuthContext] INITIALIZING')
-    
-    // Safety timeout: the "Nuclear Option" to ensure the app ALWAYS boots
+    // Safety timeout to ensure the app ALWAYS boots
     const globalAuthTimeout = setTimeout(() => {
       if (mounted && !isAuthReady) {
-        console.error('[AuthContext] CRITICAL: Auth initialization timed out after 8s. Force-clearing loading state.')
         setIsAuthReady(true)
       }
     }, 8000)
 
     const initAuth = async () => {
-      const startTime = performance.now()
       try {
-        console.log('[AuthContext] SESSION_SYNCING')
         const { data: { session }, error } = await supabase.auth.getSession()
-        const sessionTime = performance.now()
-        console.log(`[AuthTiming] Session sync: ${(sessionTime - startTime).toFixed(0)}ms`)
-        
-        if (error) {
-          console.error('[AuthContext] Session Hydration Error:', error)
-          throw error
-        }
+        if (error) throw error
         
         if (!mounted) return
 
@@ -47,17 +36,13 @@ export function AuthProvider({ children }) {
         setUser(currentUser)
         
         if (currentUser) {
-          // Immediately unblock the UI shell by setting isAuthReady true
           setIsAuthReady(true)
-          console.log('[AuthContext] PROFILE_SYNCING in background...')
-          fetchProfile(currentUser.id, startTime) // Parallel background sync
+          fetchProfile(currentUser.id)
         } else {
-          console.log('[AuthContext] READY - No active session')
           setIsAuthReady(true)
           setIsProfileReady(true) // Nothing to load
         }
-      } catch (err) {
-        console.error('[AuthContext] Bootstrap Failed:', err)
+      } catch {
         if (mounted) setIsAuthReady(true)
       } finally {
         if (mounted) clearTimeout(globalAuthTimeout)
@@ -67,7 +52,6 @@ export function AuthProvider({ children }) {
     initAuth()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log(`[AuthContext] onAuthStateChange: ${event}`)
       if (!mounted) return
       
       const currentUser = session?.user ?? null
@@ -92,7 +76,6 @@ export function AuthProvider({ children }) {
 
   async function createDefaultProfile(userId) {
     try {
-      console.log('[AuthContext] Creating default profile for', userId)
       const { data, error } = await supabase
         .from('profiles')
         .upsert({ 
@@ -104,18 +87,14 @@ export function AuthProvider({ children }) {
         .select()
         .single()
 
-      if (error) {
-        console.error('[AuthContext] Profile Creation Error:', error)
-        throw error
-      }
+      if (error) throw error
       return data
-    } catch (err) {
-      console.error('[AuthContext] Fatal Failure in createDefaultProfile:', err)
-      return null // Return null so fetchProfile knows to stop
+    } catch {
+      return null
     }
   }
 
-  async function fetchProfile(userId, startTime = performance.now()) {
+  async function fetchProfile(userId) {
     try {
       setIsProfileReady(false)
       const { data, error } = await supabase
@@ -124,27 +103,18 @@ export function AuthProvider({ children }) {
         .eq('id', userId)
         .maybeSingle()
 
-      if (error) {
-        console.error('[AuthContext] Fetch Profile Error:', error)
-        throw error
-      }
+      if (error) throw error
 
       let userProfile = data
       if (!userProfile) {
-        console.log('[AuthContext] No profile found, triggering creation...')
         userProfile = await createDefaultProfile(userId)
       }
-      
+
       if (userProfile) {
         const checkedProfile = await checkMonthlyReset(userProfile)
         setProfile(checkedProfile)
-        const totalTime = performance.now() - startTime
-        console.log(`[AuthContext] READY - Profile Loaded in ${totalTime.toFixed(0)}ms`)
-      } else {
-        console.warn('[AuthContext] READY - Proceeding with NULL profile (fallback mode)')
       }
-    } catch (err) {
-      console.error('[AuthContext] Final Profile Fetch Error:', err)
+    } catch {
     } finally {
       setIsProfileReady(true)
       // Safety: always ensure auth is ready if profile somehow finished first or errored

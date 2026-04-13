@@ -135,26 +135,26 @@ export default function SessionView() {
       <div className="flex-1 flex flex-col overflow-hidden relative">
         
         {/* Header */}
-        <header className="glass-panel border-b px-4 md:px-8 py-3 md:py-4 flex items-center justify-between z-20"
+        <header className="glass-panel border-b px-3 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0 sm:justify-between z-20"
           style={{ borderColor: 'rgba(197,198,206,0.15)', boxShadow: '0 4px 12px rgba(3,22,49,0.03)' }}>
-          <div className="flex items-center gap-4 min-w-0">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <button
               onClick={() => navigate('/app/dashboard')}
-              className="w-10 h-10 rounded-xl border flex items-center justify-center transition-all hover:bg-[#eceef0]"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center flex-shrink-0 transition-all hover:bg-[#eceef0]"
               style={{ color: '#44474d', borderColor: 'rgba(197,198,206,0.3)' }}>
-              <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+              <span className="material-symbols-outlined text-[18px] sm:text-[20px]">arrow_back</span>
             </button>
             <div className="truncate">
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: '#0e0099' }}>
+                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: '#0e0099' }}>
                    Command Center
                 </span>
-                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#c5c6ce' }} />
-                <span className="text-[10px] font-bold" style={{ color: '#8293b4' }}>
+                <span className="w-1.5 h-1.5 rounded-full hidden sm:block" style={{ backgroundColor: '#c5c6ce' }} />
+                <span className="text-[9px] sm:text-[10px] font-bold hidden sm:block" style={{ color: '#8293b4' }}>
                   {activeSession?.company}
                 </span>
               </div>
-              <h1 className="text-base md:text-lg font-black tracking-tight truncate"
+              <h1 className="text-sm sm:text-base md:text-lg font-black tracking-tight truncate"
                 style={{ fontFamily: 'Manrope', color: '#031631' }}>
                 {activeSession?.role}
               </h1>
@@ -162,17 +162,18 @@ export default function SessionView() {
           </div>
 
           {/* TAB BAR with per-tab completion dots */}
-          <nav className="flex bg-[#f2f4f6] p-1 rounded-2xl border w-full md:w-auto overflow-x-auto no-scrollbar"
+          <nav className="flex bg-[#f2f4f6] p-1 rounded-2xl border w-full sm:w-auto overflow-x-auto no-scrollbar"
             style={{ borderColor: 'rgba(3,22,49,0.05)' }}>
             {TAB_DEFS.map(tab => (
               <button key={tab.id} onClick={() => handleTabChange(tab.id)}
-                className={`relative flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-[11px] md:text-xs font-bold transition-all duration-300 ${
+                className={`relative flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-[10px] sm:text-[11px] md:text-xs font-bold transition-all duration-300 ${
                   activeTab === tab.id ? 'text-[#031631] shadow-sm bg-white' : 'text-[#8293b4] hover:text-[#031631]'
                 }`}>
-                <span className={`material-symbols-outlined text-[15px] md:text-[17px] ${activeTab === tab.id ? 'icon-filled' : ''}`}>
+                <span className={`material-symbols-outlined text-[14px] sm:text-[15px] md:text-[17px] ${activeTab === tab.id ? 'icon-filled' : ''}`}>
                   {tab.icon}
                 </span>
-                <span className="whitespace-nowrap">{tab.label}</span>
+                <span className="whitespace-nowrap hidden sm:inline">{tab.label}</span>
+                <span className="whitespace-nowrap sm:hidden">{tab.label.split(' ')[0]}</span>
                 {/* Completion dot */}
                 <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                   style={{ backgroundColor: tab.ready ? '#2e7d32' : 'rgba(197,198,206,0.6)' }} />

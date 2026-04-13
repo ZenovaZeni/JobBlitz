@@ -127,7 +127,7 @@ export default function Pricing() {
             <span className="material-symbols-outlined icon-filled text-[14px]">auto_awesome</span>
             Simple, transparent pricing
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-5"
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-5"
             style={{ fontFamily: 'Manrope', color: '#031631', letterSpacing: '-0.02em' }}>
             Start free. Upgrade when you need more.
           </h1>
@@ -140,7 +140,7 @@ export default function Pricing() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-20">
 
           {/* Free */}
-          <div className="bg-white rounded-3xl p-8 border" style={{ borderColor: 'rgba(197,198,206,0.2)', boxShadow: '0 4px 24px rgba(3,22,49,0.05)' }}>
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 border" style={{ borderColor: 'rgba(197,198,206,0.2)', boxShadow: '0 4px 24px rgba(3,22,49,0.05)' }}>
             <div className="mb-6">
               <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: '#75777e' }}>Free</p>
               <div className="flex items-end gap-2">
@@ -167,7 +167,7 @@ export default function Pricing() {
           </div>
 
           {/* Pro */}
-          <div className="rounded-3xl p-8 text-white relative overflow-hidden"
+          <div className="rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-white relative overflow-hidden"
             style={{ background: 'linear-gradient(135deg, #031631 0%, #0e0099 100%)', boxShadow: '0 8px 40px rgba(14,0,153,0.3)' }}>
             <div className="absolute top-5 right-5">
               <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
@@ -210,7 +210,7 @@ export default function Pricing() {
         </div>
 
         {/* What's in a session */}
-        <div className="max-w-3xl mx-auto mb-16 rounded-2xl p-8"
+        <div className="max-w-3xl mx-auto mb-16 rounded-2xl p-5 sm:p-8"
           style={{ backgroundColor: '#f2f4f6' }}>
           <h3 className="font-extrabold text-lg mb-2" style={{ fontFamily: 'Manrope', color: '#031631' }}>
             What's included in one session?
@@ -242,30 +242,30 @@ export default function Pricing() {
 
         {/* Feature comparison */}
         <div className="max-w-3xl mx-auto mb-20">
-          <h2 className="text-2xl font-extrabold tracking-tight text-center mb-10"
+          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-center mb-8 sm:mb-10"
             style={{ fontFamily: 'Manrope', color: '#031631' }}>
             Full comparison
           </h2>
           <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 4px 24px rgba(3,22,49,0.05)' }}>
-            <div className="grid grid-cols-3 px-6 py-4 border-b" style={{ borderColor: 'rgba(197,198,206,0.15)' }}>
-              <div className="font-bold text-sm" style={{ color: '#44474d' }}>Feature</div>
-              <div className="text-center font-bold text-sm" style={{ color: '#44474d' }}>Free</div>
-              <div className="text-center font-bold text-sm" style={{ color: '#0e0099' }}>Pro</div>
+            <div className="grid grid-cols-3 px-3 sm:px-6 py-3 sm:py-4 border-b" style={{ borderColor: 'rgba(197,198,206,0.15)' }}>
+              <div className="font-bold text-xs sm:text-sm" style={{ color: '#44474d' }}>Feature</div>
+              <div className="text-center font-bold text-xs sm:text-sm" style={{ color: '#44474d' }}>Free</div>
+              <div className="text-center font-bold text-xs sm:text-sm" style={{ color: '#0e0099' }}>Pro</div>
             </div>
             {[
               ['Sessions / month', `${FREE_LIMIT}`, `${PRO_LIMIT}`],
-              ['Tailored resume per session', true, true],
-              ['Matching cover letter per session', true, true],
-              ['ATS match score + gap analysis', true, true],
+              ['Tailored resume', true, true],
+              ['Matching cover letter', true, true],
+              ['ATS match + gap analysis', true, true],
               ['Interview STAR prep', true, true],
-              ['Cover letter tone options', '1', '4'],
+              ['Cover letter tones', '1', '4'],
               ['Resume templates', '1', '3'],
               ['PDF export', false, true],
-              ['Priority AI processing', false, true],
+              ['Priority AI', false, true],
             ].map(([feature, free, pro], i) => (
-              <div key={i} className="grid grid-cols-3 px-6 py-4 border-b last:border-0 items-center"
+              <div key={i} className="grid grid-cols-3 px-3 sm:px-6 py-3 sm:py-4 border-b last:border-0 items-center"
                 style={{ borderColor: 'rgba(197,198,206,0.1)' }}>
-                <span className="text-sm" style={{ color: '#031631' }}>{feature}</span>
+                <span className="text-xs sm:text-sm" style={{ color: '#031631' }}>{feature}</span>
                 <div className="flex justify-center">
                   {typeof free === 'boolean'
                     ? <span className="material-symbols-outlined icon-filled text-[20px]"

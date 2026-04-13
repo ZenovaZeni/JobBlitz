@@ -108,6 +108,8 @@ html {
   /* Prevent iOS text size adjustment */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Prevent horizontal scroll from any child overflow */
+  overflow-x: hidden;
 }
 
 body {
@@ -118,6 +120,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   /* Prevent overscroll bounce on iOS app shell */
   overscroll-behavior: none;
+  overflow-x: hidden;
 }
 
 /* === MOBILE: Prevent input zoom on focus (iOS requires font-size >= 16px) === */
@@ -148,11 +151,11 @@ button, a, [role="button"] {
 
 /* Page bottom padding when bottom nav visible */
 .page-pb-mobile {
-  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important;
+  padding-bottom: calc(4.25rem + env(safe-area-inset-bottom)) !important;
 }
 
 .pb-nav-safe {
-  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)) !important;
+  padding-bottom: calc(3.75rem + env(safe-area-inset-bottom)) !important;
 }
 
 /* Fixed action bar that sits ABOVE the bottom nav on mobile.
@@ -402,7 +405,12 @@ button, a, [role="button"] {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 1rem;
+}
+@media (min-width: 640px) {
+  .modal-overlay {
+    padding: 2rem;
+  }
 }
 
 .coach-panel {

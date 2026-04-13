@@ -63,13 +63,6 @@ export default function Dashboard() {
     return () => clearTimeout(timer)
   }, [sessionsLoading])
 
-  useEffect(() => {
-    if (!sessionsLoading && isProfileReady && !masterProfileLoading) {
-      const loadTime = performance.now() - mountTime
-      console.log(`[DashboardTiming] Fully hydrated in ${loadTime.toFixed(0)}ms`)
-    }
-  }, [sessionsLoading, isProfileReady, masterProfileLoading, mountTime])
-
   useEffect(() => { document.title = 'JobBlitz — Dashboard' }, [])
 
   const firstName = (profile?.full_name || user?.email || 'there').split('@')[0].split(' ')[0]
@@ -244,7 +237,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Stats row */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-5 md:mb-6">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-5 md:mb-6">
                   <StatCard icon="description" value={sessions?.length || 0} label="Applications" color="#031631" loading={sessionsLoading} />
                   <StatCard icon="analytics" value={avgMatchScore > 0 ? `${avgMatchScore}%` : '—'} label="Avg Match" color="#0e0099" loading={sessionsLoading} />
                   <StatCard icon="account_circle" value={`${masterProfile?.completion_pct ?? 0}%`} label="Profile" color="#2f2ebe" loading={masterProfileLoading} />
@@ -252,7 +245,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Main grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
 
                   {/* Primary CTA card — desktop only (mobile uses the strip above) */}
                   <div className="hidden md:flex lg:col-span-2 rounded-2xl p-8 text-white flex-col justify-between min-h-[220px] relative overflow-hidden group"
