@@ -170,13 +170,18 @@ button, a, [role="button"] {
   }
 }
 
-/* Material Symbols */
+/* Material Symbols — prevent text overflow before font loads */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   display: inline-block;
   vertical-align: middle;
   font-size: inherit;
   line-height: 1;
+  overflow: hidden;
+  max-width: 1.5em;
+  max-height: 1.5em;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 .icon-filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
 
